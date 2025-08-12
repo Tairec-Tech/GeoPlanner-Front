@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* Variables CSS personalizadas que se mantienen */
+:root {
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Estilos base del body */
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Mantener cualquier animación CSS personalizada que no pueda manejar Tailwind */
