@@ -151,22 +151,54 @@ const RegisterStep3: React.FC = () => {
         biografia: formData.bio, latitud: parseFloat(formData.latitud), longitud: parseFloat(formData.longitud),
         ciudad: formData.ciudad, pais: formData.pais, tema_preferido: formData.tema
       };
+      let fotoPerfilUrl = null;
       if (formData.fotoPerfil) {
+        // Subir imagen a Cloudinary usando upload preset
         const f = new FormData();
         f.append('file', formData.fotoPerfil);
         f.append('upload_preset', 'geoplanner');
-        await fetch('https://api.cloudinary.com/v1_1/dadw1qx7z/image/upload', { method: 'POST', body: f });
+        
+        try {
+          const uploadResponse = await fetch('https://api.cloudinary.com/v1_1/dadw1qx7z/image/upload', { 
+            method: 'POST', 
+            body: f 
+          });
+          
+          if (uploadResponse.ok) {
+            const uploadData = await uploadResponse.json();
+            fotoPerfilUrl = uploadData.secure_url;
+            console.log('✅ Imagen subida a Cloudinary:', fotoPerfilUrl);
+          } else {
+            console.error('❌ Error subiendo imagen:', await uploadResponse.text());
+          }
+        } catch (error) {
+          console.error('❌ Error en subida de imagen:', error);
+        }
       }
+      
+      // Agregar la URL de la foto de perfil a los datos del usuario
+      if (fotoPerfilUrl) {
+        userData.foto_perfil_url = fotoPerfilUrl;
+      }
+      
+      // Registrar usuario con o sin foto
       const r = await fetch('http://localhost:8000/auth/register', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(userData),
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(userData),
       });
-      if (r.ok) { 
-        sessionStorage.removeItem('registroStep1');
-        sessionStorage.removeItem('registroStep2');
-        alert('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
-        navigate('/login'); 
+      
+      if (!r.ok) {
+        setError((await r.json()).detail || 'Error en el registro');
+        setIsLoading(false);
+        return;
       }
-      else setError((await r.json()).detail || 'Error en el registro');
+      
+      // Limpiar datos de sesión y navegar
+      sessionStorage.removeItem('registroStep1');
+      sessionStorage.removeItem('registroStep2');
+      alert('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
+      navigate('/login');
     } catch { setError('Error de conexión con el servidor.'); }
     finally { setIsLoading(false); }
   };

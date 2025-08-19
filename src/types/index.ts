@@ -76,4 +76,20 @@ export interface User {
     language: string
     notifications: boolean
   }
-} 
+}
+
+// Declaración de tipos para Cropper.js
+declare global {
+  interface Window {
+    Cropper: {
+      new (element: HTMLImageElement, options?: any): {
+        destroy(): void;
+        getCroppedCanvas(options?: any): HTMLCanvasElement;
+        reset(): void;
+        getImageData(): any;
+      };
+    };
+  }
+}
+
+export {}; 
