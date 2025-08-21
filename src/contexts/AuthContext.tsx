@@ -87,8 +87,8 @@ function AuthProvider({ children }: AuthProviderProps) {
     
     try {
       setIsLoading(true)
-      const updatedUser = await apiService.updateUser(user.id, userData)
-      setUser(updatedUser)
+      const response = await apiService.updateCurrentUserProfile(userData)
+      setUser(response.usuario)
     } catch (error) {
       console.error('Error actualizando usuario:', error)
       throw error

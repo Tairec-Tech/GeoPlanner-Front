@@ -24,6 +24,9 @@ const Dashboard = () => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   
+  // CORRECCIÓN: Añadido estado de carga para el tema para evitar el parpadeo
+  const [isThemeLoading, setIsThemeLoading] = useState(true)
+
   // Estados
   const [currentView, setCurrentView] = useState<'map' | 'classic'>('map')
   const [currentMapStyle, setCurrentMapStyle] = useState('openstreetmap')
@@ -525,9 +528,17 @@ const Dashboard = () => {
 
   // Agregar eventos al mapa
   const addEventsToMap = (eventsToShow: any[] = []) => {
-    if (!mapInstanceRef.current || !L) return
+    console.log('🗺️ addEventsToMap llamado con:', eventsToShow.length, 'eventos')
+    console.log('🗺️ mapInstanceRef.current existe:', !!mapInstanceRef.current)
+    console.log('🗺️ L existe:', !!L)
+    
+    if (!mapInstanceRef.current || !L) {
+      console.log('❌ No se puede agregar eventos: mapa o L no disponible')
+      return
+    }
 
     // Limpiar marcadores existentes
+    console.log('🗺️ Limpiando', eventMarkers.length, 'marcadores existentes')
     eventMarkers.forEach(marker => {
       mapInstanceRef.current.removeLayer(marker)
     })
@@ -536,6 +547,8 @@ const Dashboard = () => {
 
     // Usar eventos filtrados si no se proporcionan eventos específicos
     const eventsToDisplay = eventsToShow.length > 0 ? eventsToShow : filterEvents()
+    console.log('🗺️ Eventos a mostrar:', eventsToDisplay.length)
+    console.log('🗺️ Eventos:', eventsToDisplay)
 
     eventsToDisplay.forEach(event => {
       const icon = createEventIcon(event.type)
@@ -577,11 +590,17 @@ const Dashboard = () => {
 
   // Filtrar eventos por búsqueda y tipo
   const filterEvents = () => {
-    let filtered = sampleEvents
+    console.log('🔍 filterEvents llamado')
+    console.log('🔍 events.length:', events.length)
+    console.log('🔍 filterType:', filterType)
+    console.log('🔍 searchTerm:', searchTerm)
+    
+    let filtered = events
 
     // Filtrar por tipo
     if (filterType !== 'all') {
       filtered = filtered.filter(event => event.type === filterType)
+      console.log('🔍 Después de filtrar por tipo:', filtered.length)
     }
 
     // Filtrar por término de búsqueda
@@ -593,8 +612,10 @@ const Dashboard = () => {
         event.organizer.toLowerCase().includes(term) ||
         event.type.toLowerCase().includes(term)
       )
+      console.log('🔍 Después de filtrar por búsqueda:', filtered.length)
     }
 
+    console.log('🔍 Eventos filtrados finales:', filtered.length)
     setFilteredEvents(filtered)
     return filtered
   }
@@ -632,7 +653,15 @@ const Dashboard = () => {
         texto: `${newEvent.title}\n\n${newEvent.description}\n\nFecha: ${newEvent.date} a las ${newEvent.time}\nMáximo asistentes: ${newEvent.maxAttendees}`,
         tipo: newEvent.type,
         fecha_evento: new Date(`${newEvent.date}T${newEvent.time}`).toISOString(),
-        privacidad: 'publica'
+        privacidad: 'publica',
+        rutas: [
+          {
+            latitud: userLocation.lat,
+            longitud: userLocation.lng,
+            etiqueta: 'Ubicación del evento',
+            orden: 0
+          }
+        ]
       }
 
       const newPost = await apiService.createPost(postData)
@@ -653,8 +682,7 @@ const Dashboard = () => {
       // Cerrar modal
       setShowCreateEventModal(false)
       
-      // Actualizar mapa
-      addEventsToMap()
+      // Los eventos se cargarán automáticamente a través del useEffect
       
       console.log('Evento creado:', newPost)
     } catch (error) {
@@ -993,15 +1021,43 @@ const Dashboard = () => {
       
       setPosts(postsWithComments)
       
+      // Convertir los posts que son eventos en objetos para el mapa
+      const mappedEvents = postsWithComments
+        .filter(p => p.fecha_evento && p.rutas && p.rutas.length > 0 && p.privacidad === 'publica') // Solo posts públicos con fecha de evento y rutas
+        .map(p => {
+          const firstRoute = p.rutas![0] // Usar non-null assertion ya que el filtro garantiza que rutas existe
+          
+          return {
+            id: p.id,
+            title: p.texto.split("\n")[0] || "Evento",
+            description: p.texto,
+            type: p.tipo || 'Social',
+            date: new Date(p.fecha_evento).toLocaleDateString(),
+            time: new Date(p.fecha_evento).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            organizer: p.nombre_autor || "Desconocido",
+            attendees: 0, // Por ahora 0, se puede implementar después
+            maxAttendees: 10, // Por ahora 10, se puede implementar después
+            lat: firstRoute.latitud,
+            lng: firstRoute.longitud,
+            saved: false,
+            post: p // Guardar referencia a la publicación original
+          }
+        })
+
+      console.log('📊 Posts cargados:', postsWithComments.length)
+      console.log('🎯 Posts con fecha de evento:', postsWithComments.filter(p => p.fecha_evento).length)
+      console.log('📍 Posts con rutas:', postsWithComments.filter(p => p.rutas && p.rutas.length > 0).length)
+      console.log('🗺️ Eventos mapeados para el mapa:', mappedEvents.length)
+      console.log('📋 Eventos mapeados:', mappedEvents)
+
+      setEvents(mappedEvents)
+      setFilteredEvents(mappedEvents)
+      
       // Cargar agenda
       const agendaData = await apiService.getAgenda()
       
       // Cargar notificaciones
       await loadNotifications()
-      
-      // Limpiar eventos del feed clásico
-      setEvents([])
-      setFilteredEvents([])
     } catch (error) {
       console.error('Error cargando datos:', error)
     } finally {
@@ -1034,8 +1090,40 @@ const Dashboard = () => {
 
   // Cargar eventos iniciales
   const loadEvents = () => {
-    setEvents([])
-    setFilteredEvents([])
+    // Cargar eventos de ejemplo cuando no hay usuario autenticado
+    const sampleEvents = [
+      {
+        id: '1',
+        title: 'Fútbol en el Parque',
+        description: 'Partido de fútbol casual en el parque central',
+        type: 'Deporte',
+        date: '2024-01-15',
+        time: '16:00',
+        lat: 10.654,
+        lng: -71.612,
+        organizer: 'Juan Pérez',
+        attendees: 8,
+        maxAttendees: 20,
+        saved: false
+      },
+      {
+        id: '2',
+        title: 'Estudio Grupal',
+        description: 'Sesión de estudio para el examen de matemáticas',
+        type: 'Estudio',
+        date: '2024-01-16',
+        time: '14:00',
+        lat: 10.660,
+        lng: -71.610,
+        organizer: 'María García',
+        attendees: 5,
+        maxAttendees: 10,
+        saved: true
+      }
+    ]
+    
+    setEvents(sampleEvents)
+    setFilteredEvents(sampleEvents)
   }
 
   // Funciones para creación de publicaciones
@@ -1081,8 +1169,10 @@ const Dashboard = () => {
         privacidad: newPost.privacy,
         media_url: mediaUrl,
         rutas: selectedMarkers.map((marker: any, i: number) => ({
-          coords: `${marker.getLatLng().lat},${marker.getLatLng().lng}`,
-          label: `Punto ${i + 1}`
+          latitud: marker.getLatLng().lat,
+          longitud: marker.getLatLng().lng,
+          etiqueta: `Punto ${i + 1}`,
+          orden: i
         })),
         terms: {
           geoplanner: DEFAULT_GEOPLANNER_TERMS,
@@ -1142,6 +1232,23 @@ const Dashboard = () => {
     setSelectedMarkers([])
   }
 
+  // Función para manejar zoom de mapas en publicaciones
+  const handleMapZoom = (postId: string, direction: 'in' | 'out') => {
+    // Buscar el mapa específico de la publicación
+    const mapElement = document.getElementById(`map-${postId}`)
+    if (mapElement && (mapElement as any)._leaflet_map) {
+      // Si el mapa está inicializado, usar la API de Leaflet
+      const map = (mapElement as any)._leaflet_map
+      if (map) {
+        if (direction === 'in') {
+          map.zoomIn()
+        } else {
+          map.zoomOut()
+        }
+      }
+    }
+  }
+
   // Funciones para renderizar publicaciones en el feed
   const renderPost = (post: Post) => {
     const privacyBadgeMap = {
@@ -1189,7 +1296,7 @@ const Dashboard = () => {
     }
 
     return (
-      <div key={post.id} className="post card shadow-sm mb-4 event-card" style={{
+      <div key={post.id} className="post-card post card shadow-sm mb-4 event-card" style={{
         backgroundColor: 'var(--card-bg)',
         color: 'var(--card-text-color)'
       }}>
@@ -1209,8 +1316,18 @@ const Dashboard = () => {
               />
             </div>
             <div className="flex-1">
-              <strong>{post.nombre_autor}</strong>
-              <div className="text-sm text-gray-500">@{post.username_autor}</div>
+              <button 
+                className="font-semibold hover:text-blue-600 transition-colors cursor-pointer"
+                onClick={() => navigate(`/usuario/${post.id_autor}`)}
+              >
+                {post.nombre_autor}
+              </button>
+              <button 
+                className="text-sm text-gray-500 hover:text-blue-600 transition-colors cursor-pointer block"
+                onClick={() => navigate(`/usuario/${post.id_autor}`)}
+              >
+                @{post.username_autor}
+              </button>
             </div>
             {post.verificado && verifiedIcon}
             <span className="badge badge-secondary">{privacyBadge}</span>
@@ -1231,15 +1348,32 @@ const Dashboard = () => {
           )}
           
           {/* Mapa de la publicación */}
-          <div className="map-container mb-3 h-48" id={`map-${post.id}`}>
+          <div className="map-container mb-3 h-96 w-250 mx-auto relative" id={`map-${post.id}`}>
             {/* Aquí se renderizará el mapa */}
+            {/* Botones de zoom */}
+            <div className="absolute top-4 right-4 z-[9999] flex flex-col gap-2">
+              <button 
+                className="btn btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
+                onClick={() => handleMapZoom(post.id, 'in')}
+                title="Zoom In"
+              >
+                <i className="fas fa-plus text-gray-800 font-bold"></i>
+              </button>
+              <button 
+                className="btn btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
+                onClick={() => handleMapZoom(post.id, 'out')}
+                title="Zoom Out"
+              >
+                <i className="fas fa-minus text-gray-800 font-bold"></i>
+              </button>
+            </div>
           </div>
           
           {/* Lista de rutas si hay múltiples */}
           {post.rutas && post.rutas.length > 1 && (
             <ol className="list-group list-group-flush list-group-numbered mb-3 text-sm">
               {post.rutas.map((ruta: any, index: number) => (
-                <li key={index} className="list-group-item">{ruta.label}</li>
+                <li key={index} className="list-group-item">{ruta.etiqueta}</li>
               ))}
             </ol>
           )}
@@ -1266,13 +1400,13 @@ const Dashboard = () => {
 
           {/* Sección de comentarios */}
           {showComments[post.id] && (
-            <div className="comentarios mt-3 p-3 bg-gray-50 rounded">
+            <div className="comentarios mt-3 p-3 rounded comment-section">
               <div className="comentarios-list mb-3">
                 {post.comentarios && post.comentarios.length > 0 ? (
                   post.comentarios.map((comentario) => (
                     <div key={comentario.id} className="mb-3">
                       {/* Comentario principal */}
-                      <div className="flex items-start gap-2 p-2 bg-white rounded">
+                      <div className="comment-box flex items-start gap-2 p-2 rounded">
                         {/* Foto de perfil del autor del comentario */}
                         <div className="flex-shrink-0">
                           <img 
@@ -1319,7 +1453,7 @@ const Dashboard = () => {
                       {comentario.respuestas && comentario.respuestas.length > 0 && (
                         <div className="ml-6 mt-2 space-y-2">
                           {comentario.respuestas.map((respuesta) => (
-                            <div key={respuesta.id} className="flex items-start gap-2 p-2 bg-gray-100 rounded">
+                            <div key={respuesta.id} className="comment-box flex items-start gap-2 p-2 rounded">
                               {/* Foto de perfil del autor de la respuesta */}
                               <div className="flex-shrink-0">
                                 <img 
@@ -1359,11 +1493,11 @@ const Dashboard = () => {
                       
                       {/* Input para responder */}
                       {replyToComment === comentario.id && (
-                        <div className="ml-6 mt-2 p-2 bg-blue-50 rounded">
+                        <div className="ml-6 mt-2 p-2 rounded reply-section">
                           <div className="flex gap-2">
                             <input 
                               type="text" 
-                              className="input input-sm flex-1"
+                              className="create-post-input input-sm flex-1"
                               placeholder={`Responder a @${comentario.username_autor}...`}
                               value={commentTexts[`${post.id}-reply-${comentario.id}`] || ''}
                               onChange={(e) => setCommentTexts(prev => ({ ...prev, [`${post.id}-reply-${comentario.id}`]: e.target.value }))}
@@ -1395,7 +1529,7 @@ const Dashboard = () => {
               <div className="flex gap-2">
                 <input 
                   type="text" 
-                  className="input input-sm flex-1"
+                  className="create-post-input input-sm flex-1"
                   placeholder="Escribe un comentario... (usa @username para mencionar)"
                   value={commentTexts[post.id] || ''}
                   onChange={(e) => setCommentTexts(prev => ({ ...prev, [post.id]: e.target.value }))}
@@ -1431,11 +1565,19 @@ const Dashboard = () => {
         setTimeout(() => {
           const mapElement = document.getElementById(`map-${postId}`)
           if (mapElement && !mapElement.classList.contains('leaflet-container')) {
-            const latlngs = rutas.map((ruta: any) => ruta.coords.split(',').map(Number))
+            const latlngs = rutas.map((ruta: any) => [ruta.latitud, ruta.longitud] as [number, number])
             const postMap = L.map(mapElement, {
               zoomControl: false,
-              scrollWheelZoom: false
-            }).setView(latlngs[0], 13)
+              scrollWheelZoom: false,
+              dragging: false,
+              touchZoom: false,
+              doubleClickZoom: false,
+              boxZoom: false,
+              keyboard: false
+            }).setView(latlngs[0] as [number, number], 13)
+
+            // Guardar referencia al mapa para poder controlar el zoom
+            ;(mapElement as any)._leaflet_map = postMap
 
             const style = mapStyles[currentMapStyle as keyof typeof mapStyles]
             L.tileLayer(style.url, {
@@ -1451,7 +1593,7 @@ const Dashboard = () => {
                 iconAnchor: [14, 28],
                 popupAnchor: [0, -28],
               })
-              L.marker(latlng, { icon: eventIcon }).addTo(postMap)
+              L.marker(latlng as [number, number], { icon: eventIcon }).addTo(postMap)
             })
 
             // Agregar ubicación del usuario si está disponible
@@ -1466,7 +1608,7 @@ const Dashboard = () => {
             if (latlngs.length > 1) {
               // Usar leaflet-routing-machine para rutas que sigan las calles
               import('leaflet-routing-machine').then((Lrm) => {
-                const waypoints = latlngs.map(latlng => L.latLng(latlng[0], latlng[1]))
+                const waypoints = latlngs.map(latlng => L.latLng((latlng as [number, number])[0], (latlng as [number, number])[1]))
                 ;(Lrm.default as any).control({
                   waypoints: waypoints,
                   createMarker: function() { return null; },
@@ -1486,7 +1628,7 @@ const Dashboard = () => {
                 })
               })
             } else {
-              postMap.setView(latlngs[0], 15)
+              postMap.setView(latlngs[0] as [number, number], 15)
             }
           }
         }, 100)
@@ -1554,14 +1696,16 @@ const Dashboard = () => {
       // Aplicar background según el tema
       if (themeName === 'noche') {
         // Para tema noche, usar el color del tema
-        if (mainContainer && mainContainer instanceof HTMLElement) {
-          mainContainer.style.background = theme.bodyBG
+        // Aplicar al contenedor principal (el div con bg-white)
+        const mainContentDiv = document.querySelector('.flex.bg-white')
+        if (mainContentDiv && mainContentDiv instanceof HTMLElement) {
+          mainContentDiv.style.background = theme.bodyBG
         }
         if (contentArea && contentArea instanceof HTMLElement) {
           contentArea.style.background = theme.bodyBG
         }
         
-        // Aplicar color blanco hueso SOLO al título GeoPlanner
+        // Aplicar color blanco hueso SOLO al título GeoPlanner para tema noche
         const geoPlannerTitle = document.querySelector('header strong')
         if (geoPlannerTitle && geoPlannerTitle instanceof HTMLElement) {
           geoPlannerTitle.style.color = '#f5f5dc' // Blanco hueso para tema noche
@@ -1581,19 +1725,29 @@ const Dashboard = () => {
             })
           }
         })
+
+        // Aplicar tema al contenedor de publicaciones (feed clásico)
+        const feedContainer = document.querySelector('.p-4.rounded-2xl.bg-gray-50.m-4.shadow-lg')
+        if (feedContainer && feedContainer instanceof HTMLElement) {
+          feedContainer.style.background = theme.cardBG
+        }
+
+
       } else {
         // Para otros temas, mantener fondo blanco
-        if (mainContainer && mainContainer instanceof HTMLElement) {
-          mainContainer.style.background = '#ffffff'
+        // Restaurar el contenedor principal a fondo blanco
+        const mainContentDiv = document.querySelector('.flex.bg-white')
+        if (mainContentDiv && mainContentDiv instanceof HTMLElement) {
+          mainContentDiv.style.background = '#ffffff'
         }
         if (contentArea && contentArea instanceof HTMLElement) {
           contentArea.style.background = '#ffffff'
         }
         
-        // Restaurar color del título GeoPlanner para otros temas
+        // Aplicar color negro al título GeoPlanner para otros temas
         const geoPlannerTitle = document.querySelector('header strong')
         if (geoPlannerTitle && geoPlannerTitle instanceof HTMLElement) {
-          geoPlannerTitle.style.color = '' // Restaurar color por defecto
+          geoPlannerTitle.style.color = '#000000' // Negro para otros temas
         }
         
         // Restaurar colores SOLO de los eventos del feed clásico
@@ -1610,12 +1764,29 @@ const Dashboard = () => {
             })
           }
         })
+
+        // Restaurar contenedor de publicaciones para otros temas
+        const feedContainer = document.querySelector('.p-4.rounded-2xl.bg-gray-50.m-4.shadow-lg')
+        if (feedContainer && feedContainer instanceof HTMLElement) {
+          feedContainer.style.background = '#f9fafb' // bg-gray-50
+        }
+
+
       }
 
       if (sidebar && sidebar instanceof HTMLElement) {
         sidebar.style.background = theme.sidebarBG
         sidebar.style.color = theme.sidebarText
       }
+
+      // Aplicar estilos al sidebar de filtros
+      const filterSidebar = document.querySelector('.filter-sidebar')
+      if (filterSidebar && filterSidebar instanceof HTMLElement) {
+        filterSidebar.style.background = theme.sidebarBG
+        filterSidebar.style.color = theme.sidebarText
+      }
+
+
 
       cards.forEach(card => {
         if (card instanceof HTMLElement) {
@@ -1788,6 +1959,9 @@ const Dashboard = () => {
       console.log('🎨 Aplicando tema por defecto')
       applyTheme('default')
       document.documentElement.setAttribute('data-theme', 'light')
+    } finally {
+        // CORRECCIÓN: Termina la carga del tema aquí
+        setIsThemeLoading(false);
     }
     
     if (savedMapStyle) setCurrentMapStyle(savedMapStyle)
@@ -1839,52 +2013,50 @@ const Dashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Lógica consolidada de inicialización y limpieza del mapa
+  // CORRECCIÓN: Lógica consolidada de inicialización y limpieza del mapa
   useEffect(() => {
-    // Solo se ejecuta si la vista actual es 'map' y el contenedor del mapa está en el DOM
-    if (currentView === 'map' && mapContainerRef.current) {
-      setIsMapLoading(true)
-
-      // Si ya existe una instancia de mapa (de una vista anterior), la eliminamos primero
+    if (currentView === 'map' && mapContainerRef.current && !isThemeLoading) {
+      // Si ya hay un mapa, no hacemos nada para evitar reinicializar.
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove()
-        mapInstanceRef.current = null
+        return;
       }
+      
+      setIsMapLoading(true);
 
-      // Cargar Leaflet si no está cargado
       const setupMap = async () => {
-        const leafletLoaded = await loadLeaflet()
-        if (leafletLoaded && mapContainerRef.current) {
-          // Inicializamos el mapa en el contenedor actual
-          mapInstanceRef.current = L.map(mapContainerRef.current).setView([10.654, -71.612], 12)
-
-          // Aplicamos el estilo de mapa actual
-          const style = mapStyles[currentMapStyle as keyof typeof mapStyles]
-          L.tileLayer(style.url, { attribution: style.attribution }).addTo(mapInstanceRef.current)
+        const leafletLoaded = await loadLeaflet();
+        // Verificamos que el contenedor siga existiendo y que no haya ya un mapa
+        if (leafletLoaded && mapContainerRef.current && !mapInstanceRef.current) {
+          // Pequeño delay para asegurar que el DOM esté completamente listo
+          await new Promise(resolve => setTimeout(resolve, 100));
           
-          // Obtenemos la ubicación del usuario y cargamos eventos
-          getUserLocation()
-          loadEvents()
-          // No agregar eventos al mapa (feed clásico vacío)
+          const map = L.map(mapContainerRef.current).setView([10.654, -71.612], 12);
 
-          setIsMapLoading(false)
-          console.log('Mapa inicializado correctamente')
+          const style = mapStyles[currentMapStyle as keyof typeof mapStyles];
+          L.tileLayer(style.url, { attribution: style.attribution }).addTo(map);
+
+          mapInstanceRef.current = map;
+          
+          getUserLocation();
+          
+          setIsMapLoading(false);
+          console.log('Mapa inicializado correctamente');
         }
-      }
+      };
 
-      setupMap()
+      setupMap();
 
       // La función de limpieza se ejecutará cuando el componente se desmonte o
-      // cuando currentView cambie (es decir, al pasar al feed clásico)
+      // cuando `currentView` cambie.
       return () => {
         if (mapInstanceRef.current) {
-          mapInstanceRef.current.remove()
-          mapInstanceRef.current = null
-          console.log('Mapa destruido y limpiado')
+          mapInstanceRef.current.remove();
+          mapInstanceRef.current = null;
+          console.log('Mapa destruido y limpiado');
         }
-      }
+      };
     }
-  }, [currentView]) // Este efecto depende SOLAMENTE de 'currentView'
+  }, [currentView, isThemeLoading]); // CAMBIO: Añadimos isThemeLoading como dependencia
 
   // useEffect simplificado para actualizar los marcadores cuando cambian los filtros
   useEffect(() => {
@@ -1892,7 +2064,16 @@ const Dashboard = () => {
       const filtered = filterEvents()
       addEventsToMap(filtered)
     }
-  }, [filterType, searchTerm]) // Se ejecuta cuando cambian los filtros
+  }, [filterType, searchTerm, events]) // CAMBIO: Añadimos 'events' como dependencia
+
+  // useEffect para cargar eventos automáticamente cuando se cargan los datos
+  useEffect(() => {
+    console.log('🔄 useEffect eventos - currentView:', currentView, 'events.length:', events.length, 'isMapLoading:', isMapLoading)
+    if (currentView === 'map' && mapInstanceRef.current && events.length > 0 && !isMapLoading) {
+      console.log('🗺️ Agregando eventos al mapa:', events.length, 'eventos')
+      addEventsToMap(events)
+    }
+  }, [events, currentView, isMapLoading])
 
   // Cargar tema inicial y aplicar estilos
   useEffect(() => {
@@ -1902,13 +2083,9 @@ const Dashboard = () => {
 
   // Aplicar tema cuando cambie currentTheme
   useEffect(() => {
-    if (currentTheme) {
-      // Aplicar tema con delay adicional para asegurar que el DOM esté listo
-      setTimeout(() => {
-        applyTheme(currentTheme)
-      }, 200)
+    if (currentTheme && !isThemeLoading) { // CAMBIO: No aplicar hasta que la carga inicial termine
+      applyTheme(currentTheme)
       
-      // Actualizar data-theme del document.documentElement según el tema seleccionado
       if (currentTheme === 'noche') {
         document.documentElement.setAttribute('data-theme', 'night')
       } else {
@@ -1923,7 +2100,7 @@ const Dashboard = () => {
         }
       })
     }
-  }, [currentTheme])
+  }, [currentTheme, isThemeLoading])
 
   // Actualizar tema de modales cuando se abran
   useEffect(() => {
@@ -2017,6 +2194,18 @@ const Dashboard = () => {
     }
   }, [showLocationModal, routeType, currentMapStyle])
 
+  // CORRECCIÓN: Renderizado condicional basado en la carga del tema
+  if (isThemeLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-100">
+        <div className="text-center">
+          <span className="loading loading-spinner loading-lg text-primary"></span>
+          <p className="mt-4 text-gray-600">Cargando tema...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white main-container">
       {/* Header */}
@@ -2068,7 +2257,35 @@ const Dashboard = () => {
         
         <div className="flex items-center gap-3">
           <button 
-            className="btn btn-outline btn-sm"
+            className="btn btn-primary btn-sm"
+            style={{
+              backgroundColor: currentTheme === 'noche' ? '#1e293b' : '#ffffff',
+              color: currentTheme === 'noche' ? '#ffffff' : '#333333',
+              border: `2px solid ${currentTheme === 'noche' ? '#38bdf8' : '#007BFF'}`,
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease',
+              boxShadow: currentTheme === 'noche' 
+                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
+                : '0 2px 4px rgba(0, 123, 255, 0.2)'
+            }}
+            onMouseEnter={(e) => {
+              const isDarkTheme = currentTheme === 'noche';
+              e.currentTarget.style.backgroundColor = isDarkTheme ? '#38bdf8' : '#007BFF';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = isDarkTheme 
+                ? '0 4px 8px rgba(56, 189, 248, 0.4)' 
+                : '0 4px 8px rgba(0, 123, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              const isDarkTheme = currentTheme === 'noche';
+              e.currentTarget.style.backgroundColor = isDarkTheme ? '#1e293b' : '#ffffff';
+              e.currentTarget.style.color = isDarkTheme ? '#ffffff' : '#333333';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = isDarkTheme 
+                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
+                : '0 2px 4px rgba(0, 123, 255, 0.2)';
+            }}
             onClick={toggleView}
           >
             {currentView === 'map' ? 'Ver Feed Clásico' : 'Ver Vista de Mapa'}
@@ -2118,7 +2335,7 @@ const Dashboard = () => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-circle text-xl"
                 title="Cambiar Tema"
                 onClick={() => handleDropdown('tema')}
               >
@@ -2166,7 +2383,7 @@ const Dashboard = () => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-circle text-xl"
                 title="Estilos de Mapa"
                 onClick={() => handleDropdown('mapa')}
               >
@@ -2207,7 +2424,7 @@ const Dashboard = () => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-circle text-xl"
                 title="Notificaciones"
                 onClick={() => handleDropdown('notificaciones')}
               >
@@ -2255,19 +2472,11 @@ const Dashboard = () => {
               <div
                 tabIndex={0}
                 role="button"
-                className="btn btn-ghost btn-circle"
+                className="btn btn-ghost btn-circle text-xl"
                 title="Perfil"
                 onClick={() => handleDropdown('perfil')}
               >
-                <img 
-                  className="w-8 h-8 rounded-full object-cover border border-gray-300" 
-                  src={user?.foto_perfil_url || '/src/assets/img/placeholder.png'} 
-                  alt="Foto de perfil"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.src = '/src/assets/img/placeholder.png'
-                  }}
-                />
+                👤
               </div>
               <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[3000] w-72 p-2 shadow">
                 <li><a onClick={handleProfile}>
@@ -2290,6 +2499,13 @@ const Dashboard = () => {
                     <small className="text-gray-500">@{user?.nombre_usuario || 'usuario'}</small>
                   </div>
                 </a></li>
+                <li><a onClick={handleProfile}>
+                  <span className="text-blue-500">👤</span>
+                  <div className="flex-1">
+                    <div><strong className="text-blue-500">Mi Perfil</strong></div>
+                    <small className="text-gray-500">Ver y editar mi perfil</small>
+                  </div>
+                </a></li>
                 <li><hr className="my-2" /></li>
                 <li><a onClick={handleLogout}>
                   <span className="text-red-500">➡️</span>
@@ -2305,72 +2521,81 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex h-screen bg-white">
-        {/* Sidebar */}
-        <div className="w-64 bg-primary text-primary-content sidebar">
-          <div className="p-4">
-            <ul className="menu bg-transparent text-primary-content">
-                              <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
+      <div className="flex bg-white" style={{ height: 'calc(100vh - 80px)' }} data-theme={currentTheme}>
+        {/* Sidebar Column */}
+        <div className="w-64 flex flex-col gap-4 mr-4 pt-4 ml-4" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+          {/* Sidebar Principal */}
+          <div className="bg-primary text-primary-content sidebar rounded-2xl shadow-lg">
+            <div className="p-4">
+              <ul className="menu bg-transparent text-primary-content">
+                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer">🎟️ Mis Inscripciones</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
-              <li><a className="text-primary-content hover:bg-primary-focus">👨‍👩‍👧‍👦 Grupos</a></li>
-            </ul>
+                <li><a className="text-primary-content hover:bg-primary-focus">👨‍👩‍👧‍👦 Grupos</a></li>
+              </ul>
+            </div>
           </div>
-          <div className="p-4 border-t border-primary-focus">
-            <ul className="menu bg-transparent text-primary-content">
-              <li><a 
-                className={filterType === 'all' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('all')}
-              >
-                Todos los tipos
-              </a></li>
-              <li><a 
-                className={filterType === 'Deporte' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('Deporte')}
-              >
-                Deporte
-              </a></li>
-              <li><a 
-                className={filterType === 'Estudio' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('Estudio')}
-              >
-                Estudio
-              </a></li>
-              <li><a 
-                className={filterType === 'Social' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('Social')}
-              >
-                Social
-              </a></li>
-              <li><a 
-                className={filterType === 'Cultural' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('Cultural')}
-              >
-                Cultural
-              </a></li>
-              <li><a 
-                className={filterType === 'Otro' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
-                onClick={() => setFilterType('Otro')}
-              >
-                Otro
-              </a></li>
-            </ul>
+
+          {/* Sidebar de Filtros */}
+          <div className="bg-primary text-primary-content rounded-2xl shadow-lg filter-sidebar">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-3">Filtros</h3>
+              <ul className="menu bg-transparent text-primary-content">
+                <li><a 
+                  className={filterType === 'all' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('all')}
+                >
+                  Todos los tipos
+                </a></li>
+                <li><a 
+                  className={filterType === 'Deporte' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('Deporte')}
+                >
+                  Deporte
+                </a></li>
+                <li><a 
+                  className={filterType === 'Estudio' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('Estudio')}
+                >
+                  Estudio
+                </a></li>
+                <li><a 
+                  className={filterType === 'Social' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('Social')}
+                >
+                  Social
+                </a></li>
+                <li><a 
+                  className={filterType === 'Cultural' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('Cultural')}
+                >
+                  Cultural
+                </a></li>
+                <li><a 
+                  className={filterType === 'Otro' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
+                  onClick={() => setFilterType('Otro')}
+                >
+                  Otro
+                </a></li>
+              </ul>
+            </div>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-hidden bg-white content-area">
+        <div className="flex-1 bg-white content-area" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
           {currentView === 'map' ? (
-            <div className="relative h-full w-full">
+            <div className="relative h-full w-full p-4">
               <div 
                 id="feed-map" 
                 ref={mapContainerRef} 
-                className="h-full w-full min-h-[500px]"
+                className="h-full w-full rounded-2xl shadow-lg"
                 style={{ 
-                  height: '100%', 
+                  height: 'calc(100vh - 120px)', 
                   width: '100%',
-                  minHeight: '500px',
-                  position: 'relative'
+                  position: 'relative',
+                  borderRadius: '16px',
+                  overflow: 'hidden'
                 }}
               >
                 {isMapLoading && (
@@ -2422,19 +2647,19 @@ const Dashboard = () => {
               <div id="event-detail-sidebar"></div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto">
-              <div className="p-4">
+            <div className="h-full overflow-y-auto flex justify-center" style={{ height: 'calc(100vh - 80px)' }}>
+              <div className="feed-container w-11/12 max-w-6xl transform scale-105">
                 {/* Widget de crear publicación */}
-                <div className="create-post-widget mb-6 flex justify-center">
-                  <div className="w-1/2 p-4 border rounded-lg bg-gray-50">
+                <div className="create-post-widget mb-6 flex justify-center mt-15">
+                  <div className="w-3/5 p-3 border rounded-lg create-post-widget">
                     <div className="flex items-center gap-3">
                       <img 
                         src={placeholder} 
-                        className="w-10 h-10 rounded-full"
+                        className="w-7 h-7 rounded-full"
                         alt="user"
                       />
                       <div 
-                        className="flex-1 p-3 bg-white border rounded-lg cursor-pointer hover:bg-gray-50"
+                        className="create-post-input cursor-pointer p-3 border rounded-lg hover:bg-gray-50 flex-1"
                         onClick={() => setShowCreatePostModal(true)}
                       >
                         ¿Qué estás organizando, <span className="font-semibold">{user?.nombre?.split(' ')[0] || 'Usuario'}</span>?

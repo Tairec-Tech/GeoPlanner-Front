@@ -34,8 +34,10 @@ export interface Post {
   estado: string
   fecha_creacion: string
   rutas?: Array<{
-    coords: string
-    label: string
+    latitud: number
+    longitud: number
+    etiqueta: string
+    orden: number
   }>
   likes: number
   likers: string[]
@@ -122,8 +124,10 @@ export interface PostCreateRequest {
   media_url?: string
   terminos_adicionales?: string
   rutas?: Array<{
-    coords: string
-    label: string
+    latitud: number
+    longitud: number
+    etiqueta: string
+    orden: number
   }>
   terms?: {
     geoplanner: string
@@ -432,6 +436,88 @@ class ApiService {
   // Método para verificar si el servidor está funcionando
   async healthCheck(): Promise<{ mensaje: string; version: string; estado: string }> {
     return this.request<{ mensaje: string; version: string; estado: string }>('/')
+  }
+
+  // Métodos para perfiles públicos
+  async getUserById(userId: string): Promise<User> {
+    return this.request<User>(`/users/${userId}`)
+  }
+
+  async getUserPosts(userId: string): Promise<Post[]> {
+    return this.request<Post[]>(`/users/${userId}/posts`)
+  }
+
+  async getFriendshipStatus(userId1: string, userId2: string): Promise<{
+    status: 'none' | 'pending' | 'accepted' | 'blocked'
+    isBlockedByMe: boolean
+    isBlockedByThem: boolean
+  }> {
+    return this.request<{
+      status: 'none' | 'pending' | 'accepted' | 'blocked'
+      isBlockedByMe: boolean
+      isBlockedByThem: boolean
+    }>(`/friendship/status/${userId1}/${userId2}`)
+  }
+
+  async sendFriendRequest(fromUserId: string, toUserId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/friendship/request', {
+      method: 'POST',
+      body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+    })
+  }
+
+  async blockUser(blockerUserId: string, blockedUserId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/friendship/block', {
+      method: 'POST',
+      body: JSON.stringify({ blocker_user_id: blockerUserId, blocked_user_id: blockedUserId }),
+    })
+  }
+
+  async unblockUser(blockerUserId: string, blockedUserId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/friendship/unblock', {
+      method: 'POST',
+      body: JSON.stringify({ blocker_user_id: blockerUserId, blocked_user_id: blockedUserId }),
+    })
+  }
+
+  async cancelFriendRequest(fromUserId: string, toUserId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/friendship/request', {
+      method: 'DELETE',
+      body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+    })
+  }
+
+  async removeFriendship(fromUserId: string, toUserId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/friendship/friendship', {
+      method: 'DELETE',
+      body: JSON.stringify({ from_user_id: fromUserId, to_user_id: toUserId }),
+    })
+  }
+
+  async getUserFriends(userId: string): Promise<Array<{
+    id: string
+    nombre: string
+    apellido: string
+    nombre_usuario: string
+    foto_perfil_url?: string
+    verificado: boolean
+    fecha_amistad: string
+  }>> {
+    return this.request<Array<{
+      id: string
+      nombre: string
+      apellido: string
+      nombre_usuario: string
+      foto_perfil_url?: string
+      verificado: boolean
+      fecha_amistad: string
+    }>>(`/friendship/friends/${userId}`)
+  }
+
+  // Obtener usuarios bloqueados por el usuario actual
+  async getBlockedUsers(): Promise<any[]> {
+    const response = await this.request<any[]>('/users/blocked')
+    return response
   }
 }
 

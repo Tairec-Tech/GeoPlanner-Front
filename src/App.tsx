@@ -5,6 +5,8 @@ import RegisterStep1 from './components/RegisterStep1'
 import RegisterStep2 from './components/RegisterStep2'
 import RegisterStep3 from './components/RegisterStep3'
 import Dashboard from './components/Dashboard'
+import ProfilePage from './components/ProfilePage'
+import PublicProfilePage from './components/PublicProfilePage'
 
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -84,6 +86,16 @@ function AppRoutes() {
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/perfil" element={
+        <ProtectedRoute>
+          <ProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/usuario/:userId" element={
+        <ProtectedRoute>
+          <PublicProfilePage />
         </ProtectedRoute>
       } />
 

@@ -56,6 +56,8 @@ const RegisterStep3: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImage, setCropperImage] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState('/src/assets/img/placeholder.png');
@@ -64,6 +66,15 @@ const RegisterStep3: React.FC = () => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropperRef = useRef<any>(null);
+
+  // Validar formulario - solo ubicación es obligatoria
+  useEffect(() => {
+    const isValid = formData.latitud !== '' && 
+                   formData.longitud !== '' && 
+                   formData.ciudad !== '' && 
+                   formData.pais !== '';
+    setIsFormValid(isValid);
+  }, [formData]);
 
   useEffect(() => {
     const step2Data = sessionStorage.getItem('registroStep2');
@@ -97,31 +108,33 @@ const RegisterStep3: React.FC = () => {
     const { name, value } = e.target;
     setFormData(p => ({ ...p, [name]: value }));
     if (name === 'tema') setCurrentTheme(temas[value] || temas.default);
+    setError('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('La imagen no puede superar los 5MB.'); return; }
-    const reader = new FileReader();
-    reader.onload = () => { setCropperImage(reader.result as string); setShowCropper(true); };
-    reader.readAsDataURL(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event: ProgressEvent<FileReader>) => {
+        const result = event.target?.result as string;
+        setCropperImage(result);
+        setShowCropper(true);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleCrop = () => {
-    const cropper = cropperRef.current?.cropper;
-    if (!cropper || typeof cropper.getCroppedCanvas !== "function") {
-      alert("El recortador de imágenes no está listo."); return;
+    if (cropperRef.current) {
+      cropperRef.current.getCroppedCanvas().toBlob((blob: Blob | null) => {
+        if (blob) {
+          const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+          setFormData(p => ({ ...p, fotoPerfil: file }));
+          setPreviewUrl(URL.createObjectURL(blob));
+          setShowCropper(false);
+        }
+      }, 'image/jpeg');
     }
-    const canvas = cropper.getCroppedCanvas({ width: 150, height: 150, imageSmoothingEnabled: true, imageSmoothingQuality: 'high' });
-    if (!canvas) { alert('No se pudo crear la imagen recortada.'); return; }
-    const croppedImageUrl = canvas.toDataURL('image/jpeg', 0.9);
-    setPreviewUrl(croppedImageUrl);
-    canvas.toBlob((blob) => {
-      if (blob) setFormData(p => ({ ...p, fotoPerfil: new File([blob], 'profile.jpg', { type: 'image/jpeg' }) }));
-    }, 'image/jpeg', 0.9);
-    setShowCropper(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleCancelCrop = () => {
@@ -139,68 +152,93 @@ const RegisterStep3: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setIsLoading(true); setError('');
+    e.preventDefault();
+    setError('');
+
+    // Validar que se haya seleccionado una ubicación
+    if (!formData.latitud || !formData.longitud || !formData.ciudad || !formData.pais) {
+      setError('Por favor selecciona una ubicación en el mapa');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validar que la ubicación no sea la posición por defecto
+    if (formData.latitud === '10.654' && formData.longitud === '-71.612' && !formData.ciudad) {
+      setError('Por favor selecciona una ubicación específica en el mapa');
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const step2Data = sessionStorage.getItem('registroStep2');
-      if (!step2Data) { navigate('/registro'); return; }
-      const s2 = JSON.parse(step2Data);
-      const fechaNacimiento = `${s2.year}-${s2.month.padStart(2, '0')}-${s2.day.padStart(2, '0')}`;
-      const userData = {
-        nombre_usuario: s2.nombreUsuario, email: s2.email, password: s2.password, nombre: s2.nombre,
-        apellido: s2.apellido, fecha_nacimiento: fechaNacimiento, genero: s2.genero === 'Otro' ? s2.otroGenero : s2.genero,
-        biografia: formData.bio, latitud: parseFloat(formData.latitud), longitud: parseFloat(formData.longitud),
-        ciudad: formData.ciudad, pais: formData.pais, tema_preferido: formData.tema
-      };
-      let fotoPerfilUrl = null;
-      if (formData.fotoPerfil) {
-        // Subir imagen a Cloudinary usando upload preset
-        const f = new FormData();
-        f.append('file', formData.fotoPerfil);
-        f.append('upload_preset', 'geoplanner');
-        
-        try {
-          const uploadResponse = await fetch('https://api.cloudinary.com/v1_1/dadw1qx7z/image/upload', { 
-            method: 'POST', 
-            body: f 
-          });
-          
-          if (uploadResponse.ok) {
-            const uploadData = await uploadResponse.json();
-            fotoPerfilUrl = uploadData.secure_url;
-            console.log('✅ Imagen subida a Cloudinary:', fotoPerfilUrl);
-          } else {
-            console.error('❌ Error subiendo imagen:', await uploadResponse.text());
-          }
-        } catch (error) {
-          console.error('❌ Error en subida de imagen:', error);
-        }
-      }
-      
-      // Agregar la URL de la foto de perfil a los datos del usuario
-      if (fotoPerfilUrl) {
-        userData.foto_perfil_url = fotoPerfilUrl;
-      }
-      
-      // Registrar usuario con o sin foto
-      const r = await fetch('http://localhost:8000/auth/register', {
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(userData),
-      });
-      
-      if (!r.ok) {
-        setError((await r.json()).detail || 'Error en el registro');
-        setIsLoading(false);
+      if (!step2Data) {
+        setError('Error: No se encontraron los datos del registro');
+        setShowErrorModal(true);
         return;
       }
+
+      const userData = JSON.parse(step2Data);
+      const finalData = {
+        ...userData,
+        biografia: formData.bio,
+        latitud: parseFloat(formData.latitud),
+        longitud: parseFloat(formData.longitud),
+        ciudad: formData.ciudad,
+        pais: formData.pais,
+        tema_preferido: formData.tema,
+        foto_perfil_url: formData.fotoPerfil ? await uploadImage(formData.fotoPerfil) : null
+      };
+
+      const response = await fetch('http://localhost:8000/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalData)
+      });
+
+      if (response.ok) {
+        sessionStorage.clear();
+        navigate('/login');
+      } else {
+        const errorData = await response.json();
+        setError(errorData.detail || 'Error al registrar usuario');
+        setShowErrorModal(true);
+      }
+    } catch {
+      setError('Error de conexión. Intenta nuevamente.');
+      setShowErrorModal(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeErrorModal = () => {
+    setShowErrorModal(false);
+    setError('');
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'geoplanner');
       
-      // Limpiar datos de sesión y navegar
-      sessionStorage.removeItem('registroStep1');
-      sessionStorage.removeItem('registroStep2');
-      alert('¡Registro completado con éxito! Ahora puedes iniciar sesión.');
-      navigate('/login');
-    } catch { setError('Error de conexión con el servidor.'); }
-    finally { setIsLoading(false); }
+      const response = await fetch('https://api.cloudinary.com/v1_1/dadw1qx7z/image/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.secure_url;
+      } else {
+        console.error('Error subiendo imagen:', await response.text());
+        return null;
+      }
+    } catch (error) {
+      console.error('Error en subida de imagen:', error);
+      return null;
+    }
   };
 
   return (
@@ -363,6 +401,18 @@ const RegisterStep3: React.FC = () => {
             <div className="modal-action">
               <button className="btn btn-info text-base" onClick={handleCrop}>Recortar y aplicar</button>
               <button className="btn btn-ghost text-base" onClick={handleCancelCrop}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showErrorModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg mb-4 text-center">Error de Registro</h3>
+            <p className="text-base text-center">{error}</p>
+            <div className="modal-action">
+              <button className="btn btn-info text-base" onClick={closeErrorModal}>Aceptar</button>
             </div>
           </div>
         </div>
