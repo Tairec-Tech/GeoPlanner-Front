@@ -1,5 +1,140 @@
+/**
+ * ========================================
+ * SERVICIO DE API DE GEOPLANNER
+ * ========================================
+ * 
+ * Este archivo contiene todas las funciones para comunicarse
+ * con el backend de GeoPlanner. Maneja todas las peticiones
+ * HTTP y la gestión de tokens de autenticación.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. URL DEL BACKEND (línea 35):
+ *    - API_BASE_URL = 'http://localhost:8000'
+ *    - Para producción, cambia a tu dominio
+ *    - Ejemplo: 'https://api.geoplanner.com'
+ *    - También puedes usar variables de entorno
+ * 
+ * 2. AGREGAR NUEVOS ENDPOINTS (líneas 200-400):
+ *    - Añade métodos en la clase ApiService
+ *    - Estructura: async nombreMetodo(): Promise<Tipo>
+ *    - Usa try/catch para manejo de errores
+ *    - Incluye tipos TypeScript para respuestas
+ * 
+ * 3. CONFIGURAR HEADERS (líneas 150-180):
+ *    - getAuthHeaders() maneja tokens JWT
+ *    - Si cambias el formato del token, modifica aquí
+ *    - Para agregar headers personalizados, añádelos aquí
+ * 
+ * 4. MANEJO DE ERRORES (líneas 400-500):
+ *    - handleApiError() procesa errores de la API
+ *    - Si cambias el formato de errores del backend, actualiza aquí
+ *    - Para agregar logging, añádelo en esta función
+ * 
+ * 5. AGREGAR NUEVAS INTERFACES (líneas 60-150):
+ *    - Define interfaces TypeScript para nuevos tipos de datos
+ *    - Ubicación: Al inicio del archivo, después de los imports
+ *    - Ejemplo: interface MiNuevoTipo { campo: string }
+ * 
+ * 6. CONFIGURAR TIMEOUTS (líneas 500-600):
+ *    - fetch() no tiene timeout por defecto
+ *    - Para agregar timeout, usa AbortController
+ *    - Ejemplo: const controller = new AbortController()
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Autenticación: login, register, logout, getCurrentUser
+ * - Usuarios: updateProfile, getBlockedUsers, blockUser, unblockUser
+ * - Publicaciones: getPosts, createPost, likePost, unlikePost
+ * - Comentarios: getComments, createComment, deleteComment
+ * - Eventos: getAgenda, getSavedEvents, inscribirseEvento
+ * - Amistades: getFriendshipStatus, sendFriendshipRequest
+ * - QR: generateQRCode, verifyQRCode, getAttendanceHistory
+ * - Notificaciones: getNotifications, markAsRead
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Backend: Geoplanner-Back/ (carpeta separada)
+ * - Tipos: src/types/index.ts
+ * - Contexto: src/contexts/AuthContext.tsx
+ * 
+ * NOTA: Todos los cambios en la API deben reflejarse en el backend
+ */
+
+// ========================================
+// CONFIGURACIÓN DE LA API DE GEOPLANNER
+// ========================================
+
 // Configuración de la API
 const API_BASE_URL = 'http://localhost:8000'
+
+/**
+ * ========================================
+ * INTERFACES DE TIPOS DE GEOPLANNER
+ * ========================================
+ * 
+ * Definición de interfaces TypeScript para todos
+ * los tipos de datos que maneja GeoPlanner.
+ */
+
+// Interfaces para QR y asistencia
+export interface QRCodeResponse {
+  qr_code_data: string
+  qr_image_base64: string
+  inscription_id: string
+}
+
+export interface QRVerificationRequest {
+  qr_data: string
+  verificador_id: string
+  ubicacion_lat?: number
+  ubicacion_lng?: number
+  notas?: string
+}
+
+export interface QRVerificationResponse {
+  success: boolean
+  message: string
+  user_name?: string
+  event_title?: string
+  verification_id?: string
+}
+
+export interface HistorialAsistenciaResponse {
+  id: string
+  id_inscripcion_usuario: string
+  id_inscripcion_publicacion: string
+  id_verificador: string
+  estado_verificacion: string
+  fecha_verificacion: string
+  ubicacion_verificacion_lat?: number
+  ubicacion_verificacion_lng?: number
+  notas_verificacion?: string
+  nombre_usuario: string
+  nombre_verificador: string
+  titulo_evento: string
+}
+
+export interface EstadisticasAsistencia {
+  total_inscritos: number
+  total_asistieron: number
+  total_no_asistieron: number
+  porcentaje_asistencia: number
+  estadisticas_genero: {
+    masculino: number
+    femenino: number
+    otro: number
+  }
+  estadisticas_por_fecha: Array<{
+    fecha: string
+    inscritos: number
+    asistieron: number
+    porcentaje: number
+  }>
+  estadisticas_por_hora: Array<{
+    hora: string
+    cantidad: number
+    porcentaje: number
+  }>
+}
 
 // Tipos para las respuestas de la API
 export interface User {
@@ -147,6 +282,22 @@ export interface SavedEvent {
   fecha_guardado: string
   publicacion?: Post
 }
+
+/**
+ * ========================================
+ * CLASE PRINCIPAL DE SERVICIOS DE GEOPLANNER
+ * ========================================
+ * 
+ * Esta clase maneja todas las comunicaciones con el backend
+ * de GeoPlanner. Proporciona métodos para todas las operaciones
+ * de la aplicación.
+ * 
+ * CARACTERÍSTICAS:
+ * - Manejo automático de tokens JWT
+ * - Interceptores para errores de autenticación
+ * - Métodos organizados por funcionalidad
+ * - Tipado completo con TypeScript
+ */
 
 // Clase para manejar las llamadas a la API
 class ApiService {
@@ -519,7 +670,81 @@ class ApiService {
     const response = await this.request<any[]>('/users/blocked')
     return response
   }
+
+  // Métodos para QR y asistencia
+  async generateQRCode(eventId: string, userId: string): Promise<QRCodeResponse> {
+    return this.request<QRCodeResponse>(`/qr-attendance/generate-qr/${eventId}/${userId}`, {
+      method: 'POST',
+    })
+  }
+
+  async verifyQRCode(verificationData: QRVerificationRequest): Promise<QRVerificationResponse> {
+    return this.request<QRVerificationResponse>('/qr-attendance/verify-qr', {
+      method: 'POST',
+      body: JSON.stringify(verificationData),
+    })
+  }
+
+  async getAttendanceHistory(eventId: string): Promise<HistorialAsistenciaResponse[]> {
+    return this.request<HistorialAsistenciaResponse[]>(`/qr-attendance/historial/${eventId}`)
+  }
+
+  async getAttendanceStatistics(eventId: string): Promise<EstadisticasAsistencia> {
+    return this.request<EstadisticasAsistencia>(`/qr-attendance/estadisticas/${eventId}`)
+  }
+
+  // Métodos para inscripción en eventos
+  async inscribirseEvento(postId: string): Promise<{message: string, inscripcion_id: string}> {
+    return this.request<{message: string, inscripcion_id: string}>(`/posts/${postId}/inscribirse`, {
+      method: 'POST',
+    })
+  }
+
+  async desinscribirseEvento(postId: string): Promise<{message: string}> {
+    return this.request<{message: string}>(`/posts/${postId}/desinscribirse`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Métodos para solicitudes de amistad
+  async sendFriendshipRequest(toUserId: string): Promise<{mensaje: string, amistad: any}> {
+    return this.request<{mensaje: string, amistad: any}>('/friendship/request', {
+      method: 'POST',
+      body: JSON.stringify({
+        to_user_id: toUserId
+      }),
+    })
+  }
+
+  async acceptFriendshipRequest(friendId: string, userId: string): Promise<{mensaje: string, amistad: any}> {
+    return this.request<{mensaje: string, amistad: any}>(`/friendship/accept/${friendId}?user_id=${userId}`, {
+      method: 'PUT',
+    })
+  }
+
+  async rejectFriendshipRequest(friendId: string, userId: string): Promise<{mensaje: string}> {
+    return this.request<{mensaje: string}>(`/friendship/reject/${friendId}?user_id=${userId}`, {
+      method: 'PUT',
+    })
+  }
+
+  async getFriendshipStatus(userId1: string, userId2: string): Promise<{status: string, isBlockedByMe: boolean, isBlockedByThem: boolean}> {
+    return this.request<{status: string, isBlockedByMe: boolean, isBlockedByThem: boolean}>(`/friendship/status/${userId1}/${userId2}`)
+  }
 }
+
+/**
+ * ========================================
+ * INSTANCIA GLOBAL DEL SERVICIO DE GEOPLANNER
+ * ========================================
+ * 
+ * Se exporta una instancia única del servicio para ser
+ * utilizada en toda la aplicación GeoPlanner.
+ * 
+ * USO:
+ * import { apiService } from '../services/api'
+ * const user = await apiService.getCurrentUser()
+ */
 
 // Exportar una instancia única del servicio
 export const apiService = new ApiService()

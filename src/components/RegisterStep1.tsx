@@ -1,3 +1,66 @@
+/**
+ * ========================================
+ * COMPONENTE REGISTRO PASO 1 DE GEOPLANNER
+ * ========================================
+ * 
+ * Primer paso del proceso de registro de nuevos usuarios
+ * en GeoPlanner. Recopila información personal básica.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. VALIDACIÓN DE EDAD (líneas 50-80):
+ *    - Edad mínima: 16 años (configurable)
+ *    - Cálculo preciso: año, mes y día
+ *    - Para cambiar la edad mínima, modifica la constante
+ *    - Ubicación: const MIN_AGE = 16
+ * 
+ * 2. CAMPOS OBLIGATORIOS (líneas 100-150):
+ *    - nombre, apellido, fecha_nacimiento, genero
+ *    - Para agregar/quitar campos obligatorios, modifica isFormValid
+ *    - Para cambiar validaciones, modifica las funciones de validación
+ * 
+ * 3. ALMACENAMIENTO TEMPORAL (líneas 200-250):
+ *    - sessionStorage: 'registroStep1'
+ *    - Para cambiar el nombre de la clave, modifica aquí
+ *    - Para agregar más datos, añádelos al objeto formData
+ * 
+ * 4. NAVEGACIÓN (líneas 300-350):
+ *    - handleNext: Navega a /registro/paso2
+ *    - Para cambiar la ruta, modifica navigate('/registro/paso2')
+ *    - Para agregar validaciones adicionales, añádelas aquí
+ * 
+ * 5. ESTILOS Y ANIMACIONES (líneas 400-500):
+ *    - CSS: src/components/RegisterStep1.css
+ *    - Para cambiar colores, modifica las variables CSS
+ *    - Para agregar animaciones, usa @keyframes en el CSS
+ * 
+ * 6. MENSAJES DE ERROR (líneas 600-700):
+ *    - Modales de error para validaciones
+ *    - Para cambiar mensajes, modifica los textos
+ *    - Para agregar nuevos tipos de error, añade modales
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Formulario de datos personales (nombre, apellido, fecha, género)
+ * - Validación de edad mínima de 16 años
+ * - Validación de formato de fecha
+ * - Almacenamiento en sessionStorage
+ * - Navegación automática al siguiente paso
+ * - Modales de error para validaciones
+ * 
+ * VALIDACIONES IMPLEMENTADAS:
+ * - Campos obligatorios completos
+ * - Edad mínima de 16 años (cálculo preciso)
+ * - Formato de fecha válido
+ * - Género seleccionado
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/RegisterStep1.css
+ * - Siguiente paso: src/components/RegisterStep2.tsx
+ * - Navegación: src/App.tsx (rutas)
+ * 
+ * NOTA: Los datos se almacenan temporalmente hasta completar el registro
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegisterStep1.css';

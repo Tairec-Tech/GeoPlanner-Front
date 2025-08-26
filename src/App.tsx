@@ -1,3 +1,60 @@
+/**
+ * ========================================
+ * COMPONENTE PRINCIPAL DE GEOPLANNER
+ * ========================================
+ * 
+ * Este es el componente raíz de la aplicación GeoPlanner.
+ * Aquí se configura toda la estructura de la aplicación:
+ * - Providers de contexto (AuthContext)
+ * - Enrutamiento con React Router
+ * - Configuración de rutas principales
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. AGREGAR NUEVAS RUTAS (líneas 80-120):
+ *    - Añade nuevas rutas en la función AppRoutes()
+ *    - Estructura: <Route path="/ruta" element={<Componente />} />
+ *    - Para rutas protegidas, usa <ProtectedRoute>
+ *    - Para rutas públicas, usa directamente el componente
+ * 
+ * 2. AGREGAR NUEVOS PROVIDERS (líneas 130-140):
+ *    - Si necesitas contextos globales, agrégalos aquí
+ *    - Ejemplo: <ThemeProvider>, <ReduxProvider>
+ *    - Estructura: <Provider><Router><AppRoutes /></Router></Provider>
+ * 
+ * 3. IMPORTAR NUEVOS COMPONENTES (líneas 2-9):
+ *    - Añade imports para nuevos componentes de página
+ *    - Ubicación: src/components/NombreComponente.tsx
+ *    - Ejemplo: import MiPagina from './components/MiPagina'
+ * 
+ * 4. CONFIGURAR RUTAS PROTEGIDAS (líneas 15-35):
+ *    - ProtectedRoute asegura autenticación
+ *    - Si cambias la lógica de autenticación, modifica aquí
+ *    - Ubicación del contexto: src/contexts/AuthContext.tsx
+ * 
+ * 5. CONFIGURAR REDIRECCIONES (líneas 110-120):
+ *    - <Route path="*" element={<Navigate to="/" replace />}
+ *    - Cambia "/" por la ruta por defecto que desees
+ *    - replace evita que se guarde en el historial
+ * 
+ * ESTRUCTURA DE RUTAS ACTUAL:
+ * - /: LandingPage (página de inicio)
+ * - /login: LoginPage (inicio de sesión)
+ * - /registro: RegisterStep1 (registro paso 1)
+ * - /registro/paso2: RegisterStep2 (registro paso 2)
+ * - /registro/paso3: RegisterStep3 (registro paso 3)
+ * - /dashboard: Dashboard (panel principal) - PROTEGIDA
+ * - /perfil: ProfilePage (perfil usuario) - PROTEGIDA
+ * - /usuario/:userId: PublicProfilePage (perfil público) - PROTEGIDA
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Componentes de página: src/components/
+ * - Contexto de autenticación: src/contexts/AuthContext.tsx
+ * - Configuración de rutas: Este archivo (líneas 80-120)
+ * 
+ * NOTA: Cualquier cambio en las rutas debe reflejarse en la navegación
+ */
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './components/LandingPage'
 import LoginPage from './components/LoginPage'
@@ -7,6 +64,7 @@ import RegisterStep3 from './components/RegisterStep3'
 import Dashboard from './components/Dashboard'
 import ProfilePage from './components/ProfilePage'
 import PublicProfilePage from './components/PublicProfilePage'
+
 
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -58,6 +116,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+
       <Route path="/login" element={
         <PublicRoute>
           <LoginPage />

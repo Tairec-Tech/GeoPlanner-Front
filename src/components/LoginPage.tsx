@@ -1,3 +1,26 @@
+/**
+ * ========================================
+ * COMPONENTE LOGIN PAGE DE GEOPLANNER
+ * ========================================
+ * 
+ * Página de inicio de sesión para usuarios existentes
+ * de GeoPlanner. Permite autenticarse con email/username
+ * y contraseña.
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * - Formulario de login con validación
+ * - Integración con el sistema de autenticación
+ * - Navegación a registro para nuevos usuarios
+ * - Manejo de errores de autenticación
+ * - Diseño responsivo y accesible
+ * 
+ * IMPORTANTE PARA EL EQUIPO:
+ * - Punto de entrada principal para usuarios existentes
+ * - Debe ser seguro y confiable
+ * - Integra con AuthContext para gestión de estado
+ * - Maneja redirecciones automáticas
+ */
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

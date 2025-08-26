@@ -1,3 +1,27 @@
+/**
+ * ========================================
+ * COMPONENTE PROFILE PAGE DE GEOPLANNER
+ * ========================================
+ * 
+ * Página de perfil del usuario autenticado en GeoPlanner.
+ * Permite ver y editar información personal, gestionar
+ * privacidad y ver publicaciones propias.
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * - Visualización de perfil del usuario
+ * - Edición de información personal
+ * - Gestión de usuarios bloqueados
+ * - Visualización de publicaciones propias
+ * - Configuración de privacidad
+ * - Mapa interactivo para ubicación
+ * 
+ * IMPORTANTE PARA EL EQUIPO:
+ * - Centro de gestión personal del usuario
+ * - Integración con sistema de mapas
+ * - Gestión de privacidad y seguridad
+ * - Interfaz de edición intuitiva
+ */
+
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'

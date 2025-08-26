@@ -1,3 +1,25 @@
+/**
+ * ========================================
+ * COMPONENTE LANDING PAGE DE GEOPLANNER
+ * ========================================
+ * 
+ * Esta es la página de inicio de GeoPlanner que se muestra
+ * a los usuarios que visitan la aplicación por primera vez.
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * - Presentación de la plataforma GeoPlanner
+ * - Animaciones y efectos visuales atractivos
+ * - Navegación a registro e inicio de sesión
+ * - Información sobre las características principales
+ * - Diseño responsivo para todos los dispositivos
+ * 
+ * IMPORTANTE PARA EL EQUIPO:
+ * - Es la primera impresión que tienen los usuarios
+ * - Debe ser atractiva y profesional
+ * - Incluye animaciones CSS personalizadas
+ * - Optimizada para conversión de usuarios
+ */
+
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/img/Logo.png'

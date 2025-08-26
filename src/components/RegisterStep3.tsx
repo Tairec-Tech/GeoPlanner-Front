@@ -1,3 +1,77 @@
+/**
+ * ========================================
+ * COMPONENTE REGISTRO PASO 3 DE GEOPLANNER
+ * ========================================
+ * 
+ * Tercer y último paso del proceso de registro de nuevos usuarios
+ * en GeoPlanner. Recopila información de ubicación y perfil.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. CONFIGURACIÓN DEL MAPA (líneas 50-100):
+ *    - Centro por defecto: [10.654, -71.612] (Maracaibo, Venezuela)
+ *    - Para cambiar el centro, modifica markerPosition
+ *    - Integración con OpenStreetMap para geocodificación
+ *    - Para cambiar el proveedor de mapas, modifica TileLayer
+ * 
+ * 2. CAMPOS OBLIGATORIOS (líneas 150-200):
+ *    - SOLO ubicación es obligatoria (latitud, longitud, ciudad, país)
+ *    - Foto de perfil: Opcional
+ *    - Biografía: Opcional
+ *    - Para cambiar obligatoriedad, modifica isFormValid
+ * 
+ * 3. RECORTE DE IMAGEN (líneas 250-350):
+ *    - Componente: react-cropper
+ *    - Aspect ratio: 1:1 (cuadrado)
+ *    - Para cambiar el aspect ratio, modifica aspectRatio
+ *    - Para cambiar el tamaño máximo, modifica maxSize
+ * 
+ * 4. TEMAS DISPONIBLES (líneas 400-500):
+ *    - default, aurora, noche, oceano, amanecer, pastel, fuego, bosque, lluvia
+ *    - Para agregar nuevos temas, añádelos al objeto temas
+ *    - Estructura: { fondo: "gradient", texto: "color", boton: { fondo, color } }
+ * 
+ * 5. GEOLOCALIZACIÓN (líneas 550-600):
+ *    - Usa navigator.geolocation para ubicación automática
+ *    - Fallback: Coordenadas por defecto
+ *    - Para cambiar el fallback, modifica las coordenadas
+ * 
+ * 6. FINALIZACIÓN DEL REGISTRO (líneas 650-750):
+ *    - Combina datos de los 3 pasos
+ *    - Envía al backend para crear usuario
+ *    - Redirige al dashboard tras éxito
+ *    - Para cambiar la redirección, modifica navigate()
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Selección de ubicación con mapa interactivo (Leaflet)
+ * - Subida y recorte de foto de perfil (react-cropper)
+ * - Configuración de biografía opcional
+ * - Selección de tema preferido
+ * - Geolocalización automática
+ * - Finalización del registro completo
+ * 
+ * VALIDACIONES IMPLEMENTADAS:
+ * - Ubicación obligatoria (latitud, longitud, ciudad, país)
+ * - Foto de perfil opcional (máximo 5MB)
+ * - Biografía opcional (máximo 500 caracteres)
+ * - Tema seleccionado (por defecto: default)
+ * 
+ * INTEGRACIONES:
+ * - Leaflet: Mapas interactivos
+ * - react-cropper: Recorte de imágenes
+ * - OpenStreetMap: Geocodificación inversa
+ * - Geolocation API: Ubicación automática
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/RegisterStep3.css
+ * - Paso anterior: src/components/RegisterStep2.tsx
+ * - API: src/services/api.ts (registro de usuario)
+ * - Mapas: Leaflet (CDN)
+ * - Cropper: react-cropper (npm)
+ * 
+ * NOTA: Este es el paso final del registro, crea el usuario en el backend
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-cropper';

@@ -1,10 +1,88 @@
-import { useEffect, useState, useRef } from 'react'
+/**
+ * ========================================
+ * COMPONENTE DASHBOARD DE GEOPLANNER
+ * ========================================
+ * 
+ * Este es el componente principal de la aplicación GeoPlanner.
+ * Es el panel de control donde los usuarios pueden:
+ * - Ver todas las publicaciones y eventos
+ * - Crear nuevas publicaciones
+ * - Gestionar su perfil
+ * - Ver notificaciones
+ * - Interactuar con otros usuarios
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. AGREGAR NUEVAS FUNCIONALIDADES (líneas 100-200):
+ *    - Añade nuevos estados con useState
+ *    - Ubicación: Después de los estados existentes
+ *    - Ejemplo: const [nuevaFuncion, setNuevaFuncion] = useState(false)
+ * 
+ * 2. CONFIGURAR MAPA (líneas 300-400):
+ *    - mapContainerRef: Referencia al contenedor del mapa
+ *    - mapInstanceRef: Instancia de Leaflet
+ *    - markerRef: Marcador en el mapa
+ *    - Para cambiar el centro del mapa, modifica las coordenadas
+ * 
+ * 3. AGREGAR NUEVOS FILTROS (líneas 500-600):
+ *    - Añade opciones en el array de filtros
+ *    - Estructura: { value: 'valor', label: 'Etiqueta' }
+ *    - Para agregar lógica de filtrado, modifica handleFilterChange
+ * 
+ * 4. CONFIGURAR NOTIFICACIONES (líneas 700-800):
+ *    - showNotifications: Estado para mostrar/ocultar
+ *    - Para agregar nuevos tipos de notificaciones, modifica aquí
+ *    - Integración con el sistema de notificaciones del backend
+ * 
+ * 5. AGREGAR NUEVOS MODALES (líneas 900-1000):
+ *    - Añade estados para nuevos modales
+ *    - Ejemplo: const [showMiModal, setShowMiModal] = useState(false)
+ *    - Para agregar el modal, añádelo en el JSX al final
+ * 
+ * 6. CONFIGURAR VISTA DE MAPA (líneas 1100-1200):
+ *    - viewMode: 'map' | 'classic' controla la vista
+ *    - Para agregar nuevas vistas, añade opciones al selector
+ *    - Integración con Leaflet para mapas interactivos
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Feed de publicaciones con filtros por tipo y ubicación
+ * - Vista de mapa (Leaflet) y vista clásica (cards)
+ * - Sistema de likes y comentarios en tiempo real
+ * - Inscripciones a eventos con códigos QR
+ * - Notificaciones push y en tiempo real
+ * - Gestión de amistades y solicitudes
+ * - Búsqueda y filtrado avanzado
+ * - Modales para crear publicaciones y eventos
+ * 
+ * ESTADOS PRINCIPALES:
+ * - posts: Array de publicaciones del feed
+ * - viewMode: Tipo de vista (map/classic)
+ * - selectedFilter: Filtro activo
+ * - showCreateModal: Modal de crear publicación
+ * - notifications: Array de notificaciones
+ * - mapLoaded: Estado de carga del mapa
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/Dashboard.css
+ * - API: src/services/api.ts
+ * - Contexto: src/contexts/AuthContext.tsx
+ * - Componentes hijos: src/components/ (varios archivos)
+ * 
+ * NOTA: Este es el componente más complejo, maneja múltiples estados
+ */
+
+import React, { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
+// import type { QRVerificationResponse } from '../services/api'
 import type { Post, AgendaItem, SavedEvent } from '../services/api'
 import logo from '../assets/img/LogoMini.png'
 import placeholder from '../assets/img/placeholder.png'
+// import QRScanner from './QRScanner'
+import QRCodeDisplay from './QRCodeDisplay'
+import AttendanceHistory from './AttendanceHistory'
+import FriendshipNotification from './FriendshipNotification'
 
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
@@ -18,98 +96,172 @@ if (typeof window !== 'undefined') {
   });
 }
 
+/**
+ * ========================================
+ * COMPONENTE PRINCIPAL DEL DASHBOARD
+ * ========================================
+ * 
+ * Dashboard es el corazón de GeoPlanner donde los usuarios
+ * pasan la mayor parte del tiempo interactuando con la aplicación.
+ */
+
 const Dashboard = () => {
-  const mapContainerRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<any>(null)
-  const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  // ========================================
+  // REFERENCIAS Y HOOKS PRINCIPALES
+  // ========================================
+  // Estas referencias se usan para interactuar con el mapa de Leaflet
+  const mapContainerRef = useRef<HTMLDivElement>(null)  // Referencia al contenedor del mapa
+  const mapInstanceRef = useRef<any>(null)              // Instancia de Leaflet
+  const navigate = useNavigate()                        // Hook para navegación entre páginas
+  const { user, logout } = useAuth()                    // Hook de autenticación (usuario actual y función de logout)
   
+  // ========================================
+  // ESTADOS DE CONFIGURACIÓN GENERAL
+  // ========================================
   // CORRECCIÓN: Añadido estado de carga para el tema para evitar el parpadeo
   const [isThemeLoading, setIsThemeLoading] = useState(true)
 
-  // Estados
-  const [currentView, setCurrentView] = useState<'map' | 'classic'>('map')
-  const [currentMapStyle, setCurrentMapStyle] = useState('openstreetmap')
-  const [currentTheme, setCurrentTheme] = useState('default')
-  const [filterType, setFilterType] = useState('all')
-  const [isMapLoading, setIsMapLoading] = useState(true)
-  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null)
-  const [userLocationMarker, setUserLocationMarker] = useState<any>(null)
-  const [events, setEvents] = useState<any[]>([])
-  const [eventMarkers, setEventMarkers] = useState<any[]>([])
-  const [routingControl, setRoutingControl] = useState<any>(null)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredEvents, setFilteredEvents] = useState<any[]>([])
-  const [showCreateEventModal, setShowCreateEventModal] = useState(false)
-  const [showAgendaModal, setShowAgendaModal] = useState(false)
-  const [showSavedEventsModal, setShowSavedEventsModal] = useState(false)
+  // ========================================
+  // ESTADOS DE VISTA Y CONFIGURACIÓN
+  // ========================================
+  // Controlan cómo se muestra la información al usuario
+  const [currentView, setCurrentView] = useState<'map' | 'classic'>('map')        // Vista actual: mapa o clásica
+  const [currentMapStyle, setCurrentMapStyle] = useState('openstreetmap')         // Estilo del mapa (openstreetmap, satellite, etc.)
+  const [currentTheme, setCurrentTheme] = useState('default')                     // Tema de color actual
+  const [filterType, setFilterType] = useState('all')                             // Tipo de filtro aplicado
+  const [isMapLoading, setIsMapLoading] = useState(true)                          // Estado de carga del mapa
+  
+  // ========================================
+  // ESTADOS DE UBICACIÓN Y MAPA
+  // ========================================
+  // Manejan la ubicación del usuario y los marcadores en el mapa
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null)  // Coordenadas del usuario
+  const [userLocationMarker, setUserLocationMarker] = useState<any>(null)                   // Marcador de ubicación del usuario
+  const [events, setEvents] = useState<any[]>([])                                           // Lista de eventos
+  const [eventMarkers, setEventMarkers] = useState<any[]>([])                               // Marcadores de eventos en el mapa
+  const [routingControl, setRoutingControl] = useState<any>(null)                           // Control de rutas en el mapa
+  const [searchTerm, setSearchTerm] = useState('')                                          // Término de búsqueda
+  const [filteredEvents, setFilteredEvents] = useState<any[]>([])                           // Eventos filtrados (no usado actualmente)
+  
+  // ========================================
+  // ESTADOS DE MODALES PRINCIPALES
+  // ========================================
+  // Controlan la visibilidad de los modales principales
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false)         // Modal para crear eventos
+  const [showAgendaModal, setShowAgendaModal] = useState(false)                   // Modal de agenda
+  const [showSavedEventsModal, setShowSavedEventsModal] = useState(false)         // Modal de eventos guardados
+  // ========================================
+  // ESTADOS DE FORMULARIOS DE EVENTOS
+  // ========================================
+  // Datos para crear nuevos eventos y elementos de agenda
   const [newEvent, setNewEvent] = useState({
-    title: '',
-    description: '',
-    type: 'Social',
-    date: '',
-    time: '',
-    maxAttendees: 10
+    title: '',              // Título del evento
+    description: '',        // Descripción del evento
+    type: 'Social',         // Tipo de evento (Social, Deportivo, Cultural, etc.)
+    date: '',               // Fecha del evento
+    time: '',               // Hora del evento
+    maxAttendees: 10        // Número máximo de asistentes
   })
   const [newAgendaItem, setNewAgendaItem] = useState({
-    title: '',
-    description: '',
-    date: '',
-    location: ''
+    title: '',              // Título del elemento de agenda
+    description: '',        // Descripción del elemento
+    date: '',               // Fecha del elemento
+    location: ''            // Ubicación del elemento
   })
-  const [posts, setPosts] = useState<Post[]>([])
-  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([])
-  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([])
-  const [showCalendarView, setShowCalendarView] = useState(false)
-  const [agendaSearchTerm, setAgendaSearchTerm] = useState('')
-  const [agendaFilter, setAgendaFilter] = useState('all') // all, upcoming, past, today
-  const [notifications, setNotifications] = useState<any[]>([])
-  const [showNotifications, setShowNotifications] = useState(false)
+  // ========================================
+  // ESTADOS DE DATOS PRINCIPALES
+  // ========================================
+  // Almacenan los datos principales de la aplicación
+  const [posts, setPosts] = useState<Post[]>([])                    // Lista de publicaciones del feed
+  const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([])  // Elementos de la agenda personal
+  const [savedEvents, setSavedEvents] = useState<SavedEvent[]>([])  // Eventos guardados por el usuario
+  const [showCalendarView, setShowCalendarView] = useState(false)   // Mostrar vista de calendario
+  const [agendaSearchTerm, setAgendaSearchTerm] = useState('')      // Término de búsqueda en agenda
+  const [agendaFilter, setAgendaFilter] = useState('all')           // Filtro de agenda (all, upcoming, past, today)
+  const [notifications, setNotifications] = useState<any[]>([])     // Lista de notificaciones
+  const [showNotifications, setShowNotifications] = useState(false) // Mostrar panel de notificaciones
 
-  const [isLoadingData, setIsLoadingData] = useState(false)
+  // ========================================
+  // ESTADOS DE CARGA Y PROCESAMIENTO
+  // ========================================
+  const [isLoadingData, setIsLoadingData] = useState(false)  // Estado de carga de datos
   
-  // Estados para creación de publicaciones
-  const [showCreatePostModal, setShowCreatePostModal] = useState(false)
-  const [showLocationModal, setShowLocationModal] = useState(false)
-  const [routeType, setRouteType] = useState<'simple' | 'multiple'>('simple')
-  const [selectedMarkers, setSelectedMarkers] = useState<any[]>([])
-  const [locationDisplay, setLocationDisplay] = useState('No se ha seleccionado ninguna ubicación.')
-  const [acceptTerms, setAcceptTerms] = useState(false)
-  const [showTerms, setShowTerms] = useState(false)
-  const [additionalTerms, setAdditionalTerms] = useState('')
+  // ========================================
+  // ESTADOS PARA CREACIÓN DE PUBLICACIONES
+  // ========================================
+  // Controlan el flujo de creación de nuevas publicaciones
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false)  // Modal principal de crear publicación
+  const [showLocationModal, setShowLocationModal] = useState(false)      // Modal para seleccionar ubicación
+  const [routeType, setRouteType] = useState<'simple' | 'multiple'>('simple')  // Tipo de ruta (simple o múltiple)
+  const [selectedMarkers, setSelectedMarkers] = useState<any[]>([])      // Marcadores seleccionados en el mapa
+  const [locationDisplay, setLocationDisplay] = useState('No se ha seleccionado ninguna ubicación.')  // Texto de ubicación
+  const [acceptTerms, setAcceptTerms] = useState(false)                  // Aceptación de términos y condiciones
+  const [showTerms, setShowTerms] = useState(false)                      // Mostrar modal de términos
+  const [additionalTerms, setAdditionalTerms] = useState('')             // Términos adicionales personalizados
   
-  // Estados para nueva publicación
+  // ========================================
+  // ESTADO DEL FORMULARIO DE NUEVA PUBLICACIÓN
+  // ========================================
+  // Datos del formulario para crear una nueva publicación
   const [newPost, setNewPost] = useState({
-    text: '',
-    type: 'Social',
-    eventDate: '',
-    privacy: 'publica',
-    mediaFile: null as File | null
+    text: '',                    // Texto de la publicación
+    type: 'Social',              // Tipo de publicación (Social, Deportivo, Cultural, etc.)
+    eventDate: '',               // Fecha del evento (si aplica)
+    privacy: 'publica',          // Privacidad (publica, amigos, privada)
+    mediaFile: null as File | null  // Archivo multimedia adjunto
   })
   
-  // Estados para funcionalidades del header
-  const [addressSearchTerm, setAddressSearchTerm] = useState('')
-  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
-  const [searchMarker, setSearchMarker] = useState<any>(null)
+  // ========================================
+  // ESTADOS PARA FUNCIONALIDADES DEL HEADER
+  // ========================================
+  // Controlan la búsqueda de direcciones y la navegación
+  const [addressSearchTerm, setAddressSearchTerm] = useState('')        // Término de búsqueda de dirección
+  const [addressSuggestions, setAddressSuggestions] = useState<any[]>([])  // Sugerencias de direcciones
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)  // Mostrar sugerencias
+  const [searchMarker, setSearchMarker] = useState<any>(null)           // Marcador de búsqueda en el mapa
   
-  // Estado para controlar dropdowns abiertos
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  // ========================================
+  // ESTADO PARA CONTROLAR DROPDOWNS
+  // ========================================
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)  // Controla qué dropdown está abierto
   
-  // Configuración de mapas
+  // ========================================
+  // ESTADOS PARA SISTEMA DE QR Y ASISTENCIA
+  // ========================================
+  // Controlan la funcionalidad de códigos QR para eventos
+  // const [showQRScanner, setShowQRScanner] = useState(false)  // Modal del escáner QR (comentado)
+  const [showQRCodeDisplay, setShowQRCodeDisplay] = useState(false)  // Mostrar código QR generado
+  const [showAttendanceHistory, setShowAttendanceHistory] = useState(false)  // Mostrar historial de asistencia
+  const [selectedEventForQR, setSelectedEventForQR] = useState<{id: string, title: string} | null>(null)  // Evento seleccionado para QR
+  const [selectedEventForHistory, setSelectedEventForHistory] = useState<{id: string, title: string} | null>(null)  // Evento para historial
+  
+  // ========================================
+  // ESTADOS PARA NOTIFICACIONES DE AMISTAD
+  // ========================================
+  // Controlan las notificaciones de solicitudes de amistad
+  const [showFriendshipNotification, setShowFriendshipNotification] = useState(false)  // Mostrar modal de notificación
+  const [selectedFriendshipNotification, setSelectedFriendshipNotification] = useState<any>(null)  // Notificación seleccionada
+  
+
+  // const [lastVerificationResult, setLastVerificationResult] = useState<QRVerificationResponse | null>(null)
+  
+  // ========================================
+  // CONFIGURACIÓN DE ESTILOS DE MAPA
+  // ========================================
+  // Define los diferentes estilos de mapa disponibles en la aplicación
   const mapStyles = {
     openstreetmap: {
-      name: 'OpenStreetMap',
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '© OpenStreetMap contributors'
+      name: 'OpenStreetMap',  // Nombre mostrado en la interfaz
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',  // URL de las tiles
+      attribution: '© OpenStreetMap contributors'  // Atribución requerida
     },
     satellite: {
-      name: 'Vista Satelital',
+      name: 'Vista Satelital',  // Vista satelital de Esri
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: '© Esri'
     },
     hybrid_esri: {
-      name: 'Satélite con Calles (Esri)',
+      name: 'Satélite con Calles (Esri)',  // Vista híbrida con calles
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: '© Esri',
     }
@@ -258,31 +410,37 @@ const Dashboard = () => {
     }
   }
 
+  // ========================================
+  // FUNCIÓN PARA CENTRAR MAPA EN DIRECCIÓN
+  // ========================================
+  // Centra el mapa en una ubicación específica y agrega un marcador
   const centerMapOnAddress = (lat: number, lon: number, label: string) => {
-    if (!mapInstanceRef.current) return
+    if (!mapInstanceRef.current) return  // Verificar que el mapa esté inicializado
     
+    // Centrar el mapa en las coordenadas con animación
     mapInstanceRef.current.setView([lat, lon], 16, { animate: true })
     
-    // Remover marcador anterior
+    // Remover marcador anterior si existe
     if (searchMarker) {
       mapInstanceRef.current.removeLayer(searchMarker)
     }
     
-    // Crear nuevo marcador
+    // Crear nuevo marcador personalizado con icono SVG
     if (L) {
       const newMarker = L.marker([lat, lon], {
         icon: L.divIcon({
           html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#007bff" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
-          className: 'search-marker',
-          iconSize: [32, 32],
-          iconAnchor: [16, 32],
-          popupAnchor: [0, -36]
+          className: 'search-marker',  // Clase CSS para estilos
+          iconSize: [32, 32],          // Tamaño del icono
+          iconAnchor: [16, 32],        // Punto de anclaje
+          popupAnchor: [0, -36]        // Posición del popup
         })
       }).addTo(mapInstanceRef.current).bindPopup(`<b>${label}</b>`).openPopup()
       
-      setSearchMarker(newMarker)
+      setSearchMarker(newMarker)  // Guardar referencia al marcador
     }
     
+    // Limpiar interfaz de búsqueda
     setShowAddressSuggestions(false)
     setAddressSearchTerm(label)
   }
@@ -309,43 +467,54 @@ const Dashboard = () => {
     setShowAddressSuggestions(false)
   }
 
+  // ========================================
+  // FUNCIONES DE CONTROL DE DROPDOWNS
+  // ========================================
   // Maneja la apertura y cierre de los menús desplegables
   const handleDropdown = (dropdownName: string) => {
     console.log('handleDropdown llamado con:', dropdownName)
     setOpenDropdown(prev => {
-      const newState = prev === dropdownName ? null : dropdownName
+      const newState = prev === dropdownName ? null : dropdownName  // Toggle del dropdown
       console.log('Estado anterior:', prev, 'Nuevo estado:', newState)
       return newState
     })
   }
 
+  // Cerrar todos los dropdowns abiertos
   const closeAllDropdowns = () => {
     setOpenDropdown(null)
   }
 
-  // Funciones para perfil
+  // ========================================
+  // FUNCIONES DE NAVEGACIÓN Y PERFIL
+  // ========================================
+  // Navegar a la página de perfil del usuario
   const handleProfile = () => {
     navigate('/perfil')
-    closeAllDropdowns();
+    closeAllDropdowns();  // Cerrar dropdowns al navegar
   }
 
+  // Cerrar sesión y redirigir al inicio
   const handleLogout = () => {
-    logout()
-    navigate('/')
-    closeAllDropdowns();
+    logout()  // Función del contexto de autenticación
+    navigate('/')  // Redirigir a la página principal
+    closeAllDropdowns();  // Cerrar dropdowns
   }
 
-  // Función helper para cerrar dropdowns
+  // Función helper para cerrar dropdowns (alias de closeAllDropdowns)
   const closeDropdown = () => {
     setOpenDropdown(null)
   }
 
-  // Cargar Leaflet dinámicamente
+  // ========================================
+  // FUNCIÓN PARA CARGAR LEAFLET DINÁMICAMENTE
+  // ========================================
+  // Carga la librería Leaflet de forma asíncrona para optimizar el rendimiento
   const loadLeaflet = async () => {
-    if (typeof window !== 'undefined' && !L) {
+    if (typeof window !== 'undefined' && !L) {  // Verificar que estemos en el navegador y Leaflet no esté cargado
       try {
-        const leafletModule = await import('leaflet')
-        L = leafletModule.default
+        const leafletModule = await import('leaflet')  // Importación dinámica de Leaflet
+        L = leafletModule.default  // Asignar a la variable global L
         console.log('Leaflet cargado exitosamente')
         return true
       } catch (error) {
@@ -353,34 +522,37 @@ const Dashboard = () => {
         return false
       }
     }
-    return !!L
+    return !!L  // Retornar true si Leaflet ya está cargado
   }
 
-  // Crear ruta entre dos puntos
+  // ========================================
+  // FUNCIÓN PARA CREAR RUTA ENTRE DOS PUNTOS
+  // ========================================
+  // Crea una ruta visual en el mapa entre dos coordenadas usando Leaflet Routing Machine
   const createRoute = (startPoint: [number, number], endPoint: [number, number]) => {
-    if (!mapInstanceRef.current || !L) return
+    if (!mapInstanceRef.current || !L) return  // Verificar que el mapa y Leaflet estén disponibles
 
     try {
-      // Limpiar rutas existentes
+      // Limpiar rutas existentes antes de crear una nueva
       clearRoutes()
 
-      // Crear control de ruta usando L.Routing
+      // Crear control de ruta usando L.Routing con configuración personalizada
       const routingControl = L.Routing.control({
         waypoints: [
-          L.latLng(startPoint[0], startPoint[1]),
-          L.latLng(endPoint[0], endPoint[1])
+          L.latLng(startPoint[0], startPoint[1]),  // Punto de inicio
+          L.latLng(endPoint[0], endPoint[1])       // Punto de destino
         ],
-        routeWhileDragging: true,
-        showAlternatives: false,
-        fitSelectedRoutes: true,
+        routeWhileDragging: true,      // Permitir arrastrar waypoints
+        showAlternatives: false,       // No mostrar rutas alternativas
+        fitSelectedRoutes: true,       // Ajustar vista a la ruta
         lineOptions: {
           styles: [
-            { color: '#007BFF', opacity: 0.8, weight: 6 }
+            { color: '#007BFF', opacity: 0.8, weight: 6 }  // Estilo de la línea de ruta
           ]
         }
       }).addTo(mapInstanceRef.current)
 
-      // Guardar referencia del control de ruta
+      // Guardar referencia del control de ruta para poder eliminarlo después
       setRoutingControl(routingControl)
       console.log('Ruta creada exitosamente')
     } catch (error) {
@@ -388,63 +560,78 @@ const Dashboard = () => {
     }
   }
 
-  // Limpiar rutas
+  // ========================================
+  // FUNCIÓN PARA LIMPIAR RUTAS
+  // ========================================
+  // Elimina todas las rutas visuales del mapa
   const clearRoutes = () => {
-    if (routingControl && mapInstanceRef.current) {
-      mapInstanceRef.current.removeControl(routingControl)
-      setRoutingControl(null)
+    if (routingControl && mapInstanceRef.current) {  // Verificar que exista una ruta y el mapa
+      mapInstanceRef.current.removeControl(routingControl)  // Remover el control de ruta del mapa
+      setRoutingControl(null)  // Limpiar la referencia
     }
   }
 
-  // Crear ruta desde la ubicación del usuario a un evento
+  // ========================================
+  // FUNCIÓN PARA CREAR RUTA A UN EVENTO
+  // ========================================
+  // Crea una ruta desde la ubicación del usuario hasta un evento específico
   const routeToEvent = (eventLat: number, eventLng: number) => {
-    if (userLocation) {
-      createRoute([userLocation.lat, userLocation.lng], [eventLat, eventLng])
+    if (userLocation) {  // Verificar que tengamos la ubicación del usuario
+      createRoute([userLocation.lat, userLocation.lng], [eventLat, eventLng])  // Crear ruta
     } else {
-      alert('No se puede crear la ruta. Ubicación del usuario no disponible.')
+      alert('No se puede crear la ruta. Ubicación del usuario no disponible.')  // Mensaje de error
     }
   }
 
-  // Crear icono personalizado para la ubicación del usuario
+  // ========================================
+  // FUNCIÓN PARA CREAR ICONO DE UBICACIÓN DEL USUARIO
+  // ========================================
+  // Crea un icono personalizado para mostrar la ubicación del usuario en el mapa
   const createUserLocationIcon = (zoomLevel: number) => {
-    if (!L) return null
+    if (!L) return null  // Verificar que Leaflet esté disponible
     
+    // Calcular tamaño del icono basado en el nivel de zoom (entre 20px y 50px)
     const iconSize = Math.max(20, Math.min(50, zoomLevel * 3))
     return L.divIcon({
       html: `<img src="${logo}" style="width: ${iconSize}px; height: ${iconSize}px; border-radius: 50%; border: 3px solid #007BFF; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" alt="Tu ubicación">`,
-      className: 'user-location-marker',
-      iconSize: [iconSize, iconSize],
-      iconAnchor: [iconSize / 2, iconSize / 2]
+      className: 'user-location-marker',  // Clase CSS para estilos adicionales
+      iconSize: [iconSize, iconSize],     // Tamaño del icono
+      iconAnchor: [iconSize / 2, iconSize / 2]  // Punto de anclaje (centro del icono)
     })
   }
 
-  // Obtener ubicación del usuario
+  // ========================================
+  // FUNCIÓN PARA OBTENER UBICACIÓN DEL USUARIO
+  // ========================================
+  // Utiliza la API de geolocalización del navegador para obtener la ubicación actual
   const getUserLocation = () => {
-    if (navigator.geolocation) {
+    if (navigator.geolocation) {  // Verificar que el navegador soporte geolocalización
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          // Éxito: crear objeto de ubicación con coordenadas
           const location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           }
-          setUserLocation(location)
-          addUserLocationToMap(location)
+          setUserLocation(location)  // Guardar ubicación en el estado
+          addUserLocationToMap(location)  // Agregar marcador al mapa
           console.log('Ubicación del usuario obtenida:', location)
         },
         (error) => {
+          // Error: usar ubicación por defecto (Maracaibo, Venezuela)
           console.warn('No se pudo obtener la ubicación del usuario:', error)
-          // Ubicación por defecto (Maracaibo, Venezuela)
           const defaultLocation = { lat: 10.654, lng: -71.612 }
           setUserLocation(defaultLocation)
           addUserLocationToMap(defaultLocation)
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
+          enableHighAccuracy: true,  // Solicitar alta precisión
+          timeout: 10000,            // Timeout de 10 segundos
+          maximumAge: 300000         // Cache de 5 minutos
         }
       )
     } else {
+      // Navegador no soporta geolocalización
       console.warn('Geolocalización no soportada por este navegador')
       const defaultLocation = { lat: 10.654, lng: -71.612 }
       setUserLocation(defaultLocation)
@@ -452,57 +639,69 @@ const Dashboard = () => {
     }
   }
 
-  // Agregar ubicación del usuario al mapa
+  // ========================================
+  // FUNCIÓN PARA AGREGAR UBICACIÓN DEL USUARIO AL MAPA
+  // ========================================
+  // Agrega un marcador personalizado en el mapa para mostrar la ubicación del usuario
   const addUserLocationToMap = (location: {lat: number, lng: number}) => {
-    if (!mapInstanceRef.current || !L || !location) return
+    if (!mapInstanceRef.current || !L || !location) return  // Verificar dependencias
 
-    // Remover marcador anterior si existe
+    // Remover marcador anterior si existe para evitar duplicados
     if (userLocationMarker) {
       mapInstanceRef.current.removeLayer(userLocationMarker)
     }
 
-    const currentZoom = mapInstanceRef.current.getZoom()
-    const icon = createUserLocationIcon(currentZoom)
+    const currentZoom = mapInstanceRef.current.getZoom()  // Obtener nivel de zoom actual
+    const icon = createUserLocationIcon(currentZoom)      // Crear icono personalizado
     
     if (icon) {
+      // Crear y agregar marcador al mapa
       const marker = L.marker([location.lat, location.lng], { icon }).addTo(mapInstanceRef.current)
-      marker.bindPopup('<b>Tu ubicación actual</b><br>¡Aquí estás tú!')
-      setUserLocationMarker(marker)
+      marker.bindPopup('<b>Tu ubicación actual</b><br>¡Aquí estás tú!')  // Agregar popup informativo
+      setUserLocationMarker(marker)  // Guardar referencia del marcador
 
-      // Actualizar icono cuando cambie el zoom
+      // Actualizar icono cuando cambie el zoom para mantener proporciones
       mapInstanceRef.current.on('zoomend', () => {
         if (marker) {
           const newZoom = mapInstanceRef.current.getZoom()
           const newIcon = createUserLocationIcon(newZoom)
           if (newIcon) {
-            marker.setIcon(newIcon)
+            marker.setIcon(newIcon)  // Cambiar icono con nuevo tamaño
           }
         }
       })
     }
   }
 
-  // Centrar mapa en ubicación del usuario
+  // ========================================
+  // FUNCIÓN PARA CENTRAR MAPA EN USUARIO
+  // ========================================
+  // Centra la vista del mapa en la ubicación actual del usuario
   const centerMapOnUser = () => {
-    if (mapInstanceRef.current && userLocation) {
-      mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], mapInstanceRef.current.getZoom(), { animate: true })
+    if (mapInstanceRef.current && userLocation) {  // Verificar que el mapa y la ubicación estén disponibles
+      mapInstanceRef.current.setView([userLocation.lat, userLocation.lng], mapInstanceRef.current.getZoom(), { animate: true })  // Centrar con animación
     } else {
-      alert('Ubicación de usuario no disponible.')
+      alert('Ubicación de usuario no disponible.')  // Mensaje de error si no hay ubicación
     }
   }
 
-  // Crear icono para eventos
+  // ========================================
+  // FUNCIÓN PARA CREAR ICONO DE EVENTOS
+  // ========================================
+  // Crea iconos personalizados para diferentes tipos de eventos en el mapa
   const createEventIcon = (eventType: string) => {
-    if (!L) return null
+    if (!L) return null  // Verificar que Leaflet esté disponible
     
+    // Paleta de colores para diferentes tipos de eventos
     const colors = {
-      'Deporte': '#28a745',
-      'Estudio': '#007bff',
-      'Social': '#ffc107',
-      'Cultural': '#dc3545',
-      'Otro': '#6c757d'
+      'Deporte': '#28a745',    // Verde para deportes
+      'Estudio': '#007bff',    // Azul para estudio
+      'Social': '#ffc107',     // Amarillo para eventos sociales
+      'Cultural': '#dc3545',   // Rojo para eventos culturales
+      'Otro': '#6c757d'        // Gris para otros tipos
     }
     
+    // Obtener color del tipo de evento o usar color por defecto
     const color = colors[eventType as keyof typeof colors] || colors.Otro
     
     return L.divIcon({
@@ -519,31 +718,34 @@ const Dashboard = () => {
         font-weight: bold; 
         font-size: 12px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-      ">${eventType.charAt(0)}</div>`,
-      className: 'event-marker',
-      iconSize: [30, 30],
-      iconAnchor: [15, 15]
+      ">${eventType.charAt(0)}</div>`,  // Mostrar primera letra del tipo
+      className: 'event-marker',        // Clase CSS para estilos adicionales
+      iconSize: [30, 30],              // Tamaño del icono
+      iconAnchor: [15, 15]             // Punto de anclaje (centro)
     })
   }
 
-  // Agregar eventos al mapa
+  // ========================================
+  // FUNCIÓN PARA AGREGAR EVENTOS AL MAPA
+  // ========================================
+  // Agrega marcadores de eventos al mapa con popups informativos
   const addEventsToMap = (eventsToShow: any[] = []) => {
     console.log('🗺️ addEventsToMap llamado con:', eventsToShow.length, 'eventos')
     console.log('🗺️ mapInstanceRef.current existe:', !!mapInstanceRef.current)
     console.log('🗺️ L existe:', !!L)
     
-    if (!mapInstanceRef.current || !L) {
+    if (!mapInstanceRef.current || !L) {  // Verificar que el mapa y Leaflet estén disponibles
       console.log('❌ No se puede agregar eventos: mapa o L no disponible')
       return
     }
 
-    // Limpiar marcadores existentes
+    // Limpiar marcadores existentes para evitar duplicados
     console.log('🗺️ Limpiando', eventMarkers.length, 'marcadores existentes')
     eventMarkers.forEach(marker => {
       mapInstanceRef.current.removeLayer(marker)
     })
 
-    const newMarkers: any[] = []
+    const newMarkers: any[] = []  // Array para almacenar nuevos marcadores
 
     // Usar eventos filtrados si no se proporcionan eventos específicos
     const eventsToDisplay = eventsToShow.length > 0 ? eventsToShow : filterEvents()
@@ -588,83 +790,95 @@ const Dashboard = () => {
     setEventMarkers(newMarkers)
   }
 
-  // Filtrar eventos por búsqueda y tipo
+  // ========================================
+  // FUNCIÓN PARA FILTRAR EVENTOS
+  // ========================================
+  // Filtra los eventos por tipo y término de búsqueda
   const filterEvents = () => {
     console.log('🔍 filterEvents llamado')
     console.log('🔍 events.length:', events.length)
     console.log('🔍 filterType:', filterType)
     console.log('🔍 searchTerm:', searchTerm)
     
-    let filtered = events
+    let filtered = events  // Comenzar con todos los eventos
 
-    // Filtrar por tipo
+    // Filtrar por tipo de evento (si no es 'all')
     if (filterType !== 'all') {
       filtered = filtered.filter(event => event.type === filterType)
       console.log('🔍 Después de filtrar por tipo:', filtered.length)
     }
 
-    // Filtrar por término de búsqueda
+    // Filtrar por término de búsqueda (título, descripción, organizador, tipo)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter(event => 
-        event.title.toLowerCase().includes(term) ||
-        event.description.toLowerCase().includes(term) ||
-        event.organizer.toLowerCase().includes(term) ||
-        event.type.toLowerCase().includes(term)
+        event.title.toLowerCase().includes(term) ||      // Buscar en título
+        event.description.toLowerCase().includes(term) || // Buscar en descripción
+        event.organizer.toLowerCase().includes(term) ||   // Buscar en organizador
+        event.type.toLowerCase().includes(term)           // Buscar en tipo
       )
       console.log('🔍 Después de filtrar por búsqueda:', filtered.length)
     }
 
     console.log('🔍 Eventos filtrados finales:', filtered.length)
-    setFilteredEvents(filtered)
-    return filtered
+    setFilteredEvents(filtered)  // Actualizar estado con eventos filtrados
+    return filtered  // Retornar eventos filtrados
   }
 
-  // Manejar búsqueda
+  // ========================================
+  // FUNCIÓN PARA MANEJAR BÚSQUEDA
+  // ========================================
+  // Actualiza el término de búsqueda para filtrar eventos
   const handleSearch = (term: string) => {
-    setSearchTerm(term)
+    setSearchTerm(term)  // Actualizar estado de búsqueda
   }
 
-  // Función para actualizar tema de modales
+  // ========================================
+  // FUNCIÓN PARA ACTUALIZAR TEMA DE MODALES
+  // ========================================
+  // Aplica el tema actual a todos los modales de la aplicación
   const updateModalTheme = () => {
-    const modals = document.querySelectorAll('.modal-box')
+    const modals = document.querySelectorAll('.modal-box')  // Seleccionar todos los modales
     modals.forEach(modal => {
-      if (modal instanceof HTMLElement) {
-        modal.setAttribute('data-theme', currentTheme)
+      if (modal instanceof HTMLElement) {  // Verificar que sea un elemento HTML
+        modal.setAttribute('data-theme', currentTheme)  // Aplicar tema actual
       }
     })
   }
 
-  // Manejar creación de eventos
+  // ========================================
+  // FUNCIÓN PARA MANEJAR CREACIÓN DE EVENTOS
+  // ========================================
+  // Crea un nuevo evento y lo publica en el backend
   const handleCreateEvent = async () => {
-    if (!userLocation) {
+    if (!userLocation) {  // Verificar que tengamos la ubicación del usuario
       alert('No se puede crear el evento. Ubicación del usuario no disponible.')
       return
     }
 
-    if (!newEvent.title || !newEvent.description || !newEvent.date || !newEvent.time) {
+    if (!newEvent.title || !newEvent.description || !newEvent.date || !newEvent.time) {  // Validar campos obligatorios
       alert('Por favor completa todos los campos obligatorios.')
       return
     }
 
     try {
-      // Crear publicación en el backend
+      // Preparar datos para crear publicación en el backend
       const postData = {
-        texto: `${newEvent.title}\n\n${newEvent.description}\n\nFecha: ${newEvent.date} a las ${newEvent.time}\nMáximo asistentes: ${newEvent.maxAttendees}`,
-        tipo: newEvent.type,
-        fecha_evento: new Date(`${newEvent.date}T${newEvent.time}`).toISOString(),
-        privacidad: 'publica',
+        texto: `${newEvent.title}\n\n${newEvent.description}\n\nFecha: ${newEvent.date} a las ${newEvent.time}\nMáximo asistentes: ${newEvent.maxAttendees}`,  // Texto descriptivo del evento
+        tipo: newEvent.type,  // Tipo de evento
+        fecha_evento: new Date(`${newEvent.date}T${newEvent.time}`).toISOString(),  // Fecha y hora en formato ISO
+        privacidad: 'publica',  // Privacidad por defecto
         rutas: [
           {
-            latitud: userLocation.lat,
-            longitud: userLocation.lng,
-            etiqueta: 'Ubicación del evento',
-            orden: 0
+            latitud: userLocation.lat,  // Latitud de la ubicación del usuario
+            longitud: userLocation.lng, // Longitud de la ubicación del usuario
+            etiqueta: 'Ubicación del evento',  // Etiqueta descriptiva
+            orden: 0  // Orden de la ruta
           }
         ]
       }
 
-      const newPost = await apiService.createPost(postData)
+      const newPost = await apiService.createPost(postData)  // Crear publicación en el backend
       
       // Recargar datos
       await loadRealData()
@@ -684,47 +898,57 @@ const Dashboard = () => {
       
       // Los eventos se cargarán automáticamente a través del useEffect
       
-      console.log('Evento creado:', newPost)
+      console.log('Evento creado:', newPost)  // Log de confirmación
     } catch (error) {
-      console.error('Error creando evento:', error)
-      alert('Error al crear el evento. Intenta de nuevo.')
+      console.error('Error creando evento:', error)  // Log de error
+      alert('Error al crear el evento. Intenta de nuevo.')  // Mensaje al usuario
     }
   }
 
-  // Manejar cambios en el formulario de nuevo evento
+  // ========================================
+  // FUNCIÓN PARA MANEJAR CAMBIOS EN FORMULARIO DE EVENTO
+  // ========================================
+  // Actualiza un campo específico del formulario de nuevo evento
   const handleNewEventChange = (field: string, value: string | number) => {
     setNewEvent(prev => ({
-      ...prev,
-      [field]: value
+      ...prev,  // Mantener valores anteriores
+      [field]: value  // Actualizar solo el campo específico
     }))
   }
 
-  // Funciones para manejar la agenda
+  // ========================================
+  // FUNCIONES PARA MANEJAR LA AGENDA
+  // ========================================
+  // Actualiza un campo específico del formulario de nueva actividad de agenda
   const handleNewAgendaItemChange = (field: string, value: string) => {
     setNewAgendaItem(prev => ({
-      ...prev,
-      [field]: value
+      ...prev,  // Mantener valores anteriores
+      [field]: value  // Actualizar solo el campo específico
     }))
   }
 
+  // ========================================
+  // FUNCIÓN PARA CREAR NUEVA ACTIVIDAD DE AGENDA
+  // ========================================
+  // Crea una nueva actividad en la agenda del usuario
   const handleCreateAgendaItem = async () => {
-    if (!newAgendaItem.title || !newAgendaItem.date) {
+    if (!newAgendaItem.title || !newAgendaItem.date) {  // Validar campos obligatorios
       alert('El título y la fecha son obligatorios')
       return
     }
 
     try {
-      // Crear actividad en el backend
+      // Crear actividad en el backend usando la API
       const agendaItem = await apiService.createAgendaItem({
-        titulo: newAgendaItem.title,
-        descripcion: newAgendaItem.description,
-        fecha_actividad: newAgendaItem.date
+        titulo: newAgendaItem.title,           // Título de la actividad
+        descripcion: newAgendaItem.description, // Descripción opcional
+        fecha_actividad: newAgendaItem.date     // Fecha de la actividad
       })
 
-      // Actualizar estado
+      // Actualizar estado local agregando la nueva actividad
       setAgendaItems(prev => [...prev, agendaItem])
       
-      // Limpiar formulario
+      // Limpiar formulario para nueva entrada
       setNewAgendaItem({
         title: '',
         description: '',
@@ -732,128 +956,161 @@ const Dashboard = () => {
         location: ''
       })
 
-      alert('Actividad agregada a tu agenda')
+      alert('Actividad agregada a tu agenda')  // Confirmación al usuario
     } catch (error) {
-      console.error('Error creando actividad:', error)
-      alert('Error al crear la actividad')
+      console.error('Error creando actividad:', error)  // Log de error
+      alert('Error al crear la actividad')  // Mensaje de error al usuario
     }
   }
 
+  // ========================================
+  // FUNCIÓN PARA ELIMINAR ACTIVIDAD DE AGENDA
+  // ========================================
+  // Elimina una actividad específica de la agenda del usuario
   const handleDeleteAgendaItem = async (itemId: string) => {
-    if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+    if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {  // Confirmación del usuario
       try {
-        await apiService.deleteAgendaItem(itemId)
-        // Actualizar estado
+        await apiService.deleteAgendaItem(itemId)  // Eliminar del backend
+        // Actualizar estado local removiendo la actividad
         setAgendaItems(prev => prev.filter(item => item.id !== itemId))
       } catch (error) {
-        console.error('Error eliminando actividad:', error)
-        alert('Error al eliminar la actividad')
+        console.error('Error eliminando actividad:', error)  // Log de error
+        alert('Error al eliminar la actividad')  // Mensaje de error al usuario
       }
     }
   }
 
+  // ========================================
+  // FUNCIÓN PARA GUARDAR/QUITAR EVENTO
+  // ========================================
+  // Alterna el estado de guardado de un evento (guardar o quitar de guardados)
   const handleSaveEvent = async (eventId: string) => {
     try {
-      const isCurrentlySaved = savedEvents.some(event => event.id_publicacion === eventId)
+      const isCurrentlySaved = savedEvents.some(event => event.id_publicacion === eventId)  // Verificar si ya está guardado
       
       if (isCurrentlySaved) {
-        // Remover de guardados
-        await apiService.unsaveEvent(eventId)
-        setSavedEvents(prev => prev.filter(event => event.id_publicacion !== eventId))
+        // Remover de guardados si ya está guardado
+        await apiService.unsaveEvent(eventId)  // Quitar del backend
+        setSavedEvents(prev => prev.filter(event => event.id_publicacion !== eventId))  // Remover del estado local
       } else {
-        // Agregar a guardados
-        const savedEvent = await apiService.saveEvent(eventId)
-        setSavedEvents(prev => [...prev, savedEvent])
+        // Agregar a guardados si no está guardado
+        const savedEvent = await apiService.saveEvent(eventId)  // Guardar en el backend
+        setSavedEvents(prev => [...prev, savedEvent])  // Agregar al estado local
       }
     } catch (error) {
-      console.error('Error guardando/quitando evento:', error)
-      alert('Error al guardar/quitar el evento')
+      console.error('Error guardando/quitando evento:', error)  // Log de error
+      alert('Error al guardar/quitar el evento')  // Mensaje de error al usuario
     }
   }
 
-  // Funciones para likes
+  // ========================================
+  // FUNCIÓN PARA MANEJAR LIKES
+  // ========================================
+  // Alterna el estado de like de una publicación (dar o quitar like)
   const handleLike = async (postId: string) => {
     try {
-      const post = posts.find(p => p.id === postId)
-      if (!post) return
+      const post = posts.find(p => p.id === postId)  // Buscar la publicación
+      if (!post) return  // Si no existe la publicación, salir
 
-      if (post.likers.includes(user?.id || '')) {
-        // Quitar like
-        await apiService.unlikePost(postId)
+      if (post.likers.includes(user?.id || '')) {  // Verificar si el usuario ya dio like
+        // Quitar like si ya lo había dado
+        await apiService.unlikePost(postId)  // Remover like del backend
         console.log('✅ Like removido')
       } else {
-        // Dar like
-        await apiService.likePost(postId)
+        // Dar like si no lo había dado
+        await apiService.likePost(postId)  // Agregar like al backend
         console.log('✅ Like agregado')
       }
       
-      // Recargar posts para actualizar likes
+      // Recargar posts para actualizar la interfaz con los nuevos likes
       await loadRealData()
     } catch (error) {
-      console.error('❌ Error manejando like:', error)
+      console.error('❌ Error manejando like:', error)  // Log de error
     }
   }
 
-  // Funciones para comentarios
-  const [commentTexts, setCommentTexts] = useState<{[key: string]: string}>({})
-  const [showComments, setShowComments] = useState<{[key: string]: boolean}>({})
-  const [replyToComment, setReplyToComment] = useState<string | null>(null)
-  const [userNotifications, setUserNotifications] = useState<import('../services/api').Notification[]>([])
-  const [unreadNotifications, setUnreadNotifications] = useState(0)
+  // ========================================
+  // ESTADOS PARA SISTEMA DE COMENTARIOS Y NOTIFICACIONES
+  // ========================================
+  // Estados para manejar comentarios y respuestas
+  const [commentTexts, setCommentTexts] = useState<{[key: string]: string}>({})  // Textos de comentarios por post
+  const [showComments, setShowComments] = useState<{[key: string]: boolean}>({})  // Mostrar/ocultar comentarios por post
+  const [replyToComment, setReplyToComment] = useState<string | null>(null)  // ID del comentario al que se está respondiendo
+  
+  // Estados para notificaciones del usuario
+  const [userNotifications, setUserNotifications] = useState<import('../services/api').Notification[]>([])  // Lista de notificaciones
+  const [unreadNotifications, setUnreadNotifications] = useState(0)  // Contador de notificaciones no leídas
 
+  // ========================================
+  // FUNCIÓN PARA AGREGAR COMENTARIOS
+  // ========================================
+  // Agrega un comentario nuevo o una respuesta a un comentario existente
   const handleAddComment = async (postId: string, isReply = false) => {
     let texto: string
     if (isReply && replyToComment) {
+      // Obtener texto de respuesta específico
       texto = commentTexts[`${postId}-reply-${replyToComment}`]?.trim()
     } else {
+      // Obtener texto de comentario normal
       texto = commentTexts[postId]?.trim()
     }
     
-    if (!texto) return
+    if (!texto) return  // No hacer nada si no hay texto
 
     try {
+      // Agregar comentario al backend (puede ser respuesta si isReply es true)
       const newComment = await apiService.addComment(postId, texto, isReply && replyToComment ? replyToComment : undefined)
       console.log('✅ Comentario agregado:', newComment)
       
       // Limpiar input y recargar posts
       if (isReply && replyToComment) {
+        // Limpiar campo de respuesta específico
         setCommentTexts(prev => ({ ...prev, [`${postId}-reply-${replyToComment}`]: '' }))
       } else {
+        // Limpiar campo de comentario normal
         setCommentTexts(prev => ({ ...prev, [postId]: '' }))
       }
-      setReplyToComment(null)
-      await loadRealData()
+      setReplyToComment(null)  // Resetear estado de respuesta
+      await loadRealData()  // Recargar datos para mostrar el nuevo comentario
     } catch (error) {
-      console.error('❌ Error agregando comentario:', error)
+      console.error('❌ Error agregando comentario:', error)  // Log de error
     }
   }
 
+  // ========================================
+  // FUNCIONES PARA MANEJAR RESPUESTAS A COMENTARIOS
+  // ========================================
+  // Establece el comentario al que se va a responder
   const handleReplyToComment = (commentId: string) => {
-    setReplyToComment(commentId)
+    setReplyToComment(commentId)  // Guardar ID del comentario padre
   }
 
+  // Cancela la respuesta a un comentario
   const cancelReply = () => {
-    setReplyToComment(null)
+    setReplyToComment(null)  // Limpiar estado de respuesta
   }
 
-  // Función para renderizar texto con menciones como links
+  // ========================================
+  // FUNCIÓN PARA RENDERIZAR TEXTO CON MENCIONES
+  // ========================================
+  // Convierte menciones (@username) en enlaces clickeables
   const renderTextWithMentions = (text: string) => {
-    if (!text) return ''
+    if (!text) return ''  // Retornar vacío si no hay texto
     
-    // Buscar menciones en el texto (@username)
+    // Buscar menciones en el texto usando regex (@username)
     const mentionRegex = /@(\w+)/g
-    const parts = text.split(mentionRegex)
+    const parts = text.split(mentionRegex)  // Dividir texto en partes
     
     return parts.map((part, index) => {
-      if (index % 2 === 1) {
-        // Es un username (índice impar)
+      if (index % 2 === 1) {  // Los índices impares son usernames
+        // Es un username (índice impar) - crear enlace clickeable
         return (
           <a
             key={index}
-            href={`/perfil/${part}`}
+            href={`/perfil/${part}`}  // Enlace al perfil del usuario
             className="text-blue-600 hover:text-blue-800 underline cursor-pointer"
             onClick={(e) => {
-              e.preventDefault()
+              e.preventDefault()  // Prevenir navegación por defecto
               // Aquí puedes navegar al perfil del usuario
               console.log(`Navegar al perfil de @${part}`)
             }}
@@ -862,96 +1119,115 @@ const Dashboard = () => {
           </a>
         )
       }
-      return part
+      return part  // Retornar texto normal (no es mención)
     })
   }
 
+  // ========================================
+  // FUNCIÓN PARA ELIMINAR COMENTARIOS
+  // ========================================
+  // Elimina un comentario específico (solo el autor puede eliminarlo)
   const handleDeleteComment = async (commentId: string, authorId: string) => {
     try {
-      await apiService.deleteComment(commentId, authorId)
+      await apiService.deleteComment(commentId, authorId)  // Eliminar del backend
       console.log('✅ Comentario eliminado')
-      await loadRealData()
+      await loadRealData()  // Recargar datos para actualizar interfaz
     } catch (error) {
-      console.error('❌ Error eliminando comentario:', error)
+      console.error('❌ Error eliminando comentario:', error)  // Log de error
     }
   }
 
+  // ========================================
+  // FUNCIÓN PARA MOSTRAR/OCULTAR COMENTARIOS
+  // ========================================
+  // Alterna la visibilidad de los comentarios de una publicación
   const toggleComments = (postId: string) => {
-    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }))
+    setShowComments(prev => ({ ...prev, [postId]: !prev[postId] }))  // Toggle del estado
   }
 
-  // Cargar datos guardados al inicializar
+  // ========================================
+  // FUNCIÓN PARA CARGAR DATOS GUARDADOS
+  // ========================================
+  // Carga la agenda y eventos guardados del usuario desde el backend
   const loadSavedData = async () => {
     try {
-      if (user) {
-        // Cargar agenda desde el backend
+      if (user) {  // Verificar que el usuario esté autenticado
+        // Cargar agenda personal del usuario desde el backend
         const agendaData = await apiService.getAgenda()
-        setAgendaItems(agendaData)
+        setAgendaItems(agendaData)  // Actualizar estado de agenda
 
-        // Cargar eventos guardados desde el backend
+        // Cargar eventos guardados por el usuario desde el backend
         const savedEventsData = await apiService.getSavedEventsWithDetails()
-        setSavedEvents(savedEventsData)
+        setSavedEvents(savedEventsData)  // Actualizar estado de eventos guardados
       }
     } catch (error) {
-      console.error('Error cargando datos guardados:', error)
+      console.error('Error cargando datos guardados:', error)  // Log de error
     }
   }
 
-  // Funciones avanzadas para la agenda
+  // ========================================
+  // FUNCIÓN PARA FILTRAR ELEMENTOS DE AGENDA
+  // ========================================
+  // Filtra y ordena los elementos de la agenda según búsqueda y filtros de tiempo
   const getFilteredAgendaItems = () => {
-    let filtered = agendaItems
+    let filtered = agendaItems  // Comenzar con todos los elementos
 
-    // Filtrar por búsqueda
+    // Filtrar por término de búsqueda (título y descripción)
     if (agendaSearchTerm) {
       filtered = filtered.filter(item => 
-        item.titulo.toLowerCase().includes(agendaSearchTerm.toLowerCase()) ||
-        (item.descripcion && item.descripcion.toLowerCase().includes(agendaSearchTerm.toLowerCase()))
+        item.titulo.toLowerCase().includes(agendaSearchTerm.toLowerCase()) ||  // Buscar en título
+        (item.descripcion && item.descripcion.toLowerCase().includes(agendaSearchTerm.toLowerCase()))  // Buscar en descripción
       )
     }
 
-    // Filtrar por tipo
+    // Filtrar por tipo de tiempo (futuras, pasadas, hoy)
     const now = new Date()
     switch (agendaFilter) {
-      case 'upcoming':
+      case 'upcoming':  // Actividades futuras
         filtered = filtered.filter(item => new Date(item.fecha_actividad) > now)
         break
-      case 'past':
+      case 'past':  // Actividades pasadas
         filtered = filtered.filter(item => new Date(item.fecha_actividad) < now)
         break
-      case 'today':
+      case 'today':  // Actividades de hoy
         const today = new Date()
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())  // Inicio del día
+        const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)  // Fin del día
         filtered = filtered.filter(item => {
           const itemDate = new Date(item.fecha_actividad)
-          return itemDate >= todayStart && itemDate < todayEnd
+          return itemDate >= todayStart && itemDate < todayEnd  // Dentro del rango de hoy
         })
         break
     }
 
+    // Ordenar por fecha de actividad (más antigua primero)
     return filtered.sort((a, b) => new Date(a.fecha_actividad).getTime() - new Date(b.fecha_actividad).getTime())
   }
 
-  // Sistema de notificaciones
+  // ========================================
+  // SISTEMA DE NOTIFICACIONES DE ACTIVIDADES
+  // ========================================
+  // Verifica actividades próximas y genera notificaciones automáticas
   const checkUpcomingActivities = () => {
-    const now = new Date()
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)
+    const now = new Date()  // Fecha y hora actual
+    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)  // Una hora desde ahora
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())  // Inicio del día actual
+    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)  // Inicio del día siguiente
 
+    // Filtrar actividades que están próximas (hoy o mañana)
     const upcomingNotifications = agendaItems.filter(item => {
       const itemDate = new Date(item.fecha_actividad)
-      return itemDate >= now && itemDate <= tomorrow
+      return itemDate >= now && itemDate <= tomorrow  // Actividades en las próximas 24 horas
     }).map(item => ({
-      id: `notif_${item.id}`,
-      type: 'activity',
-      title: `Actividad próxima: ${item.titulo}`,
-      message: `Tu actividad "${item.titulo}" está programada para ${new Date(item.fecha_actividad).toLocaleString()}`,
-      time: new Date(item.fecha_actividad),
-      read: false
+      id: `notif_${item.id}`,  // ID único para la notificación
+      type: 'activity',  // Tipo de notificación
+      title: `Actividad próxima: ${item.titulo}`,  // Título descriptivo
+      message: `Tu actividad "${item.titulo}" está programada para ${new Date(item.fecha_actividad).toLocaleString()}`,  // Mensaje detallado
+      time: new Date(item.fecha_actividad),  // Hora de la actividad
+      read: false  // Estado inicial: no leída
     }))
 
-    setNotifications(upcomingNotifications)
+    setNotifications(upcomingNotifications)  // Actualizar estado de notificaciones
   }
 
   // Exportar agenda
@@ -1283,16 +1559,55 @@ const Dashboard = () => {
 
     const now = new Date()
     const eventDate = new Date(post.fecha_evento)
-    let actionButton = null
+    let actionButtons = []
     
     if (isOwner) {
       if (eventDate > now) {
-        actionButton = <button className="btn btn-sm btn-warning">Ver Inscritos</button>
+        actionButtons.push(
+          <button key="inscritos" className="btn btn-sm btn-warning">Ver Inscritos</button>
+        )
       } else {
-        actionButton = <button className="btn btn-sm btn-success">Verificar Asistentes</button>
+        actionButtons.push(
+          <button 
+            key="scanner" 
+            className="btn btn-sm btn-success"
+                            // onClick={() => handleShowQRScanner(post.id, post.texto)}
+          >
+            📱 Escanear QR
+          </button>
+        )
+        actionButtons.push(
+          <button 
+            key="historial" 
+            className="btn btn-sm btn-info"
+                            onClick={() => handleShowAttendanceHistory(post.id, post.texto)}
+          >
+            📊 Historial
+          </button>
+        )
       }
     } else {
-      actionButton = <button className="btn btn-sm btn-primary">Inscribirse</button>
+      // Verificar si el evento es privado o solo para amigos
+      if (post.privacidad === 'privada' || post.privacidad === 'amigos') {
+        actionButtons.push(
+          <button 
+            key="qr" 
+            className="btn btn-sm btn-primary"
+                            onClick={() => handleShowQRCodeDisplay(post.id, post.texto)}
+          >
+            📱 Mi QR
+          </button>
+        )
+      }
+      actionButtons.push(
+                    <button 
+              key="inscribirse" 
+              className="btn btn-sm btn-primary"
+              onClick={() => handleInscribirse(post.id)}
+            >
+              Inscribirse
+            </button>
+      )
     }
 
     return (
@@ -1395,7 +1710,11 @@ const Dashboard = () => {
             <button className="btn btn-sm btn-outline-info">
               📜 Ver Términos
             </button>
-            {actionButton}
+            {actionButtons.map((button, index) => (
+            <React.Fragment key={index}>
+              {button}
+            </React.Fragment>
+          ))}
           </div>
 
           {/* Sección de comentarios */}
@@ -1638,6 +1957,89 @@ const Dashboard = () => {
     }
     
     initPostMap()
+  }
+
+  // Funciones para sistema de QR y asistencia - Temporalmente deshabilitadas
+  // const handleShowQRScanner = (eventId: string, eventTitle: string) => {
+  //   setSelectedEventForQR({ id: eventId, title: eventTitle })
+  //   setShowQRScanner(true)
+  // }
+
+  const handleShowQRCodeDisplay = (eventId: string, eventTitle: string) => {
+    setSelectedEventForQR({ id: eventId, title: eventTitle })
+    setShowQRCodeDisplay(true)
+  }
+
+  const handleShowAttendanceHistory = (eventId: string, eventTitle: string) => {
+    setSelectedEventForHistory({ id: eventId, title: eventTitle })
+    setShowAttendanceHistory(true)
+  }
+
+  // const handleQRVerificationComplete = (result: QRVerificationResponse) => {
+  //   setLastVerificationResult(result)
+  //   // Mostrar notificación de éxito
+  //   if (result.success) {
+  //     // Aquí podrías mostrar una notificación toast
+  //     console.log('✅ Verificación exitosa:', result.message)
+  //   }
+  // }
+
+  // const handleCloseQRScanner = () => {
+  //   setShowQRScanner(false)
+  //   setSelectedEventForQR(null)
+  // }
+
+  const handleCloseQRCodeDisplay = () => {
+    setShowQRCodeDisplay(false)
+    setSelectedEventForQR(null)
+  }
+
+  const handleCloseAttendanceHistory = () => {
+    setShowAttendanceHistory(false)
+    setSelectedEventForHistory(null)
+  }
+
+  // Funciones para notificaciones de amistad
+  const handleShowFriendshipNotification = (notification: any) => {
+    setSelectedFriendshipNotification(notification)
+    setShowFriendshipNotification(true)
+  }
+
+  const handleCloseFriendshipNotification = () => {
+    setShowFriendshipNotification(false)
+    setSelectedFriendshipNotification(null)
+  }
+
+  const handleFriendshipNotificationUpdate = () => {
+    // Recargar notificaciones
+    loadNotifications()
+  }
+
+  // Funciones para inscripción en eventos
+  const handleInscribirse = async (postId: string) => {
+    try {
+      await apiService.inscribirseEvento(postId)
+      // Recargar las publicaciones para mostrar el estado actualizado
+      loadRealData()
+      // Mostrar notificación de éxito
+      alert('¡Inscripción exitosa!')
+    } catch (error) {
+      console.error('Error al inscribirse:', error)
+      alert('Error al inscribirse en el evento')
+    }
+  }
+
+  const handleDesinscribirse = async (postId: string) => {
+    try {
+      await apiService.desinscribirseEvento(postId)
+      // Recargar las publicaciones para mostrar el estado actualizado
+      loadRealData()
+      // Mostrar notificación de éxito
+      alert('Desinscripción exitosa')
+    } catch (error) {
+      console.error('Error al desinscribirse:', error)
+      alert('Error al desinscribirse del evento')
+    }
   }
 
   // Función para mezclar color con blanco (para dropdowns)
@@ -1945,7 +2347,7 @@ const Dashboard = () => {
         
         // Actualizar data-theme del document.documentElement según el tema del backend
         if (userData.tema_preferido === 'noche') {
-          document.documentElement.setAttribute('data-theme', 'night')
+          document.documentElement.setAttribute('data-theme', 'dracula')
         } else {
           document.documentElement.setAttribute('data-theme', 'light')
         }
@@ -2439,30 +2841,36 @@ const Dashboard = () => {
               </div>
               <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[3000] w-80 p-2 shadow">
                 <li className="menu-title"><span>Notificaciones</span></li>
-                {notifications.length === 0 ? (
+                {userNotifications.length === 0 ? (
                   <li><a className="text-gray-500">No hay notificaciones nuevas</a></li>
                 ) : (
-                  notifications.slice(0, 5).map((notification) => (
+                  userNotifications.slice(0, 5).map((notification) => (
                     <li key={notification.id}>
                       <a onClick={() => {
-                        // Marcar como leída y abrir agenda si es una notificación de actividad
-                        if (notification.type === 'activity') {
+                        // Manejar diferentes tipos de notificaciones
+                        if (notification.tipo === 'solicitud_amistad') {
+                          handleShowFriendshipNotification(notification)
+                        } else if (notification.tipo === 'activity') {
                           setShowAgendaModal(true)
                         }
+                        // Marcar como leída
+                        markNotificationAsRead(notification.id)
                       }}>
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                          📅
+                          {notification.tipo === 'solicitud_amistad' ? '🤝' : 
+                           notification.tipo === 'amistad_aceptada' ? '✅' :
+                           notification.tipo === 'amistad_rechazada' ? '❌' : '📅'}
                         </div>
                         <div className="flex-1">
-                          <div><strong>{notification.title}</strong></div>
-                          <small className="text-gray-500">{notification.message}</small>
+                          <div><strong>{notification.nombre_usuario_origen}</strong></div>
+                          <small className="text-gray-500">{notification.mensaje}</small>
                         </div>
                       </a>
                     </li>
                   ))
                 )}
-                {notifications.length > 5 && (
-                  <li><a className="text-primary">Ver todas las notificaciones ({notifications.length})</a></li>
+                {userNotifications.length > 5 && (
+                  <li><a className="text-primary">Ver todas las notificaciones ({userNotifications.length})</a></li>
                 )}
               </ul>
             </div>
@@ -2532,6 +2940,7 @@ const Dashboard = () => {
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer">🎟️ Mis Inscripciones</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus">👨‍👩‍👧‍👦 Grupos</a></li>
+
               </ul>
             </div>
           </div>
@@ -3373,8 +3782,52 @@ const Dashboard = () => {
           </form>
         </dialog>
       )}
+
+      {/* Componentes de QR y Asistencia */}
+      {/* {showQRScanner && selectedEventForQR && (
+        <QRScanner
+          onVerificationComplete={handleQRVerificationComplete}
+          onClose={handleCloseQRScanner}
+        />
+      )} */}
+
+      {showQRCodeDisplay && selectedEventForQR && (
+        <QRCodeDisplay
+          eventId={selectedEventForQR.id}
+          eventTitle={selectedEventForQR.title}
+          onClose={handleCloseQRCodeDisplay}
+        />
+      )}
+
+      {showAttendanceHistory && selectedEventForHistory && (
+        <AttendanceHistory
+          eventId={selectedEventForHistory.id}
+          eventTitle={selectedEventForHistory.title}
+          onClose={handleCloseAttendanceHistory}
+        />
+      )}
+
+      {/* Notificación de solicitud de amistad */}
+      {showFriendshipNotification && selectedFriendshipNotification && (
+        <FriendshipNotification
+          notification={selectedFriendshipNotification}
+          onClose={handleCloseFriendshipNotification}
+          onUpdate={handleFriendshipNotificationUpdate}
+        />
+      )}
+
+
     </div>
   )
 }
+
+/**
+ * ========================================
+ * EXPORTACIÓN DEL COMPONENTE DASHBOARD
+ * ========================================
+ * 
+ * Se exporta el componente Dashboard para ser utilizado
+ * en el sistema de rutas de GeoPlanner.
+ */
 
 export default Dashboard

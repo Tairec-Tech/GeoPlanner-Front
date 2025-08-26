@@ -1,3 +1,77 @@
+/**
+ * ========================================
+ * COMPONENTE REGISTRO PASO 2 DE GEOPLANNER
+ * ========================================
+ * 
+ * Segundo paso del proceso de registro de nuevos usuarios
+ * en GeoPlanner. Recopila credenciales de acceso.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. VALIDACIÓN DE CONTRASEÑA (líneas 50-100):
+ *    - Longitud mínima: 8 caracteres
+ *    - Requisitos: mayúscula, minúscula, número, símbolo
+ *    - Para cambiar requisitos, modifica checkPasswordStrength
+ *    - Para agregar nuevos criterios, añádelos en la función
+ * 
+ * 2. VERIFICACIÓN DE DISPONIBILIDAD (líneas 150-200):
+ *    - Username: Verifica que no exista en la base de datos
+ *    - Email: Verifica formato y disponibilidad
+ *    - Para cambiar la lógica, modifica checkUsernameAvailability
+ *    - Para agregar más validaciones, añádelas aquí
+ * 
+ * 3. CAMPOS OBLIGATORIOS (líneas 250-300):
+ *    - username, email, password, confirmPassword
+ *    - Para agregar/quitar campos, modifica isFormValid
+ *    - Para cambiar validaciones, modifica las funciones
+ * 
+ * 4. ALMACENAMIENTO TEMPORAL (líneas 350-400):
+ *    - sessionStorage: 'registroStep2'
+ *    - Para cambiar el nombre de la clave, modifica aquí
+ *    - Para agregar más datos, añádelos al objeto formData
+ * 
+ * 5. NAVEGACIÓN (líneas 450-500):
+ *    - handleNext: Navega a /registro/paso3
+ *    - handleBack: Regresa a /registro/paso1
+ *    - Para cambiar rutas, modifica navigate()
+ * 
+ * 6. MENSAJES DE ERROR (líneas 550-650):
+ *    - Modales para username/email duplicados
+ *    - Para cambiar mensajes, modifica los textos
+ *    - Para agregar nuevos tipos de error, añade modales
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Formulario de credenciales (username, email, password)
+ * - Validación de disponibilidad de username y email
+ * - Evaluación de fortaleza de contraseña en tiempo real
+ * - Verificación de formato de email
+ * - Confirmación de contraseña
+ * - Navegación entre pasos
+ * 
+ * VALIDACIONES IMPLEMENTADAS:
+ * - Username único y disponible
+ * - Email válido y único
+ * - Contraseña fuerte (8+ chars, mayúscula, minúscula, número, símbolo)
+ * - Confirmación de contraseña
+ * - Campos obligatorios completos
+ * 
+ * CRITERIOS DE CONTRASEÑA:
+ * - Mínimo 8 caracteres
+ * - Al menos una mayúscula
+ * - Al menos una minúscula
+ * - Al menos un número
+ * - Al menos un símbolo especial
+ * - Evitar patrones comunes (consejo)
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/RegisterStep2.css
+ * - Paso anterior: src/components/RegisterStep1.tsx
+ * - Siguiente paso: src/components/RegisterStep3.tsx
+ * - API: src/services/api.ts (verificación de disponibilidad)
+ * 
+ * NOTA: Las credenciales se validan contra el backend antes de continuar
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegisterStep2.css';
