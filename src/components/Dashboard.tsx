@@ -78,6 +78,7 @@ import { apiService } from '../services/api'
 // import type { QRVerificationResponse } from '../services/api'
 import type { Post, AgendaItem, SavedEvent } from '../services/api'
 import logo from '../assets/img/LogoMini.png'
+import logoNoche from '../assets/img/logo_noche.png'
 import placeholder from '../assets/img/placeholder.png'
 // import QRScanner from './QRScanner'
 import QRCodeDisplay from './QRCodeDisplay'
@@ -337,10 +338,10 @@ const Dashboard = () => {
       btnPrimaryBG: "#1D2B64"
     },
     noche: {
-      headerBG: "linear-gradient(145deg, #141E30, #243B55)",
+      headerBG: "linear-gradient(145deg, #0f172a, #1e293b, #334155, #475569, #64748b)",
       headerText: "white",
       bodyBG: "#0f172a",
-      sidebarBG: "linear-gradient(145deg, #141E30, #243B55)",
+      sidebarBG: "linear-gradient(145deg, #0f172a, #1e293b, #334155, #475569, #64748b)",
       sidebarText: "white",
       cardBG: "#1e293b",
       cardText: "#e2e8f0",
@@ -2202,8 +2203,13 @@ const Dashboard = () => {
         // Aplicar animación aurora solo para el tema aurora
         if (themeName === 'aurora') {
           header.classList.add('aurora-animation')
+          // header.classList.remove('night-header')
+        } else if (themeName === 'noche') {
+          // header.classList.add('night-header')
+          header.classList.remove('aurora-animation')
         } else {
           header.classList.remove('aurora-animation')
+          // header.classList.remove('night-header')
         }
       }
 
@@ -2770,7 +2776,11 @@ const Dashboard = () => {
         <div className="loading-screen">
           <div className="loading-container">
             <div className="logo-drop">
-              <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+              <img 
+                src={currentTheme === 'noche' ? logoNoche : "/src/assets/img/Logo.png"} 
+                alt="Logo GeoPlanner" 
+                className="logo-spin" 
+              />
             </div>
             <p className="loading-text">Cargando dashboard...</p>
           </div>
@@ -2779,7 +2789,11 @@ const Dashboard = () => {
       {/* Header */}
       <header className="flex justify-between items-center text-primary-content p-4 shadow-lg bg-primary">
         <a href="#" className="flex items-center gap-2 text-primary-content no-underline">
-          <img src={logo} alt="Logo" className="w-9 h-9" />
+          <img 
+            src={currentTheme === 'noche' ? logoNoche : logo} 
+            alt="Logo" 
+            className="w-9 h-9" 
+          />
           <strong className="text-xl">GeoPlanner</strong>
         </a>
         
@@ -2825,35 +2839,11 @@ const Dashboard = () => {
         
         <div className="flex items-center gap-3">
           <button 
-            className="btn btn-primary btn-sm"
-            style={{
-              backgroundColor: currentTheme === 'noche' ? '#1e293b' : '#ffffff',
-              color: currentTheme === 'noche' ? '#ffffff' : '#333333',
-              border: `2px solid ${currentTheme === 'noche' ? '#38bdf8' : '#007BFF'}`,
-              fontWeight: 'bold',
-              transition: 'all 0.3s ease',
-              boxShadow: currentTheme === 'noche' 
-                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
-                : '0 2px 4px rgba(0, 123, 255, 0.2)'
-            }}
-            onMouseEnter={(e) => {
-              const isDarkTheme = currentTheme === 'noche';
-              e.currentTarget.style.backgroundColor = isDarkTheme ? '#38bdf8' : '#007BFF';
-              e.currentTarget.style.color = '#ffffff';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = isDarkTheme 
-                ? '0 4px 8px rgba(56, 189, 248, 0.4)' 
-                : '0 4px 8px rgba(0, 123, 255, 0.3)';
-            }}
-            onMouseLeave={(e) => {
-              const isDarkTheme = currentTheme === 'noche';
-              e.currentTarget.style.backgroundColor = isDarkTheme ? '#1e293b' : '#ffffff';
-              e.currentTarget.style.color = isDarkTheme ? '#ffffff' : '#333333';
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = isDarkTheme 
-                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
-                : '0 2px 4px rgba(0, 123, 255, 0.2)';
-            }}
+            className={`btn btn-sm font-bold transition-all duration-300 ${
+              currentTheme === 'noche' 
+                ? 'bg-slate-800 text-white border-2 border-cyan-400 hover:bg-cyan-400 hover:text-white hover:shadow-lg hover:shadow-cyan-400/40 hover:-translate-y-0.5' 
+                : 'bg-white text-gray-800 border-2 border-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5'
+            }`}
             onClick={toggleView}
           >
             {currentView === 'map' ? 'Ver Feed Clásico' : 'Ver Vista de Mapa'}
@@ -4143,24 +4133,106 @@ const Dashboard = () => {
  */
 
 // Estilos para la animación de aurora
-const auroraStyles = `
-  @keyframes auroraWave {
-    0% {
-      background-position: 0% 50%;
+  const auroraStyles = `
+    @keyframes auroraWave {
+      0% {
+        background-position: 0% 50%;
+      }
+      50% {
+        background-position: 100% 50%;
+      }
+      100% {
+        background-position: 0% 50%;
+      }
     }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
 
-  .aurora-animation {
-    background-size: 400% 400% !important;
-    animation: auroraWave 12s ease-in-out infinite;
-  }
-`;
+    .aurora-animation {
+      background-size: 400% 400% !important;
+      animation: auroraWave 12s ease-in-out infinite;
+    }
+
+    /* @keyframes twinkle {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes twinkle2 {
+      0%, 100% { opacity: 0.2; }
+      50% { opacity: 0.8; }
+    }
+
+    @keyframes twinkle3 {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    .night-header {
+      position: relative;
+      overflow: hidden;
+      z-index: auto;
+    }
+
+    .night-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(2px 2px at 20px 30px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 40px 70px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 90px 40px, #67e8f9, transparent),
+        radial-gradient(1px 1px at 130px 80px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 160px 30px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 200px 60px, #67e8f9, transparent),
+        radial-gradient(2px 2px at 240px 20px, #94a3b8, transparent),
+        radial-gradient(1px 1px at 280px 70px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(2px 2px at 320px 40px, #67e8f9, transparent),
+        radial-gradient(1px 1px at 360px 80px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 400px 30px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 440px 60px, #67e8f9, transparent),
+        radial-gradient(2px 2px at 480px 20px, #94a3b8, transparent),
+        radial-gradient(1px 1px at 520px 70px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(2px 2px at 560px 40px, #67e8f9, transparent),
+        radial-gradient(1px 1px at 600px 80px, #94a3b8, transparent);
+      background-repeat: repeat;
+      background-size: 640px 100px;
+      animation: twinkle 4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .night-header::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(1px 1px at 60px 50px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 100px 20px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 140px 90px, #67e8f9, transparent),
+        radial-gradient(2px 2px at 180px 10px, #94a3b8, transparent),
+        radial-gradient(1px 1px at 220px 50px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(2px 2px at 260px 80px, #67e8f9, transparent),
+        radial-gradient(1px 1px at 300px 30px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 340px 60px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 380px 90px, #67e8f9, transparent),
+        radial-gradient(2px 2px at 420px 20px, #94a3b8, transparent),
+        radial-gradient(1px 1px at 460px 50px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(2px 2px at 500px 80px, #67e8f9, transparent),
+        radial-gradient(1px 1px at 540px 30px, #94a3b8, transparent),
+        radial-gradient(2px 2px at 580px 60px, rgba(34, 211, 238, 0.6), transparent),
+        radial-gradient(1px 1px at 620px 90px, #67e8f9, transparent);
+      background-repeat: repeat;
+      background-size: 640px 100px;
+      animation: twinkle2 6s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    } */
+  `;
 
 // Inyectar estilos en el head del documento
 if (typeof document !== 'undefined') {
