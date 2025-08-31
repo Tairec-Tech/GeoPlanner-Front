@@ -213,6 +213,45 @@ export interface SavedEvent {
   publicacion?: Post
 }
 
+// Interfaz para las configuraciones de usuario
+export interface UserSettings {
+  // Notificaciones
+  emailNotifications: boolean
+  pushNotifications: boolean
+  newFriendRequests: boolean
+  eventInvitations: boolean
+  likesAndComments: boolean
+  mentions: boolean
+  nearbyEvents: boolean
+  weeklyDigest: boolean
+  
+  // Privacidad
+  profileVisibility: 'public' | 'friends' | 'private'
+  showLocation: boolean
+  showBirthDate: boolean
+  allowFriendRequests: boolean
+  allowMessages: boolean
+  showOnlineStatus: boolean
+  allowTagging: boolean
+  
+  // Seguridad
+  twoFactorAuth: boolean
+  loginAlerts: boolean
+  deviceManagement: boolean
+  
+  // Contenido
+  language: string
+  timezone: string
+  contentFilter: 'none' | 'moderate' | 'strict'
+  autoPlayVideos: boolean
+  showTrendingContent: boolean
+  
+  // Datos
+  dataUsage: 'standard' | 'reduced'
+  analyticsSharing: boolean
+  personalizedAds: boolean
+}
+
 // Clase para manejar las llamadas a la API
 class ApiService {
   private baseURL: string
@@ -685,6 +724,177 @@ class ApiService {
     return this.request<{mensaje: string}>(`/friendship/reject/${friendId}?user_id=${userId}`, {
       method: 'PUT',
     })
+  }
+
+  // ===== MÉTODOS PARA CONFIGURACIONES DE USUARIO =====
+
+  // Obtener configuraciones del usuario
+  async getUserSettings(): Promise<UserSettings> {
+    return this.request<UserSettings>('/users/settings')
+  }
+
+  // Actualizar configuraciones del usuario
+  async updateUserSettings(settings: Partial<UserSettings>): Promise<{ mensaje: string; configuraciones: UserSettings }> {
+    return this.request<{ mensaje: string; configuraciones: UserSettings }>('/users/settings', {
+      method: 'PUT',
+      body: JSON.stringify(settings),
+    })
+  }
+
+  // Cambiar contraseña
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/users/change-password', {
+      method: 'POST',
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword
+      }),
+    })
+  }
+
+  // Configurar autenticación de dos factores
+  async setupTwoFactor(): Promise<{ 
+    mensaje: string
+    qr_code: string
+    secret_key: string
+    backup_codes: string[]
+  }> {
+    return this.request<{ 
+      mensaje: string
+      qr_code: string
+      secret_key: string
+      backup_codes: string[]
+    }>('/users/setup-2fa', {
+      method: 'POST',
+    })
+  }
+
+  // Verificar código de autenticación de dos factores
+  async verifyTwoFactorCode(code: string): Promise<{ mensaje: string; success: boolean }> {
+    return this.request<{ mensaje: string; success: boolean }>('/users/verify-2fa', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    })
+  }
+
+  // Desactivar autenticación de dos factores
+  async disableTwoFactor(password: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/users/disable-2fa', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    })
+  }
+
+  // Obtener sesiones activas del usuario
+  async getActiveSessions(): Promise<Array<{
+    id: string
+    device_info: string
+    ip_address: string
+    location: string
+    last_activity: string
+    is_current: boolean
+  }>> {
+    return this.request<Array<{
+      id: string
+      device_info: string
+      ip_address: string
+      location: string
+      last_activity: string
+      is_current: boolean
+    }>>('/users/sessions')
+  }
+
+  // Cerrar sesión específica
+  async revokeSession(sessionId: string): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>(`/users/sessions/${sessionId}`, {
+      method: 'DELETE',
+    })
+  }
+
+  // Cerrar todas las sesiones excepto la actual
+  async revokeAllOtherSessions(): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/users/sessions/revoke-others', {
+      method: 'DELETE',
+    })
+  }
+
+  // Descargar datos del usuario
+  async downloadUserData(): Promise<{ mensaje: string; download_url: string; expires_at: string }> {
+    return this.request<{ mensaje: string; download_url: string; expires_at: string }>('/users/download-data', {
+      method: 'POST',
+    })
+  }
+
+  // Eliminar cuenta del usuario
+  async deleteAccount(reason: string, password: string, downloadData: boolean = true): Promise<{ mensaje: string }> {
+    return this.request<{ mensaje: string }>('/users/delete-account', {
+      method: 'DELETE',
+      body: JSON.stringify({
+        reason,
+        password,
+        download_data: downloadData
+      }),
+    })
+  }
+
+  // Obtener historial de actividad del usuario
+  async getUserActivityHistory(limit: number = 50): Promise<Array<{
+    id: string
+    action: string
+    description: string
+    ip_address: string
+    user_agent: string
+    timestamp: string
+  }>> {
+    return this.request<Array<{
+      id: string
+      action: string
+      description: string
+      ip_address: string
+      user_agent: string
+      timestamp: string
+    }>>(`/users/activity-history?limit=${limit}`)
+  }
+
+  // Exportar configuraciones por defecto
+  getDefaultSettings(): UserSettings {
+    return {
+      // Notificaciones
+      emailNotifications: true,
+      pushNotifications: true,
+      newFriendRequests: true,
+      eventInvitations: true,
+      likesAndComments: true,
+      mentions: true,
+      nearbyEvents: false,
+      weeklyDigest: true,
+      
+      // Privacidad
+      profileVisibility: 'public',
+      showLocation: true,
+      showBirthDate: true,
+      allowFriendRequests: true,
+      allowMessages: true,
+      showOnlineStatus: true,
+      allowTagging: true,
+      
+      // Seguridad
+      twoFactorAuth: false,
+      loginAlerts: true,
+      deviceManagement: true,
+      
+      // Contenido
+      language: 'es',
+      timezone: 'America/Caracas',
+      contentFilter: 'moderate',
+      autoPlayVideos: true,
+      showTrendingContent: true,
+      
+      // Datos
+      dataUsage: 'standard',
+      analyticsSharing: true,
+      personalizedAds: false
+    }
   }
 
 }

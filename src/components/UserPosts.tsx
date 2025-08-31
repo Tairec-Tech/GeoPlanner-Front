@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { apiService } from '../services/api'
 import type { Post } from '../services/api'
-import './UserPosts.css'
+import '../styles/UserPosts.css'
 
 interface UserPostsProps {
   userId: string

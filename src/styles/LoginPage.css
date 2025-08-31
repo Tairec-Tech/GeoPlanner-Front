@@ -1,0 +1,296 @@
+.login-page {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  padding-bottom: 80px; /* Espacio para el footer fijo */
+  display: flex;
+  flex-direction: column;
+}
+
+.login-main {
+  flex: 1; /* Permite que el contenido principal ocupe el espacio disponible */
+  display: flex;
+  align-items: center; /* Centra verticalmente el contenedor del login */
+  justify-content: center; /* Centra horizontalmente */
+}
+
+.login-container {
+  background: linear-gradient(145deg, #007bff, #003366);
+  border-radius: 15px;
+  padding: 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeSlideUp 1s ease forwards;
+}
+
+/* Animación de caída */
+.logo-drop {
+  animation: dropIn 1s ease-out;
+  text-align: center;
+}
+
+.logo-spin {
+  width: 90px;
+  margin-bottom: 1rem;
+  animation: spinY 6s linear infinite;
+  transform-origin: center;
+  transform-style: preserve-3d;
+  display: inline-block;
+}
+
+@keyframes dropIn {
+  0% {
+    transform: translateY(-100px) scale(1.2);
+    opacity: 0;
+  }
+  70% {
+    transform: translateY(10px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes spinY {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.btn-custom {
+  background-color: #00bfff !important;
+  color: white !important;
+  border: none !important;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 0 10px #00bfff88;
+  transition: transform 0.2s ease;
+}
+
+.btn-custom:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 20px #00bfffcc;
+}
+
+.btn-custom:disabled {
+  opacity: 0.7;
+  transform: none;
+  box-shadow: 0 0 10px #00bfff88;
+}
+
+.btn-custom::after {
+  content: "";
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+.btn-custom:active::after {
+  top: var(--y);
+  left: var(--x);
+  width: 200px;
+  height: 200px;
+  transform: scale(1);
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.tagline {
+  font-size: 1rem;
+  color: #dce9ff;
+  margin-bottom: 2rem;
+}
+
+.login-container a {
+  color: #a9dcff;
+}
+
+.login-container a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+.footer-bar {
+  background-color: #ffffff;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.08);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1030;
+}
+
+.footer-text {
+  font-size: 1rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.footer-link {
+  font-size: 1rem;
+  color: #555;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* Estilos para los inputs de DaisyUI */
+.login-container .input {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+.login-container .input:focus {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 0 0.2rem rgba(255, 255, 255, 0.25) !important;
+  color: white !important;
+}
+
+.login-container .input::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.login-container .label-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.login-container .input:focus ~ .label .label-text,
+.login-container .input:not(:placeholder-shown) ~ .label .label-text {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Estilos para el alert de error */
+.login-container .alert-error {
+  background-color: rgba(220, 53, 69, 0.2) !important;
+  border: 1px solid rgba(220, 53, 69, 0.3) !important;
+  color: #ffcccc !important;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .login-container {
+    margin: 1rem;
+    padding: 2rem;
+  }
+  
+  .footer-bar .container {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* Estilos para el Modal de Error */
+.modal {
+  z-index: 9999;
+}
+
+.modal-box {
+  animation: modalSlideIn 0.3s ease-out;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Estilos específicos para el contenido del modal */
+.modal-box .text-6xl {
+  animation: iconBounce 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.modal-box .bg-blue-50 {
+  animation: fadeInUp 0.4s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-action {
+  animation: fadeInUp 0.4s ease-out 0.4s both;
+}
+
+/* Hover effects para los botones del modal */
+.modal-action .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Responsive para el modal */
+@media (max-width: 576px) {
+  .modal-box {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .modal-box .text-6xl {
+    font-size: 3rem;
+  }
+  
+  .modal-box .text-lg {
+    font-size: 1.1rem;
+  }
+} 

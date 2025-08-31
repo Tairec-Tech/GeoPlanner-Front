@@ -46,6 +46,11 @@
  * - /dashboard: Dashboard (panel principal) - PROTEGIDA
  * - /perfil: ProfilePage (perfil usuario) - PROTEGIDA
  * - /usuario/:userId: PublicProfilePage (perfil público) - PROTEGIDA
+ * - /about: AboutUs (acerca de nosotros)
+ * - /contact: Contact (contacto)
+ * - /terms: TermsOfService (términos de uso)
+ * - /privacy: PrivacyPolicy (política de privacidad)
+ * - /cookies: CookiePolicy (política de cookies)
  * 
  * UBICACIÓN DE ARCHIVOS:
  * - Componentes de página: src/components/
@@ -56,14 +61,19 @@
  */
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import LandingPage from './components/LandingPage'
-import LoginPage from './components/LoginPage'
-import RegisterStep1 from './components/RegisterStep1'
-import RegisterStep2 from './components/RegisterStep2'
-import RegisterStep3 from './components/RegisterStep3'
-import Dashboard from './components/Dashboard'
-import ProfilePage from './components/ProfilePage'
-import PublicProfilePage from './components/PublicProfilePage'
+import LandingPage from './pages/LandingPage'
+import LoginPage from './pages/LoginPage'
+import RegisterStep1 from './pages/RegisterStep1'
+import RegisterStep2 from './pages/RegisterStep2'
+import RegisterStep3 from './pages/RegisterStep3'
+import Dashboard from './pages/Dashboard'
+import ProfilePage from './pages/ProfilePage'
+import PublicProfilePage from './pages/PublicProfilePage'
+import AboutUs from './pages/AboutUs'
+import Contact from './pages/Contact'
+import TermsOfService from './pages/TermsOfService'
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import CookiePolicy from './pages/CookiePolicy'
 
 
 
@@ -163,6 +173,13 @@ function AppRoutes() {
           <PublicProfilePage />
         </ProtectedRoute>
       } />
+
+      {/* Páginas del Footer */}
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/cookies" element={<CookiePolicy />} />
 
     </Routes>
   )
