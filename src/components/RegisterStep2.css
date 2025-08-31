@@ -15,14 +15,14 @@
 }
 
 .register-container {
-  background: white;
+  background: linear-gradient(145deg, #007bff, #003366);
   padding: 2.5rem;
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  color: #333;
+  color: white;
   position: relative;
   overflow: hidden;
 }
@@ -59,13 +59,24 @@
 
 /* Estilos para inputs */
 .register-container .input {
-  background-color: white !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
   color: #333 !important;
-  border: 1px solid #ddd !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 .register-container .input::placeholder {
   color: #666 !important;
+}
+
+/* Estilos para etiquetas */
+.register-container label {
+  color: white !important;
+  font-weight: 600;
+}
+
+.register-container .form-label {
+  color: white !important;
+  font-weight: 600;
 }
 
 /* Botón personalizado */

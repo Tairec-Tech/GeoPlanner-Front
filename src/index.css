@@ -1,3 +1,53 @@
+/**
+ * ========================================
+ * ESTILOS GLOBALES DE GEOPLANNER
+ * ========================================
+ * 
+ * Este archivo contiene los estilos CSS globales de GeoPlanner.
+ * Aquí se definen las variables CSS, estilos base y utilidades
+ * que se aplican a toda la aplicación.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. IMPORTACIÓN DE TAILWIND (línea 1):
+ *    - @import "tailwindcss" carga el framework
+ *    - Si cambias la configuración, modifica tailwind.config.js
+ *    - Para agregar plugins, añádelos aquí
+ * 
+ * 2. VARIABLES CSS (líneas 4-10):
+ *    - font-synthesis: none - Evita síntesis de fuentes
+ *    - text-rendering: optimizeLegibility - Mejora legibilidad
+ *    - -webkit-font-smoothing: antialiased - Suaviza fuentes en WebKit
+ *    - -moz-osx-font-smoothing: grayscale - Suaviza fuentes en Firefox
+ * 
+ * 3. ESTILOS BASE (líneas 12-17):
+ *    - margin: 0 - Elimina márgenes por defecto
+ *    - min-width: 320px - Ancho mínimo para móviles
+ *    - min-height: 100vh - Altura mínima completa
+ * 
+ * 4. ANIMACIONES PERSONALIZADAS (línea 19):
+ *    - Aquí puedes agregar animaciones CSS que Tailwind no maneja
+ *    - Usa @keyframes para animaciones complejas
+ *    - Ejemplo: animaciones de carga, transiciones especiales
+ * 
+ * 5. AGREGAR VARIABLES CSS PERSONALIZADAS:
+ *    - Añádelas dentro de :root { }
+ *    - Ejemplo: --primary-color: #007BFF;
+ *    - Usa var(--nombre-variable) en otros archivos
+ * 
+ * 6. AGREGAR ESTILOS GLOBALES:
+ *    - Añádelos después de los estilos base
+ *    - Usa selectores específicos para evitar conflictos
+ *    - Ejemplo: .mi-clase { color: var(--primary-color); }
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Configuración Tailwind: tailwind.config.js
+ * - Estilos específicos: src/components/*.css
+ * - Variables CSS: Este archivo (líneas 4-10)
+ * 
+ * NOTA: Los cambios en este archivo afectan a toda la aplicación
+ */
+
 @import "tailwindcss";
 
 /* Variables CSS personalizadas que se mantienen */
@@ -14,5 +64,5 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
-
 /* Mantener cualquier animación CSS personalizada que no pueda manejar Tailwind */
+

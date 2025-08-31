@@ -1,5 +1,29 @@
+/**
+ * ========================================
+ * COMPONENTE LOGIN PAGE DE GEOPLANNER
+ * ========================================
+ * 
+ * Página de inicio de sesión para usuarios existentes
+ * de GeoPlanner. Permite autenticarse con email/username
+ * y contraseña.
+ * 
+ * FUNCIONALIDADES PRINCIPALES:
+ * - Formulario de login con validación
+ * - Integración con el sistema de autenticación
+ * - Navegación a registro para nuevos usuarios
+ * - Manejo de errores de autenticación
+ * - Diseño responsivo y accesible
+ * 
+ * IMPORTANTE PARA EL EQUIPO:
+ * - Punto de entrada principal para usuarios existentes
+ * - Debe ser seguro y confiable
+ * - Integra con AuthContext para gestión de estado
+ * - Maneja redirecciones automáticas
+ */
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './LoginPage.css';
 
 interface LoginForm {
@@ -15,6 +39,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -31,49 +56,10 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      // Primero obtener el token
-      const tokenResponse = await fetch('http://localhost:8000/auth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username: formData.username_or_email, // El backend espera username pero puede ser email o username
-          password: formData.password
-        }),
-      });
-
-      if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.json();
-        throw new Error(errorData.detail || 'Credenciales inválidas');
-      }
-
-      const tokenData = await tokenResponse.json();
-
-      // Luego obtener la información del usuario
-      const userResponse = await fetch('http://localhost:8000/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username_or_email: formData.username_or_email,
-          password: formData.password
-        }),
-      });
-
-      if (!userResponse.ok) {
-        const errorData = await userResponse.json();
-        throw new Error(errorData.detail || 'Error al obtener información del usuario');
-      }
-
-      const userData = await userResponse.json();
-
-      // Guardar el token y la información del usuario
-      localStorage.setItem('token', tokenData.access_token);
-      localStorage.setItem('user', JSON.stringify(userData.usuario));
+      // Usar el AuthContext para el login
+      await login(formData.username_or_email, formData.password);
       
-      // Redirigir al dashboard
+      // Si llegamos aquí, el login fue exitoso
       navigate('/dashboard');
     } catch (error) {
       let msg = 'Error de conexión. Verifica tu conexión a internet.';

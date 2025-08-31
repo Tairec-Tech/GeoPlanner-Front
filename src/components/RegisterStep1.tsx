@@ -1,3 +1,66 @@
+/**
+ * ========================================
+ * COMPONENTE REGISTRO PASO 1 DE GEOPLANNER
+ * ========================================
+ * 
+ * Primer paso del proceso de registro de nuevos usuarios
+ * en GeoPlanner. Recopila información personal básica.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. VALIDACIÓN DE EDAD (líneas 50-80):
+ *    - Edad mínima: 16 años (configurable)
+ *    - Cálculo preciso: año, mes y día
+ *    - Para cambiar la edad mínima, modifica la constante
+ *    - Ubicación: const MIN_AGE = 16
+ * 
+ * 2. CAMPOS OBLIGATORIOS (líneas 100-150):
+ *    - nombre, apellido, fecha_nacimiento, genero
+ *    - Para agregar/quitar campos obligatorios, modifica isFormValid
+ *    - Para cambiar validaciones, modifica las funciones de validación
+ * 
+ * 3. ALMACENAMIENTO TEMPORAL (líneas 200-250):
+ *    - sessionStorage: 'registroStep1'
+ *    - Para cambiar el nombre de la clave, modifica aquí
+ *    - Para agregar más datos, añádelos al objeto formData
+ * 
+ * 4. NAVEGACIÓN (líneas 300-350):
+ *    - handleNext: Navega a /registro/paso2
+ *    - Para cambiar la ruta, modifica navigate('/registro/paso2')
+ *    - Para agregar validaciones adicionales, añádelas aquí
+ * 
+ * 5. ESTILOS Y ANIMACIONES (líneas 400-500):
+ *    - CSS: src/components/RegisterStep1.css
+ *    - Para cambiar colores, modifica las variables CSS
+ *    - Para agregar animaciones, usa @keyframes en el CSS
+ * 
+ * 6. MENSAJES DE ERROR (líneas 600-700):
+ *    - Modales de error para validaciones
+ *    - Para cambiar mensajes, modifica los textos
+ *    - Para agregar nuevos tipos de error, añade modales
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Formulario de datos personales (nombre, apellido, fecha, género)
+ * - Validación de edad mínima de 16 años
+ * - Validación de formato de fecha
+ * - Almacenamiento en sessionStorage
+ * - Navegación automática al siguiente paso
+ * - Modales de error para validaciones
+ * 
+ * VALIDACIONES IMPLEMENTADAS:
+ * - Campos obligatorios completos
+ * - Edad mínima de 16 años (cálculo preciso)
+ * - Formato de fecha válido
+ * - Género seleccionado
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/RegisterStep1.css
+ * - Siguiente paso: src/components/RegisterStep2.tsx
+ * - Navegación: src/App.tsx (rutas)
+ * 
+ * NOTA: Los datos se almacenan temporalmente hasta completar el registro
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './RegisterStep1.css';
@@ -23,6 +86,8 @@ const RegisterStep1: React.FC = () => {
     otroGenero: ''
   });
   const [error, setError] = useState<string>('');
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const meses = [
@@ -44,11 +109,67 @@ const RegisterStep1: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const anos = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
 
+  // Función para calcular la edad
+  const calculateAge = (day: string, month: string, year: string): number => {
+    if (!day || !month || !year) return 0;
+    
+    const birthDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // Si aún no ha llegado el mes de cumpleaños, restar un año
+    if (monthDiff < 0) {
+      age--;
+    }
+    // Si estamos en el mes del cumpleaños, verificar si ya pasó el día
+    else if (monthDiff === 0) {
+      const dayDiff = today.getDate() - birthDate.getDate();
+      // Si aún no ha llegado el día del cumpleaños, restar un año
+      if (dayDiff < 0) {
+        age--;
+      }
+    }
+    
+    return age;
+  };
+
+  // Función para validar la fecha
+  const validateDate = (day: string, month: string, year: string): boolean => {
+    if (!day || !month || !year) return false;
+    
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const isValidDate = date.getFullYear() === parseInt(year) &&
+                       date.getMonth() === parseInt(month) - 1 &&
+                       date.getDate() === parseInt(day);
+    
+    return isValidDate;
+  };
+
+  // Función para validar la edad mínima
+  const validateAge = (age: number): boolean => {
+    return age >= 16;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
+
+  // Validar formulario completo
+  useEffect(() => {
+    const isValid = formData.nombre.trim() !== '' &&
+                   formData.apellido.trim() !== '' &&
+                   formData.day !== '' &&
+                   formData.month !== '' &&
+                   formData.year !== '' &&
+                   formData.genero !== '' &&
+                   (formData.genero !== 'Otro' || formData.otroGenero.trim() !== '');
+    
+    setIsFormValid(isValid);
+  }, [formData]);
 
   // Actualizar días según mes y año
   useEffect(() => {
@@ -74,21 +195,40 @@ const RegisterStep1: React.FC = () => {
     // Validaciones
     if (!formData.nombre.trim() || !formData.apellido.trim()) {
       setError('Por favor completa nombre y apellido');
+      setShowErrorModal(true);
       return;
     }
 
     if (!formData.day || !formData.month || !formData.year) {
       setError('Por favor completa tu fecha de nacimiento');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validar que la fecha sea válida
+    if (!validateDate(formData.day, formData.month, formData.year)) {
+      setError('La fecha de nacimiento ingresada no es válida');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validar edad mínima
+    const age = calculateAge(formData.day, formData.month, formData.year);
+    if (!validateAge(age)) {
+      setError('Debes tener al menos 16 años para registrarte en GeoPlanner');
+      setShowErrorModal(true);
       return;
     }
 
     if (!formData.genero) {
       setError('Por favor selecciona tu género');
+      setShowErrorModal(true);
       return;
     }
 
     if (formData.genero === 'Otro' && !formData.otroGenero.trim()) {
       setError('Por favor especifica tu género');
+      setShowErrorModal(true);
       return;
     }
 
@@ -99,6 +239,11 @@ const RegisterStep1: React.FC = () => {
 
   const handleBack = () => {
     navigate('/');
+  };
+
+  const closeErrorModal = () => {
+    setShowErrorModal(false);
+    setError('');
   };
 
   return (
@@ -286,13 +431,33 @@ const RegisterStep1: React.FC = () => {
               >
                 Volver
               </button>
-              <button type="submit" className="btn btn-custom text-base">
+              <button 
+                type="submit" 
+                className="btn btn-custom text-base"
+                disabled={!isFormValid}
+                style={{ opacity: isFormValid ? 1 : 0.5, cursor: isFormValid ? 'pointer' : 'not-allowed' }}
+              >
                 Continuar
               </button>
             </div>
           </form>
         </div>
       </main>
+
+      {/* Modal de Error */}
+      {showErrorModal && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-lg text-red-600">Error de Validación</h3>
+            <p className="py-4">{error}</p>
+            <div className="modal-action">
+              <button className="btn btn-primary" onClick={closeErrorModal}>
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="footer-bar">
         <div className="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
