@@ -1,26 +1,3 @@
-/**
- * ========================================
- * CONTEXTO DE AUTENTICACIÓN DE GEOPLANNER
- * ========================================
- * 
- * Gestiona el estado de autenticación global de la aplicación,
- * incluyendo login, registro, logout y verificación de tokens.
- * 
- * CARACTERÍSTICAS PRINCIPALES:
- * - Gestión de tokens JWT
- * - Verificación automática de autenticación
- * - Pantalla de carga con delays diferenciados:
- *   * Login: 1.5s (para tapar parpadeo del dashboard)
- *   * Registro/Verificación: 1s (delay estándar)
- * - Manejo de errores de autenticación
- * 
- * IMPORTANTE PARA EL EQUIPO:
- * - Delay extendido en login evita parpadeo de colores
- * - Mantiene consistencia visual
- * - Centraliza toda la lógica de auth
- * - Integra con el sistema de rutas protegidas
- */
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { apiService } from '../services/api'
 import type { User } from '../services/api'
@@ -58,9 +35,7 @@ function AuthProvider({ children }: AuthProviderProps) {
   // Verificar si hay un token al cargar la aplicación
   useEffect(() => {
     const checkAuth = async () => {
-      const startTime = Date.now()
       const token = localStorage.getItem('authToken')
-      
       if (token) {
         try {
           const currentUser = await apiService.getCurrentUser()
@@ -70,15 +45,6 @@ function AuthProvider({ children }: AuthProviderProps) {
           apiService.clearToken()
         }
       }
-      
-      // Delay estándar para verificación inicial (1s)
-      const elapsedTime = Date.now() - startTime
-      const minLoadingTime = 1000 // 1 segundo para verificación inicial
-      
-      if (elapsedTime < minLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime))
-      }
-      
       setIsLoading(false)
     }
 
@@ -88,18 +54,8 @@ function AuthProvider({ children }: AuthProviderProps) {
   const login = async (username: string, password: string) => {
     try {
       setIsLoading(true)
-      const startTime = Date.now()
-      
       const response = await apiService.login({ username_or_email: username, password })
       setUser(response.user)
-      
-      // Delay extendido para login (1.5s) para tapar el parpadeo del dashboard
-      const elapsedTime = Date.now() - startTime
-      const minLoadingTime = 1500 // 1.5 segundos para login
-      
-      if (elapsedTime < minLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime))
-      }
     } catch (error) {
       console.error('Error en login:', error)
       throw error
@@ -111,18 +67,8 @@ function AuthProvider({ children }: AuthProviderProps) {
   const register = async (userData: any) => {
     try {
       setIsLoading(true)
-      const startTime = Date.now()
-      
       const newUser = await apiService.register(userData)
       setUser(newUser)
-      
-      // Delay estándar para registro (1s)
-      const elapsedTime = Date.now() - startTime
-      const minLoadingTime = 1000 // 1 segundo para registro
-      
-      if (elapsedTime < minLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsedTime))
-      }
     } catch (error) {
       console.error('Error en registro:', error)
       throw error

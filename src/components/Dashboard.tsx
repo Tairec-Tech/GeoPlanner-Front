@@ -78,13 +78,11 @@ import { apiService } from '../services/api'
 // import type { QRVerificationResponse } from '../services/api'
 import type { Post, AgendaItem, SavedEvent } from '../services/api'
 import logo from '../assets/img/LogoMini.png'
-import logoNoche from '../assets/img/logo_noche.png'
 import placeholder from '../assets/img/placeholder.png'
 // import QRScanner from './QRScanner'
 import QRCodeDisplay from './QRCodeDisplay'
 import AttendanceHistory from './AttendanceHistory'
 import FriendshipNotification from './FriendshipNotification'
-import ErrorModal from './ErrorModal'
 
 import 'leaflet/dist/leaflet.css'
 import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
@@ -122,20 +120,6 @@ const Dashboard = () => {
   // ========================================
   // CORRECCIÓN: Añadido estado de carga para el tema para evitar el parpadeo
   const [isThemeLoading, setIsThemeLoading] = useState(true)
-  const [showInternalLoading, setShowInternalLoading] = useState(true) // Pantalla de carga interna del dashboard (0.5s adicionales para tapar parpadeo)
-  const [myInscriptions, setMyInscriptions] = useState<any[]>([]) // Inscripciones del usuario actual
-  const [showMyInscriptionsModal, setShowMyInscriptionsModal] = useState(false) // Modal de mis inscripciones
-  const [errorModal, setErrorModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    type: 'error' | 'warning' | 'info' | 'success';
-  }>({
-    isOpen: false,
-    title: '',
-    message: '',
-    type: 'error'
-  })
 
   // ========================================
   // ESTADOS DE VISTA Y CONFIGURACIÓN
@@ -214,8 +198,6 @@ const Dashboard = () => {
   const [acceptTerms, setAcceptTerms] = useState(false)                  // Aceptación de términos y condiciones
   const [showTerms, setShowTerms] = useState(false)                      // Mostrar modal de términos
   const [additionalTerms, setAdditionalTerms] = useState('')             // Términos adicionales personalizados
-  const [showPostTermsModal, setShowPostTermsModal] = useState(false)    // Modal para mostrar términos de publicación
-  const [selectedPostTerms, setSelectedPostTerms] = useState<{geoplanner: string, additional: string} | null>(null)
   
   // ========================================
   // ESTADO DEL FORMULARIO DE NUEVA PUBLICACIÓN
@@ -291,28 +273,22 @@ const Dashboard = () => {
   // Términos y condiciones predeterminados de GeoPlanner
   const DEFAULT_GEOPLANNER_TERMS = `TÉRMINOS Y CONDICIONES DE GEOPLANNER
 
-1. RESPONSABILIDAD EXCLUSIVA DEL ORGANIZADOR:
-   Usted es el ÚNICO responsable de la legalidad, seguridad, permisos, control de multitudes, cumplimiento normativo, y todo el contenido y desarrollo de su evento. GeoPlanner NO asume NINGUNA responsabilidad por incidentes, daños, lesiones, muertes, pérdidas materiales o consecuencias legales de cualquier naturaleza.
+1. Responsabilidad Exclusiva del Organizador:
+   Usted es el único responsable de la legalidad, seguridad (permisos, control de multitudes, etc.) y contenido de su evento.
 
-2. DESLINDE TOTAL DE GEOPLANNER:
-   GeoPlanner es ÚNICAMENTE una plataforma tecnológica de intermediación. NO somos organizadores, promotores, ni responsables de eventos. NO nos hacemos responsables por incidentes, accidentes, daños, lesiones, muertes, pérdidas materiales, consecuencias legales, penales, civiles o administrativas de cualquier naturaleza relacionadas con el evento.
+2. Deslinde de GeoPlanner:
+   GeoPlanner es solo una plataforma tecnológica y no se hace responsable por ningún incidente, daño o consecuencia legal relacionada con el evento.
 
-3. PROHIBICIONES ABSOLUTAS:
-   Se prohíben TERMINANTEMENTE eventos que involucren: actividades ilegales, armas, sustancias ilícitas, violencia, discursos de odio, discriminación, actividades terroristas, tráfico de personas, pornografía, actividades que pongan en riesgo la vida o integridad física de los participantes.
+3. Prohibiciones Estrictas:
+   Se prohíben terminantemente eventos con actividades ilegales, armas, sustancias ilícitas, violencia o discursos de odio.
 
-4. COOPERACIÓN OBLIGATORIA CON AUTORIDADES:
-   Al publicar, usted AUTORIZA EXPRESAMENTE a GeoPlanner a compartir TODA su información personal, datos de ubicación, historial de actividades, y cualquier información relevante con autoridades judiciales, policiales, gubernamentales o administrativas que lo soliciten, sin necesidad de notificación previa, en caso de investigaciones, denuncias, o sospechas de actividades ilegales.
+4. Cooperación con Autoridades:
+   Al publicar, confirma que su identidad fue verificada y acepta que su información puede ser compartida con las autoridades si se detecta alguna ilegalidad.
 
-5. VERIFICACIÓN DE IDENTIDAD Y CUMPLIMIENTO:
-   Usted declara bajo juramento que: a) Ha proporcionado información veraz y completa; b) Su identidad ha sido verificada; c) Cumple con todas las leyes aplicables; d) Tiene los permisos necesarios para organizar el evento; e) El evento no viola ninguna normativa local, nacional o internacional.
+5. Verificación de Identidad:
+   Usted declara que ha proporcionado información veraz y que su identidad ha sido verificada por la plataforma.
 
-6. RENUNCIA A RECLAMACIONES:
-   Usted renuncia EXPRESAMENTE a presentar cualquier tipo de reclamo, demanda, acción legal o administrativa contra GeoPlanner por cualquier motivo relacionado con el uso de la plataforma o la organización de eventos.
-
-7. JURISDICCIÓN Y LEY APLICABLE:
-   Estos términos se rigen por las leyes de Venezuela. Cualquier disputa será resuelta exclusivamente en los tribunales competentes de Venezuela.
-
-⚠️ AL PUBLICAR, USTED DECLARA BAJO JURAMENTO QUE HA LEÍDO, ENTENDIDO Y ACEPTADO ESTOS TÉRMINOS EN SU TOTALIDAD, RECONOCIENDO QUE SON LEGALMENTE VINCULANTES.`
+⚠️ Al publicar, declara que ha leído y aceptado estos términos en su totalidad.`
 
   // Temas disponibles - Copiados del dashboard original
   const temas = {
@@ -328,20 +304,20 @@ const Dashboard = () => {
     },
 
     aurora: {
-      headerBG: "linear-gradient(145deg, #F8CDDA, #E8B4D9, #D19BB8, #B76E99, #8B5A9B, #6B4E8B, #1D2B64)",
+      headerBG: "linear-gradient(145deg, #1D2B64, #F8CDDA)",
       headerText: "#FFFFFF",
       bodyBG: "#fdeff2",
-      sidebarBG: "linear-gradient(145deg, #F8CDDA, #E8B4D9, #D19BB8, #B76E99, #8B5A9B, #6B4E8B, #1D2B64)",
+      sidebarBG: "linear-gradient(145deg, #1D2B64, #F8CDDA)",
       sidebarText: "#FFFFFF",
       cardBG: "#ffffff",
       cardText: "#1D2B64",
       btnPrimaryBG: "#1D2B64"
     },
     noche: {
-      headerBG: "linear-gradient(145deg, #0f172a, #1e293b, #334155, #475569, #64748b)",
+      headerBG: "linear-gradient(145deg, #141E30, #243B55)",
       headerText: "white",
       bodyBG: "#0f172a",
-      sidebarBG: "linear-gradient(145deg, #0f172a, #1e293b, #334155, #475569, #64748b)",
+      sidebarBG: "linear-gradient(145deg, #141E30, #243B55)",
       sidebarText: "white",
       cardBG: "#1e293b",
       cardText: "#e2e8f0",
@@ -1161,16 +1137,6 @@ const Dashboard = () => {
     }
   }
 
-  // Función para mostrar términos de una publicación
-  const handleShowPostTerms = (post: Post) => {
-    const terms = {
-      geoplanner: DEFAULT_GEOPLANNER_TERMS,
-      additional: post.terminos_adicionales || ''
-    }
-    setSelectedPostTerms(terms)
-    setShowPostTermsModal(true)
-  }
-
   // ========================================
   // FUNCIÓN PARA MOSTRAR/OCULTAR COMENTARIOS
   // ========================================
@@ -1368,14 +1334,6 @@ const Dashboard = () => {
       
       // Cargar notificaciones
       await loadNotifications()
-      
-      // Cargar inscripciones del usuario
-      try {
-        const inscriptionsData = await apiService.getMyInscriptions()
-        setMyInscriptions(inscriptionsData)
-      } catch (error) {
-        console.error('Error cargando inscripciones:', error)
-      }
     } catch (error) {
       console.error('Error cargando datos:', error)
     } finally {
@@ -1492,7 +1450,10 @@ const Dashboard = () => {
           etiqueta: `Punto ${i + 1}`,
           orden: i
         })),
-        terminos_adicionales: additionalTerms
+        terms: {
+          geoplanner: DEFAULT_GEOPLANNER_TERMS,
+          additional: additionalTerms
+        }
       }
 
       await apiService.createPost(postData)
@@ -1626,55 +1587,27 @@ const Dashboard = () => {
         )
       }
     } else {
-      // Verificar si el usuario está inscrito en este evento
-      const isInscribed = isUserInscribed(post.id)
-      
-      if (isInscribed) {
-        // Si está inscrito, mostrar botón de desinscribirse
-        actionButtons.push(
-          <button 
-            key="desinscribirse" 
-            className="btn btn-sm btn-error"
-            onClick={() => handleDesinscribirse(post.id)}
-          >
-            ❌ Cancelar Inscripción
-          </button>
-        )
-        
-        // Mostrar botón de QR si está inscrito (para cualquier tipo de evento)
+      // Verificar si el evento es privado o solo para amigos
+      if (post.privacidad === 'privada' || post.privacidad === 'amigos') {
         actionButtons.push(
           <button 
             key="qr" 
             className="btn btn-sm btn-primary"
-            onClick={() => handleShowQRCodeDisplay(post.id, post.texto)}
+                            onClick={() => handleShowQRCodeDisplay(post.id, post.texto)}
           >
-            📱 Ver Invitación QR
-          </button>
-        )
-      } else {
-        // Si no está inscrito, mostrar botón de inscribirse
-        actionButtons.push(
-          <button 
-            key="inscribirse" 
-            className="btn btn-sm btn-primary"
-            onClick={() => handleInscribirse(post.id)}
-          >
-            ✅ Inscribirse
-          </button>
-        )
-        
-        // Mostrar botón de QR deshabilitado si no está inscrito
-        actionButtons.push(
-          <button 
-            key="qr-disabled" 
-            className="btn btn-sm btn-disabled"
-            disabled
-            title="Debes inscribirte primero para ver tu QR"
-          >
-            📱 Ver Invitación QR
+            📱 Mi QR
           </button>
         )
       }
+      actionButtons.push(
+                    <button 
+              key="inscribirse" 
+              className="btn btn-sm btn-primary"
+              onClick={() => handleInscribirse(post.id)}
+            >
+              Inscribirse
+            </button>
+      )
     }
 
     return (
@@ -1774,10 +1707,7 @@ const Dashboard = () => {
             >
               💬 Comentarios ({post.comentarios?.length || 0})
             </button>
-            <button 
-              className="btn btn-sm btn-outline-info"
-              onClick={() => handleShowPostTerms(post)}
-            >
+            <button className="btn btn-sm btn-outline-info">
               📜 Ver Términos
             </button>
             {actionButtons.map((button, index) => (
@@ -2092,10 +2022,10 @@ const Dashboard = () => {
       // Recargar las publicaciones para mostrar el estado actualizado
       loadRealData()
       // Mostrar notificación de éxito
-      showError('¡Éxito!', 'Inscripción realizada correctamente', 'success')
+      alert('¡Inscripción exitosa!')
     } catch (error) {
       console.error('Error al inscribirse:', error)
-      showError('Error de Inscripción', 'No se pudo completar la inscripción. Intenta nuevamente.')
+      alert('Error al inscribirse en el evento')
     }
   }
 
@@ -2105,47 +2035,11 @@ const Dashboard = () => {
       // Recargar las publicaciones para mostrar el estado actualizado
       loadRealData()
       // Mostrar notificación de éxito
-      showError('¡Éxito!', 'Inscripción cancelada correctamente', 'success')
+      alert('Desinscripción exitosa')
     } catch (error) {
       console.error('Error al desinscribirse:', error)
-      showError('Error de Cancelación', 'No se pudo cancelar la inscripción. Intenta nuevamente.')
+      alert('Error al desinscribirse del evento')
     }
-  }
-
-  // Función para cargar las inscripciones del usuario
-  const loadMyInscriptions = async () => {
-    try {
-      const inscriptions = await apiService.getMyInscriptions()
-      setMyInscriptions(inscriptions)
-    } catch (error) {
-      console.error('Error cargando inscripciones:', error)
-    }
-  }
-
-  // Función para mostrar el modal de mis inscripciones
-  const handleShowMyInscriptions = () => {
-    loadMyInscriptions()
-    setShowMyInscriptionsModal(true)
-  }
-
-  // Función para verificar si el usuario está inscrito en un evento
-  const isUserInscribed = (postId: string): boolean => {
-    return myInscriptions.some(inscription => inscription.id_publicacion === postId)
-  }
-
-  // Función para mostrar errores con el modal personalizado
-  const showError = (title: string, message: string, type: 'error' | 'warning' | 'info' | 'success' = 'error') => {
-    setErrorModal({
-      isOpen: true,
-      title,
-      message,
-      type
-    })
-  }
-
-  // Función para cerrar el modal de errores
-  const closeErrorModal = () => {
-    setErrorModal(prev => ({ ...prev, isOpen: false }))
   }
 
   // Función para mezclar color con blanco (para dropdowns)
@@ -2199,18 +2093,6 @@ const Dashboard = () => {
       if (header && header instanceof HTMLElement) {
         header.style.background = theme.headerBG
         header.style.color = theme.headerText
-        
-        // Aplicar animación aurora solo para el tema aurora
-        if (themeName === 'aurora') {
-          header.classList.add('aurora-animation')
-          // header.classList.remove('night-header')
-        } else if (themeName === 'noche') {
-          // header.classList.add('night-header')
-          header.classList.remove('aurora-animation')
-        } else {
-          header.classList.remove('aurora-animation')
-          // header.classList.remove('night-header')
-        }
       }
 
       // Aplicar background según el tema
@@ -2225,11 +2107,10 @@ const Dashboard = () => {
           contentArea.style.background = theme.bodyBG
         }
         
-        // Aplicar color específico al título GeoPlanner según el tema
+        // Aplicar color blanco hueso SOLO al título GeoPlanner para tema noche
         const geoPlannerTitle = document.querySelector('header strong')
         if (geoPlannerTitle && geoPlannerTitle instanceof HTMLElement) {
           geoPlannerTitle.style.color = '#f5f5dc' // Blanco hueso para tema noche
-          geoPlannerTitle.style.textShadow = '2px 2px 4px rgba(0, 0, 0, 0.5)' // Sombra para acentuar
         }
         
         // Aplicar color blanco hueso SOLO a los eventos del feed clásico
@@ -2265,47 +2146,10 @@ const Dashboard = () => {
           contentArea.style.background = '#ffffff'
         }
         
-        // Aplicar color específico al título GeoPlanner según el tema
+        // Aplicar color negro al título GeoPlanner para otros temas
         const geoPlannerTitle = document.querySelector('header strong')
         if (geoPlannerTitle && geoPlannerTitle instanceof HTMLElement) {
-          // Colores específicos para cada tema
-          switch (themeName) {
-            case 'default':
-              geoPlannerTitle.style.color = '#1e40af' // Azul oscuro
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(30, 64, 175, 0.3)'
-              break
-            case 'aurora':
-              geoPlannerTitle.style.color = '#1d2b64' // Azul aurora
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(29, 43, 100, 0.3)'
-              break
-            case 'oceano':
-              geoPlannerTitle.style.color = '#2C3E50' // Azul oceano
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(44, 62, 80, 0.3)'
-              break
-            case 'amanecer':
-              geoPlannerTitle.style.color = '#FF512F' // Naranja amanecer
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(255, 81, 47, 0.3)'
-              break
-            case 'pastel':
-              geoPlannerTitle.style.color = '#003366' // Azul pastel
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(0, 51, 102, 0.3)'
-              break
-            case 'fuego':
-              geoPlannerTitle.style.color = '#CB356B' // Rosa fuego
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(203, 53, 107, 0.3)'
-              break
-            case 'bosque':
-              geoPlannerTitle.style.color = '#11998E' // Verde bosque
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(17, 153, 142, 0.3)'
-              break
-            case 'lluvia':
-              geoPlannerTitle.style.color = '#396afc' // Azul lluvia
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(57, 106, 252, 0.3)'
-              break
-            default:
-              geoPlannerTitle.style.color = '#1e40af' // Azul por defecto
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(30, 64, 175, 0.3)'
-          }
+          geoPlannerTitle.style.color = '#000000' // Negro para otros temas
         }
         
         // Restaurar colores SOLO de los eventos del feed clásico
@@ -2520,11 +2364,6 @@ const Dashboard = () => {
     } finally {
         // CORRECCIÓN: Termina la carga del tema aquí
         setIsThemeLoading(false);
-        
-        // Delay interno de 0.5s para tapar el parpadeo de colores
-        setTimeout(() => {
-          setShowInternalLoading(false);
-        }, 1000);
     }
     
     if (savedMapStyle) setCurrentMapStyle(savedMapStyle)
@@ -2667,12 +2506,12 @@ const Dashboard = () => {
 
   // Actualizar tema de modales cuando se abran
   useEffect(() => {
-    if (showAgendaModal || showCreateEventModal || showSavedEventsModal || showCreatePostModal || showLocationModal || showPostTermsModal) {
+    if (showAgendaModal || showCreateEventModal || showSavedEventsModal || showCreatePostModal || showLocationModal) {
       setTimeout(() => {
         updateModalTheme()
       }, 100)
     }
-  }, [showAgendaModal, showCreateEventModal, showSavedEventsModal, showCreatePostModal, showLocationModal, showPostTermsModal, currentTheme])
+  }, [showAgendaModal, showCreateEventModal, showSavedEventsModal, showCreatePostModal, showLocationModal, currentTheme])
 
   // Inicializar mapa de ubicación cuando se abra el modal
   useEffect(() => {
@@ -2771,29 +2610,10 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-white main-container">
-      {/* Pantalla de carga interna del dashboard */}
-      {showInternalLoading && (
-        <div className="loading-screen">
-          <div className="loading-container">
-            <div className="logo-drop">
-              <img 
-                src={currentTheme === 'noche' ? logoNoche : "/src/assets/img/Logo.png"} 
-                alt="Logo GeoPlanner" 
-                className="logo-spin" 
-              />
-            </div>
-            <p className="loading-text">Cargando dashboard...</p>
-          </div>
-        </div>
-      )}
       {/* Header */}
       <header className="flex justify-between items-center text-primary-content p-4 shadow-lg bg-primary">
         <a href="#" className="flex items-center gap-2 text-primary-content no-underline">
-          <img 
-            src={currentTheme === 'noche' ? logoNoche : logo} 
-            alt="Logo" 
-            className="w-9 h-9" 
-          />
+          <img src={logo} alt="Logo" className="w-9 h-9" />
           <strong className="text-xl">GeoPlanner</strong>
         </a>
         
@@ -2839,11 +2659,35 @@ const Dashboard = () => {
         
         <div className="flex items-center gap-3">
           <button 
-            className={`btn btn-sm font-bold transition-all duration-300 ${
-              currentTheme === 'noche' 
-                ? 'bg-slate-800 text-white border-2 border-cyan-400 hover:bg-cyan-400 hover:text-white hover:shadow-lg hover:shadow-cyan-400/40 hover:-translate-y-0.5' 
-                : 'bg-white text-gray-800 border-2 border-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5'
-            }`}
+            className="btn btn-primary btn-sm"
+            style={{
+              backgroundColor: currentTheme === 'noche' ? '#1e293b' : '#ffffff',
+              color: currentTheme === 'noche' ? '#ffffff' : '#333333',
+              border: `2px solid ${currentTheme === 'noche' ? '#38bdf8' : '#007BFF'}`,
+              fontWeight: 'bold',
+              transition: 'all 0.3s ease',
+              boxShadow: currentTheme === 'noche' 
+                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
+                : '0 2px 4px rgba(0, 123, 255, 0.2)'
+            }}
+            onMouseEnter={(e) => {
+              const isDarkTheme = currentTheme === 'noche';
+              e.currentTarget.style.backgroundColor = isDarkTheme ? '#38bdf8' : '#007BFF';
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = isDarkTheme 
+                ? '0 4px 8px rgba(56, 189, 248, 0.4)' 
+                : '0 4px 8px rgba(0, 123, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              const isDarkTheme = currentTheme === 'noche';
+              e.currentTarget.style.backgroundColor = isDarkTheme ? '#1e293b' : '#ffffff';
+              e.currentTarget.style.color = isDarkTheme ? '#ffffff' : '#333333';
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = isDarkTheme 
+                ? '0 2px 4px rgba(56, 189, 248, 0.3)' 
+                : '0 2px 4px rgba(0, 123, 255, 0.2)';
+            }}
             onClick={toggleView}
           >
             {currentView === 'map' ? 'Ver Feed Clásico' : 'Ver Vista de Mapa'}
@@ -3092,10 +2936,10 @@ const Dashboard = () => {
           <div className="bg-primary text-primary-content sidebar rounded-2xl shadow-lg">
             <div className="p-4">
               <ul className="menu bg-transparent text-primary-content">
-                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
-                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={handleShowMyInscriptions}>🎟️ Mis Inscripciones</a></li>
-                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
-                <li><a className="text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold">👨‍👩‍👧‍👦 Grupos</a></li>
+                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
+                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer">🎟️ Mis Inscripciones</a></li>
+                <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
+                <li><a className="text-primary-content hover:bg-primary-focus">👨‍👩‍👧‍👦 Grupos</a></li>
 
               </ul>
             </div>
@@ -3104,40 +2948,40 @@ const Dashboard = () => {
           {/* Sidebar de Filtros */}
           <div className="bg-primary text-primary-content rounded-2xl shadow-lg filter-sidebar">
             <div className="p-4">
-              <h3 className="text-lg font-semibold mb-3 ">Filtros</h3>
+              <h3 className="text-lg font-semibold mb-3">Filtros</h3>
               <ul className="menu bg-transparent text-primary-content">
                 <li><a 
-                  className={filterType === 'all' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'all' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('all')}
                 >
                   Todos los tipos
                 </a></li>
                 <li><a 
-                  className={filterType === 'Deporte' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'Deporte' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('Deporte')}
                 >
                   Deporte
                 </a></li>
                 <li><a 
-                  className={filterType === 'Estudio' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'Estudio' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('Estudio')}
                 >
                   Estudio
                 </a></li>
                 <li><a 
-                  className={filterType === 'Social' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'Social' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('Social')}
                 >
                   Social
                 </a></li>
                 <li><a 
-                  className={filterType === 'Cultural' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'Cultural' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('Cultural')}
                 >
                   Cultural
                 </a></li>
                 <li><a 
-                  className={filterType === 'Otro' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
+                  className={filterType === 'Otro' ? 'bg-primary-focus text-primary-content' : 'text-primary-content hover:bg-primary-focus'}
                   onClick={() => setFilterType('Otro')}
                 >
                   Otro
@@ -3533,11 +3377,7 @@ const Dashboard = () => {
                   </div>
                   <button 
                     type="button"
-                    className={`btn btn-outline btn-sm mt-2 transition-colors duration-200 ${
-                      acceptTerms 
-                        ? 'text-blue-600 border-blue-600 hover:bg-blue-50' 
-                        : 'text-red-600 border-red-600 hover:bg-red-50'
-                    }`}
+                    className="btn btn-outline btn-sm mt-2"
                     onClick={() => setShowTerms(!showTerms)}
                   >
                     {showTerms ? '👁️ Ocultar términos' : '👁️ Ver términos completos'}
@@ -3546,17 +3386,15 @@ const Dashboard = () => {
 
                 {/* Términos colapsables */}
                 {showTerms && (
-                  <div className="bg-gray-50 p-4 rounded-lg mb-3 border border-gray-200">
-                    <h6 className="font-bold text-primary mb-3">Términos y Condiciones de GeoPlanner</h6>
-                    <div className="text-sm space-y-3 text-gray-800">
-                      <p><strong>1. RESPONSABILIDAD EXCLUSIVA DEL ORGANIZADOR:</strong> Usted es el ÚNICO responsable de la legalidad, seguridad, permisos, control de multitudes, cumplimiento normativo, y todo el contenido y desarrollo de su evento. GeoPlanner NO asume NINGUNA responsabilidad por incidentes, daños, lesiones, muertes, pérdidas materiales o consecuencias legales de cualquier naturaleza.</p>
-                      <p><strong>2. DESLINDE TOTAL DE GEOPLANNER:</strong> GeoPlanner es ÚNICAMENTE una plataforma tecnológica de intermediación. NO somos organizadores, promotores, ni responsables de eventos. NO nos hacemos responsables por incidentes, accidentes, daños, lesiones, muertes, pérdidas materiales, consecuencias legales, penales, civiles o administrativas de cualquier naturaleza relacionadas con el evento.</p>
-                      <p><strong>3. PROHIBICIONES ABSOLUTAS:</strong> Se prohíben TERMINANTEMENTE eventos que involucren: actividades ilegales, armas, sustancias ilícitas, violencia, discursos de odio, discriminación, actividades terroristas, tráfico de personas, pornografía, actividades que pongan en riesgo la vida o integridad física de los participantes.</p>
-                      <p><strong>4. COOPERACIÓN OBLIGATORIA CON AUTORIDADES:</strong> Al publicar, usted AUTORIZA EXPRESAMENTE a GeoPlanner a compartir TODA su información personal, datos de ubicación, historial de actividades, y cualquier información relevante con autoridades judiciales, policiales, gubernamentales o administrativas que lo soliciten, sin necesidad de notificación previa, en caso de investigaciones, denuncias, o sospechas de actividades ilegales.</p>
-                      <p><strong>5. VERIFICACIÓN DE IDENTIDAD Y CUMPLIMIENTO:</strong> Usted declara bajo juramento que: a) Ha proporcionado información veraz y completa; b) Su identidad ha sido verificada; c) Cumple con todas las leyes aplicables; d) Tiene los permisos necesarios para organizar el evento; e) El evento no viola ninguna normativa local, nacional o internacional.</p>
-                      <p><strong>6. RENUNCIA A RECLAMACIONES:</strong> Usted renuncia EXPRESAMENTE a presentar cualquier tipo de reclamo, demanda, acción legal o administrativa contra GeoPlanner por cualquier motivo relacionado con el uso de la plataforma o la organización de eventos.</p>
-                      <p><strong>7. JURISDICCIÓN Y LEY APLICABLE:</strong> Estos términos se rigen por las leyes de Venezuela. Cualquier disputa será resuelta exclusivamente en los tribunales competentes de Venezuela.</p>
-                      <p className="text-red-800 font-bold bg-red-100 p-3 rounded-lg border border-red-300">⚠️ AL PUBLICAR, USTED DECLARA BAJO JURAMENTO QUE HA LEÍDO, ENTENDIDO Y ACEPTADO ESTOS TÉRMINOS EN SU TOTALIDAD, RECONOCIENDO QUE SON LEGALMENTE VINCULANTES.</p>
+                  <div className="collapse-content bg-gray-50 p-3 rounded-lg mb-3 max-h-40 overflow-y-auto">
+                    <h6 className="font-bold text-primary mb-2">Términos y Condiciones de GeoPlanner</h6>
+                    <div className="text-sm space-y-2">
+                      <p><strong>1. Responsabilidad Exclusiva del Organizador:</strong> Usted es el único responsable de la legalidad, seguridad (permisos, control de multitudes, etc.) y contenido de su evento.</p>
+                      <p><strong>2. Deslinde de GeoPlanner:</strong> GeoPlanner es solo una plataforma tecnológica y no se hace responsable por ningún incidente, daño o consecuencia legal relacionada con el evento.</p>
+                      <p><strong>3. Prohibiciones Estrictas:</strong> Se prohíben terminantemente eventos con actividades ilegales, armas, sustancias ilícitas, violencia o discursos de odio.</p>
+                      <p><strong>4. Cooperación con Autoridades:</strong> Al publicar, confirma que su identidad fue verificada y acepta que su información puede ser compartida con las autoridades si se detecta alguna ilegalidad.</p>
+                      <p><strong>5. Verificación de Identidad:</strong> Usted declara que ha proporcionado información veraz y que su identidad ha sido verificada por la plataforma.</p>
+                      <p className="text-warning font-bold">⚠️ Al publicar, declara que ha leído y aceptado estos términos en su totalidad.</p>
                     </div>
                   </div>
                 )}
@@ -3690,67 +3528,6 @@ const Dashboard = () => {
           </div>
           <form method="dialog" className="modal-backdrop">
             <button onClick={() => setShowLocationModal(false)}>close</button>
-          </form>
-        </dialog>
-      )}
-
-      {/* Modal de Términos de Publicación */}
-      {showPostTermsModal && selectedPostTerms && (
-        <dialog open className="modal">
-          <div className="modal-box w-11/12 max-w-4xl" data-theme={currentTheme}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg">📜 Términos y Condiciones del Evento</h3>
-              <button 
-                className="btn btn-sm btn-circle btn-outline"
-                onClick={() => setShowPostTermsModal(false)}
-              >
-                ✕
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              {/* Términos de GeoPlanner */}
-              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <h4 className="font-bold text-blue-800 mb-2">Términos y Condiciones de GeoPlanner</h4>
-                <div className="text-sm text-blue-700 space-y-2">
-                  <p><strong>1. RESPONSABILIDAD EXCLUSIVA DEL ORGANIZADOR:</strong> Usted es el ÚNICO responsable de la legalidad, seguridad, permisos, control de multitudes, cumplimiento normativo, y todo el contenido y desarrollo de su evento. GeoPlanner NO asume NINGUNA responsabilidad por incidentes, daños, lesiones, muertes, pérdidas materiales o consecuencias legales de cualquier naturaleza.</p>
-                  <p><strong>2. DESLINDE TOTAL DE GEOPLANNER:</strong> GeoPlanner es ÚNICAMENTE una plataforma tecnológica de intermediación. NO somos organizadores, promotores, ni responsables de eventos. NO nos hacemos responsables por incidentes, accidentes, daños, lesiones, muertes, pérdidas materiales, consecuencias legales, penales, civiles o administrativas de cualquier naturaleza relacionadas con el evento.</p>
-                  <p><strong>3. PROHIBICIONES ABSOLUTAS:</strong> Se prohíben TERMINANTEMENTE eventos que involucren: actividades ilegales, armas, sustancias ilícitas, violencia, discursos de odio, discriminación, actividades terroristas, tráfico de personas, pornografía, actividades que pongan en riesgo la vida o integridad física de los participantes.</p>
-                  <p><strong>4. COOPERACIÓN OBLIGATORIA CON AUTORIDADES:</strong> Al publicar, usted AUTORIZA EXPRESAMENTE a GeoPlanner a compartir TODA su información personal, datos de ubicación, historial de actividades, y cualquier información relevante con autoridades judiciales, policiales, gubernamentales o administrativas que lo soliciten, sin necesidad de notificación previa, en caso de investigaciones, denuncias, o sospechas de actividades ilegales.</p>
-                  <p><strong>5. VERIFICACIÓN DE IDENTIDAD Y CUMPLIMIENTO:</strong> Usted declara bajo juramento que: a) Ha proporcionado información veraz y completa; b) Su identidad ha sido verificada; c) Cumple con todas las leyes aplicables; d) Tiene los permisos necesarios para organizar el evento; e) El evento no viola ninguna normativa local, nacional o internacional.</p>
-                  <p><strong>6. RENUNCIA A RECLAMACIONES:</strong> Usted renuncia EXPRESAMENTE a presentar cualquier tipo de reclamo, demanda, acción legal o administrativa contra GeoPlanner por cualquier motivo relacionado con el uso de la plataforma o la organización de eventos.</p>
-                  <p><strong>7. JURISDICCIÓN Y LEY APLICABLE:</strong> Estos términos se rigen por las leyes de Venezuela. Cualquier disputa será resuelta exclusivamente en los tribunales competentes de Venezuela.</p>
-                </div>
-              </div>
-
-              {/* Términos adicionales del organizador */}
-              {selectedPostTerms.additional && (
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <h4 className="font-bold text-orange-800 mb-2">Términos Adicionales del Organizador</h4>
-                  <div className="text-sm text-orange-700 whitespace-pre-wrap">
-                    {selectedPostTerms.additional}
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-red-100 p-3 rounded-lg border border-red-300">
-                <p className="text-red-800 font-bold text-center">
-                  ⚠️ Al inscribirte en este evento, declaras que has leído y aceptado estos términos en su totalidad.
-                </p>
-              </div>
-            </div>
-
-            <div className="modal-action">
-              <button 
-                className="btn btn-primary"
-                onClick={() => setShowPostTermsModal(false)}
-              >
-                Entendido
-              </button>
-            </div>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setShowPostTermsModal(false)}>close</button>
           </form>
         </dialog>
       )}
@@ -4039,206 +3816,9 @@ const Dashboard = () => {
         />
       )}
 
-      {/* Modal de Errores */}
-      <ErrorModal
-        isOpen={errorModal.isOpen}
-        onClose={closeErrorModal}
-        title={errorModal.title}
-        message={errorModal.message}
-        type={errorModal.type}
-      />
-
-      {/* Modal de Mis Inscripciones */}
-      {showMyInscriptionsModal && (
-        <dialog className="modal modal-open">
-          <div className="modal-box w-11/12 max-w-4xl" data-theme={currentTheme}>
-            <h3 className="font-bold text-lg mb-4">🎟️ Mis Inscripciones</h3>
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {myInscriptions.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No tienes inscripciones activas.</p>
-                </div>
-              ) : (
-                myInscriptions.map((inscription) => (
-                  <div key={inscription.id} className="card bg-base-200">
-                    <div className="card-body p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h5 className="font-semibold">{inscription.publicacion.texto.split('\n')[0]}</h5>
-                          <p className="text-sm text-gray-600 mt-1">{inscription.publicacion.texto}</p>
-                          <div className="flex items-center gap-4 mt-2 text-sm">
-                            <span>👤 {inscription.publicacion.autor.nombre} {inscription.publicacion.autor.apellido}</span>
-                            <span>📅 {new Date(inscription.fecha_inscripcion).toLocaleDateString()}</span>
-                            <span className="badge badge-primary">{inscription.publicacion.tipo}</span>
-                            <span className={`badge ${inscription.publicacion.privacidad === 'publica' ? 'badge-success' : 'badge-warning'}`}>
-                              {inscription.publicacion.privacidad === 'publica' ? 'Público' : 
-                               inscription.publicacion.privacidad === 'amigos' ? 'Solo Amigos' : 'Privado'}
-                            </span>
-                            {inscription.publicacion.fecha_evento && (
-                              <span>🕒 {new Date(inscription.publicacion.fecha_evento).toLocaleDateString()}</span>
-                            )}
-                          </div>
-                          <div className="mt-2">
-                            <span className={`badge ${inscription.estado_asistencia === 'pendiente' ? 'badge-warning' : 
-                                               inscription.estado_asistencia === 'confirmado' ? 'badge-success' : 'badge-error'}`}>
-                              {inscription.estado_asistencia === 'pendiente' ? 'Pendiente' :
-                               inscription.estado_asistencia === 'confirmado' ? 'Confirmado' : 'Cancelado'}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <button 
-                            className="btn btn-sm btn-error"
-                            onClick={() => handleDesinscribirse(inscription.id_publicacion)}
-                          >
-                            ❌ Cancelar
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-primary"
-                            onClick={() => handleShowQRCodeDisplay(inscription.id_publicacion, inscription.publicacion.texto)}
-                          >
-                            📱 Ver Invitación QR
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-            <div className="modal-action">
-              <button 
-                className="btn"
-                onClick={() => setShowMyInscriptionsModal(false)}
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-          <form method="dialog" className="modal-backdrop">
-            <button onClick={() => setShowMyInscriptionsModal(false)}>close</button>
-          </form>
-        </dialog>
-      )}
-
 
     </div>
   )
-}
-
-/**
- * ========================================
- * ESTILOS CSS PARA ANIMACIONES
- * ========================================
- */
-
-// Estilos para la animación de aurora
-  const auroraStyles = `
-    @keyframes auroraWave {
-      0% {
-        background-position: 0% 50%;
-      }
-      50% {
-        background-position: 100% 50%;
-      }
-      100% {
-        background-position: 0% 50%;
-      }
-    }
-
-    .aurora-animation {
-      background-size: 400% 400% !important;
-      animation: auroraWave 12s ease-in-out infinite;
-    }
-
-    /* @keyframes twinkle {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
-    }
-
-    @keyframes twinkle2 {
-      0%, 100% { opacity: 0.2; }
-      50% { opacity: 0.8; }
-    }
-
-    @keyframes twinkle3 {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 1; }
-    }
-
-    .night-header {
-      position: relative;
-      overflow: hidden;
-      z-index: auto;
-    }
-
-    .night-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        radial-gradient(2px 2px at 20px 30px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 40px 70px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 90px 40px, #67e8f9, transparent),
-        radial-gradient(1px 1px at 130px 80px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 160px 30px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 200px 60px, #67e8f9, transparent),
-        radial-gradient(2px 2px at 240px 20px, #94a3b8, transparent),
-        radial-gradient(1px 1px at 280px 70px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(2px 2px at 320px 40px, #67e8f9, transparent),
-        radial-gradient(1px 1px at 360px 80px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 400px 30px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 440px 60px, #67e8f9, transparent),
-        radial-gradient(2px 2px at 480px 20px, #94a3b8, transparent),
-        radial-gradient(1px 1px at 520px 70px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(2px 2px at 560px 40px, #67e8f9, transparent),
-        radial-gradient(1px 1px at 600px 80px, #94a3b8, transparent);
-      background-repeat: repeat;
-      background-size: 640px 100px;
-      animation: twinkle 4s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .night-header::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image: 
-        radial-gradient(1px 1px at 60px 50px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 100px 20px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 140px 90px, #67e8f9, transparent),
-        radial-gradient(2px 2px at 180px 10px, #94a3b8, transparent),
-        radial-gradient(1px 1px at 220px 50px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(2px 2px at 260px 80px, #67e8f9, transparent),
-        radial-gradient(1px 1px at 300px 30px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 340px 60px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 380px 90px, #67e8f9, transparent),
-        radial-gradient(2px 2px at 420px 20px, #94a3b8, transparent),
-        radial-gradient(1px 1px at 460px 50px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(2px 2px at 500px 80px, #67e8f9, transparent),
-        radial-gradient(1px 1px at 540px 30px, #94a3b8, transparent),
-        radial-gradient(2px 2px at 580px 60px, rgba(34, 211, 238, 0.6), transparent),
-        radial-gradient(1px 1px at 620px 90px, #67e8f9, transparent);
-      background-repeat: repeat;
-      background-size: 640px 100px;
-      animation: twinkle2 6s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 0;
-    } */
-  `;
-
-// Inyectar estilos en el head del documento
-if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.textContent = auroraStyles;
-  document.head.appendChild(styleElement);
 }
 
 /**

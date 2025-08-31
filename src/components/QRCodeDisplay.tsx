@@ -32,7 +32,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
       setQrData(response)
     } catch (err) {
       console.error('Error al generar QR:', err)
-      setError('Error al generar la invitación QR. Asegúrate de estar inscrito en el evento.')
+      setError('Error al generar el código QR. Asegúrate de estar inscrito en el evento.')
     } finally {
       setLoading(false)
     }
@@ -55,7 +55,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
         <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
           <div className="text-center">
             <div className="loading loading-spinner loading-lg text-primary"></div>
-            <p className="mt-4 text-gray-600">Generando tu invitación QR...</p>
+            <p className="mt-4 text-gray-600">Generando código QR...</p>
           </div>
         </div>
       </div>
@@ -100,7 +100,6 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
 
         <div className="text-center mb-4">
           <p className="text-gray-600 mb-4">
-            🎫 <strong>Tu invitación digital</strong><br/>
             Muestra este código QR al organizador del evento para verificar tu asistencia
           </p>
         </div>
@@ -118,14 +117,12 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
 
             {/* Información adicional */}
             <div className="bg-gray-50 rounded-lg p-4 mb-4 text-left">
-              <h4 className="font-semibold text-gray-800 mb-2">📋 Información de la Invitación:</h4>
+              <h4 className="font-semibold text-gray-800 mb-2">Información del QR:</h4>
               <div className="text-sm text-gray-600 space-y-1">
-                <p><strong>🎯 Evento:</strong> {eventTitle}</p>
-                <p><strong>👤 Participante:</strong> {user?.nombre} {user?.apellido}</p>
-                <p><strong>🆔 Usuario:</strong> @{user?.nombre_usuario}</p>
-                <p><strong>🔢 ID de Inscripción:</strong> {qrData.inscription_id}</p>
-                <p><strong>📅 Generado:</strong> {new Date().toLocaleString('es-ES')}</p>
-                <p><strong>🔐 Estado:</strong> <span className="badge badge-success">Válido</span></p>
+                <p><strong>Evento:</strong> {eventTitle}</p>
+                <p><strong>Participante:</strong> {user?.nombre} {user?.apellido}</p>
+                <p><strong>ID de Inscripción:</strong> {qrData.inscription_id}</p>
+                <p><strong>Generado:</strong> {new Date().toLocaleString('es-ES')}</p>
               </div>
             </div>
 
@@ -135,7 +132,7 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
                 onClick={downloadQR}
                 className="btn btn-outline btn-primary"
               >
-                📥 Descargar Invitación
+                📥 Descargar QR
               </button>
               <button
                 onClick={onClose}
@@ -149,13 +146,12 @@ const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ eventId, eventTitle, onCl
 
         {/* Instrucciones */}
         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="font-semibold text-blue-800 mb-2">💡 Instrucciones de Uso:</h4>
+          <h4 className="font-semibold text-blue-800 mb-2">💡 Instrucciones:</h4>
           <ul className="text-sm text-blue-700 space-y-1">
-            <li>• 📱 Guarda esta invitación QR en tu teléfono</li>
-            <li>• 🎫 Preséntala al organizador al llegar al evento</li>
-            <li>• 📷 El organizador escaneará tu QR para confirmar asistencia</li>
-            <li>• 🔒 Esta invitación es única y solo válida para este evento</li>
-            <li>• ⏰ La invitación se genera en tiempo real y es segura</li>
+            <li>• Guarda este código QR en tu teléfono</li>
+            <li>• Preséntalo al organizador al llegar al evento</li>
+            <li>• El organizador escaneará tu QR para confirmar asistencia</li>
+            <li>• Este QR es único y solo válido para este evento</li>
           </ul>
         </div>
       </div>
