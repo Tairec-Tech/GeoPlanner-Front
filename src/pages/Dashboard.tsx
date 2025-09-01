@@ -144,10 +144,43 @@ const Dashboard = () => {
   // ESTADOS DE VISTA Y CONFIGURACIÓN
   // ========================================
   // Controlan cómo se muestra la información al usuario
-  const [currentView, setCurrentView] = useState<'map' | 'classic'>('map')        // Vista actual: mapa o clásica
+  const [currentView, setCurrentView] = useState<'map' | 'classic'>(() => {
+    // Recuperar la vista guardada del localStorage al inicializar
+    const savedView = localStorage.getItem('dashboardView')
+    return (savedView as 'map' | 'classic') || 'map'
+  })        // Vista actual: mapa o clásica
+
+  // Función para cambiar vista y guardar en localStorage
+  const changeView = (view: 'map' | 'classic') => {
+    setCurrentView(view)
+    localStorage.setItem('dashboardView', view)
+  }
+
+  // Función para cambiar filtro y guardar en localStorage
+  const changeFilter = (filter: string) => {
+    setFilterType(filter)
+    localStorage.setItem('dashboardFilter', filter)
+  }
+
+  // Función para cambiar término de búsqueda y guardar en localStorage
+  const changeSearchTerm = (term: string) => {
+    setSearchTerm(term)
+    localStorage.setItem('dashboardSearch', term)
+  }
+
+  // Función para limpiar el estado guardado del dashboard (usar al cerrar sesión)
+  const clearDashboardState = () => {
+    localStorage.removeItem('dashboardView')
+    localStorage.removeItem('dashboardFilter')
+    localStorage.removeItem('dashboardSearch')
+  }
   const [currentMapStyle, setCurrentMapStyle] = useState('openstreetmap')         // Estilo del mapa (openstreetmap, satellite, etc.)
   const [currentTheme, setCurrentTheme] = useState('default')                     // Tema de color actual
-  const [filterType, setFilterType] = useState('all')                             // Tipo de filtro aplicado
+  const [filterType, setFilterType] = useState(() => {
+    // Recuperar el filtro guardado del localStorage
+    const savedFilter = localStorage.getItem('dashboardFilter')
+    return savedFilter || 'all'
+  })                                                                              // Tipo de filtro aplicado
   const [isMapLoading, setIsMapLoading] = useState(true)                          // Estado de carga del mapa
   
   // ========================================
@@ -159,7 +192,11 @@ const Dashboard = () => {
   const [events, setEvents] = useState<any[]>([])                                           // Lista de eventos
   const [eventMarkers, setEventMarkers] = useState<any[]>([])                               // Marcadores de eventos en el mapa
   const [routingControl, setRoutingControl] = useState<any>(null)                           // Control de rutas en el mapa
-  const [searchTerm, setSearchTerm] = useState('')                                          // Término de búsqueda
+  const [searchTerm, setSearchTerm] = useState(() => {
+    // Recuperar el término de búsqueda guardado del localStorage
+    const savedSearch = localStorage.getItem('dashboardSearch')
+    return savedSearch || ''
+  })                                                                                        // Término de búsqueda
   const [filteredEvents, setFilteredEvents] = useState<any[]>([])                           // Eventos filtrados (no usado actualmente)
   
   // ========================================
@@ -272,19 +309,32 @@ const Dashboard = () => {
   // Define los diferentes estilos de mapa disponibles en la aplicación
   const mapStyles = {
     openstreetmap: {
-      name: 'OpenStreetMap',  // Nombre mostrado en la interfaz
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',  // URL de las tiles
-      attribution: '© OpenStreetMap contributors'  // Atribución requerida
+      name: 'OpenStreetMap',  // Mapa digital estándar
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      attribution: '© OpenStreetMap contributors',
+      type: 'single'
     },
-    satellite: {
-      name: 'Vista Satelital',  // Vista satelital de Esri
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attribution: '© Esri'
+    google_maps: {
+      name: 'Google Maps',  // Mapa digital de Google
+      url: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+      attribution: '© Google',
+      type: 'single'
     },
     hybrid_esri: {
-      name: 'Satélite con Calles (Esri)',  // Vista híbrida con calles
+      name: 'Satélite con Calles (Esri)',  // Vista satelital con calles
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attribution: '© Esri',
+      type: 'hybrid',
+      streetLayer: {
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+        attribution: '© Esri'
+      }
+    },
+    google_hybrid: {
+      name: 'Google Maps Satelital',  // Vista satelital de Google con calles
+      url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+      attribution: '© Google',
+      type: 'single'
     }
   }
 
@@ -1322,7 +1372,7 @@ const Dashboard = () => {
   // ========================================
   // Actualiza el término de búsqueda para filtrar eventos
   const handleSearch = (term: string) => {
-    setSearchTerm(term)  // Actualizar estado de búsqueda
+    changeSearchTerm(term)  // Actualizar estado de búsqueda y guardar en localStorage
   }
 
   // ========================================
@@ -1478,20 +1528,79 @@ const Dashboard = () => {
   // Alterna el estado de guardado de un evento (guardar o quitar de guardados)
   const handleSaveEvent = async (eventId: string) => {
     try {
+      console.log('🔍 Debug - Evento ID:', eventId)
+      console.log('🔍 Debug - Eventos guardados actuales:', savedEvents.map(e => e.id_publicacion))
+      
       const isCurrentlySaved = savedEvents.some(event => event.id_publicacion === eventId)  // Verificar si ya está guardado
+      console.log('🔍 Debug - ¿Ya está guardado?:', isCurrentlySaved)
       
       if (isCurrentlySaved) {
         // Remover de guardados si ya está guardado
+        console.log('🗑️ Intentando remover evento de guardados...')
         await apiService.unsaveEvent(eventId)  // Quitar del backend
         setSavedEvents(prev => prev.filter(event => event.id_publicacion !== eventId))  // Remover del estado local
+        console.log('✅ Evento removido de guardados')
       } else {
         // Agregar a guardados si no está guardado
+        console.log('💾 Intentando guardar evento...')
+        
+        // Verificación adicional: asegurar que el evento no esté ya guardado
+        const isAlreadySaved = savedEvents.some(event => event.id_publicacion === eventId)
+        if (isAlreadySaved) {
+          console.log('⚠️ Evento ya está en la lista local, sincronizando...')
+          // Recargar desde el backend para asegurar sincronización
+          const updatedSavedEvents = await apiService.getSavedEventsWithDetails()
+          setSavedEvents(updatedSavedEvents)
+          return
+        }
+        
         const savedEvent = await apiService.saveEvent(eventId)  // Guardar en el backend
         setSavedEvents(prev => [...prev, savedEvent])  // Agregar al estado local
+        console.log('✅ Evento guardado exitosamente')
       }
     } catch (error) {
-      console.error('Error guardando/quitando evento:', error)  // Log de error
-      alert('Error al guardar/quitar el evento')  // Mensaje de error al usuario
+      console.error('❌ Error guardando/quitando evento:', error)  // Log de error
+      
+      // Determinar el mensaje de error específico
+      let errorMessage = 'No se pudo guardar o quitar el evento. Verifica tu conexión e intenta nuevamente.'
+      
+      if (error instanceof Error) {
+        if (error.message.includes('422') || (error.message.includes('400') && error.message.includes('ya está guardado'))) {
+          // Para errores 422 o 400 cuando el evento ya está guardado, sincronizar el estado
+          console.log('🔄 Error 422/400 detectado, sincronizando estado...')
+          
+          // Recargar los eventos guardados del backend para sincronizar
+          try {
+            const updatedSavedEvents = await apiService.getSavedEventsWithDetails()
+            setSavedEvents(updatedSavedEvents)
+            console.log('✅ Estado sincronizado con el backend')
+            
+            // No mostrar error al usuario, solo sincronizar silenciosamente
+            return // Salir sin mostrar modal de error
+          } catch (syncError) {
+            console.error('❌ Error sincronizando estado:', syncError)
+            errorMessage = 'Error de validación: El evento no puede ser guardado. Posibles causas:\n• El evento ya está guardado\n• El evento no existe o fue eliminado\n• Problemas de permisos\n\nIntenta refrescar la página e intentar nuevamente.'
+          }
+        } else if (error.message.includes('404')) {
+          errorMessage = 'Evento no encontrado. Es posible que haya sido eliminado o no esté disponible.'
+        } else if (error.message.includes('401')) {
+          errorMessage = 'Sesión expirada. Por favor, inicia sesión nuevamente.'
+        } else if (error.message.includes('403')) {
+          errorMessage = 'No tienes permisos para realizar esta acción.'
+        } else if (error.message.includes('500')) {
+          errorMessage = 'Error del servidor. Por favor, intenta más tarde.'
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
+      // Mostrar modal de error específico
+      setErrorModal({
+        isOpen: true,
+        title: 'Error al Guardar Evento',
+        message: errorMessage,
+        type: 'error'
+      })
     }
   }
 
@@ -1797,10 +1906,41 @@ const Dashboard = () => {
         })
       )
       
-      setPosts(postsWithComments)
+      // Filtrar eventos pasados (más de 24 horas después de la fecha del evento)
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+      
+      const activePosts = postsWithComments.filter(post => {
+        if (!post.fecha_evento) return true // Si no tiene fecha de evento, mostrarlo
+        
+        const eventDate = new Date(post.fecha_evento)
+        const isEventPassed = eventDate < twentyFourHoursAgo
+        
+        if (isEventPassed) {
+          console.log(`🚫 Evento oculto (pasado): ${post.texto.substring(0, 50)}... - Fecha: ${eventDate.toLocaleString()}`)
+        }
+        
+        return !isEventPassed // Solo mostrar eventos que NO han pasado más de 24 horas
+      })
+
+      // Agregar información sobre eventos próximos a expirar
+      const postsWithExpiryInfo = activePosts.map(post => {
+        if (!post.fecha_evento) return post
+        
+        const eventDate = new Date(post.fecha_evento)
+        const hoursUntilExpiry = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+        
+        return {
+          ...post,
+          isExpiringSoon: hoursUntilExpiry <= 24 && hoursUntilExpiry > 0,
+          hoursUntilExpiry: Math.floor(hoursUntilExpiry)
+        }
+      })
+      
+      setPosts(postsWithExpiryInfo)
       
       // Convertir los posts que son eventos en objetos para el mapa
-      const mappedEvents = postsWithComments
+      const mappedEvents = postsWithExpiryInfo
         .filter(p => p.fecha_evento && p.rutas && p.rutas.length > 0 && p.privacidad === 'publica') // Solo posts públicos con fecha de evento y rutas
         .map(p => {
           const firstRoute = p.rutas![0] // Usar non-null assertion ya que el filtro garantiza que rutas existe
@@ -1822,9 +1962,10 @@ const Dashboard = () => {
           }
         })
 
-      console.log('📊 Posts cargados:', postsWithComments.length)
+      console.log('📊 Posts cargados del backend:', postsWithComments.length)
       console.log('🎯 Posts con fecha de evento:', postsWithComments.filter(p => p.fecha_evento).length)
       console.log('📍 Posts con rutas:', postsWithComments.filter(p => p.rutas && p.rutas.length > 0).length)
+      console.log('✅ Posts activos (no pasados):', activePosts.length)
       console.log('🗺️ Eventos mapeados para el mapa:', mappedEvents.length)
       console.log('📋 Eventos mapeados:', mappedEvents)
 
@@ -2071,25 +2212,27 @@ const Dashboard = () => {
     if (isOwner) {
       if (eventDate > now) {
         actionButtons.push(
-          <button key="inscritos" className="btn btn-sm btn-warning">Ver Inscritos</button>
+          <button key="inscritos" className="btn btn-xs md:btn-sm lg:btn-md btn-warning text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4">
+            <span className="hidden sm:inline">Ver Inscritos</span>
+          </button>
         )
       } else {
         actionButtons.push(
           <button 
             key="scanner" 
-            className="btn btn-sm btn-success"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-success text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
                             // onClick={() => handleShowQRScanner(post.id, post.texto)}
           >
-            📱 Escanear QR
+            📱 <span className="hidden sm:inline">Escanear QR</span>
           </button>
         )
         actionButtons.push(
           <button 
             key="historial" 
-            className="btn btn-sm btn-info"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-info text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
                             onClick={() => handleShowAttendanceHistory(post.id, post.texto)}
           >
-            📊 Historial
+            📊 <span className="hidden sm:inline">Historial</span>
           </button>
         )
       }
@@ -2102,10 +2245,10 @@ const Dashboard = () => {
         actionButtons.push(
           <button 
             key="desinscribirse" 
-            className="btn btn-sm btn-error"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-error text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
             onClick={() => handleDesinscribirse(post.id)}
           >
-            ❌ Cancelar Inscripción
+            ❌ <span className="hidden sm:inline">Cancelar Inscripción</span>
           </button>
         )
         
@@ -2113,10 +2256,10 @@ const Dashboard = () => {
         actionButtons.push(
           <button 
             key="qr" 
-            className="btn btn-sm btn-primary"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-primary text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
             onClick={() => handleShowQRCodeDisplay(post.id, post.texto)}
           >
-            📱 Ver Invitación QR
+            📱 <span className="hidden sm:inline">Ver Invitación QR</span>
           </button>
         )
       } else {
@@ -2124,10 +2267,10 @@ const Dashboard = () => {
         actionButtons.push(
           <button 
             key="inscribirse" 
-            className="btn btn-sm btn-primary"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-primary text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
             onClick={() => handleInscribirse(post.id)}
           >
-            ✅ Inscribirse
+            ✅ <span className="hidden sm:inline">Inscribirse</span>
           </button>
         )
         
@@ -2135,22 +2278,22 @@ const Dashboard = () => {
         actionButtons.push(
           <button 
             key="qr-disabled" 
-            className="btn btn-sm btn-disabled"
+            className="btn btn-xs md:btn-sm lg:btn-md btn-disabled text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
             disabled
             title="Debes inscribirte primero para ver tu QR"
           >
-            📱 Ver Invitación QR
+            📱 <span className="hidden sm:inline">Ver Invitación QR</span>
           </button>
         )
       }
     }
 
     return (
-      <div key={post.id} className="post-card post card shadow-sm mb-4 event-card" style={{
+      <div key={post.id} className="post-card post card shadow-sm mb-4 event-card w-full max-w-4xl mx-auto relative" style={{
         backgroundColor: 'var(--card-bg)',
         color: 'var(--card-text-color)'
       }}>
-        <div className="card-body">
+        <div className="card-body p-3 md:p-6 relative z-30">
           {/* Header de la publicación */}
           <div className="post-header flex items-center gap-2 mb-3">
             {/* Foto de perfil del autor */}
@@ -2158,95 +2301,107 @@ const Dashboard = () => {
               <img 
                 src={post.foto_autor || '/src/assets/img/placeholder.png'} 
                 alt={`Foto de ${post.nombre_autor}`}
-                className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-gray-200"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
                   target.src = '/src/assets/img/placeholder.png'
                 }}
               />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <button 
-                className="font-semibold hover:text-blue-600 transition-colors cursor-pointer"
+                className="font-semibold hover:text-blue-600 transition-colors cursor-pointer text-sm md:text-base lg:text-lg truncate"
                 onClick={() => navigate(`/usuario/${post.id_autor}`)}
               >
                 {post.nombre_autor}
               </button>
               <button 
-                className="text-sm text-gray-500 hover:text-blue-600 transition-colors cursor-pointer block"
+                className="text-xs md:text-sm lg:text-base text-gray-500 hover:text-blue-600 transition-colors cursor-pointer block truncate"
                 onClick={() => navigate(`/usuario/${post.id_autor}`)}
               >
                 @{post.username_autor}
               </button>
             </div>
             {post.verificado && verifiedIcon}
-            <span className="badge badge-secondary">{privacyBadge}</span>
+            <span className="badge badge-secondary text-xs md:text-sm lg:text-base">{privacyBadge}</span>
             <div className="ml-auto">{saveStarIcon}</div>
           </div>
           
+          {/* Indicador de expiración */}
+          {post.isExpiringSoon && (
+            <div className="mb-3 p-2 bg-orange-100 border border-orange-300 rounded-lg">
+              <div className="flex items-center gap-2 text-orange-700">
+                <span className="text-sm">⏰</span>
+                <span className="text-xs md:text-sm font-medium">
+                  Este evento expira en {post.hoursUntilExpiry} horas
+                </span>
+              </div>
+            </div>
+          )}
+          
           {/* Texto de la publicación */}
-          <p className="mb-3">{post.texto}</p>
+          <p className="mb-3 text-sm md:text-base lg:text-lg leading-relaxed">{post.texto}</p>
           
           {/* Imagen si existe */}
           {post.media_url && (
             <img 
               src={post.media_url} 
               alt="Media" 
-              className="img-fluid rounded mb-3 w-full h-48 object-cover"
+              className="img-fluid rounded mb-3 w-full h-32 md:h-48 object-cover"
               onError={(e) => (e.target as HTMLImageElement).style.display = 'none'}
             />
           )}
           
           {/* Mapa de la publicación */}
-          <div className="map-container mb-3 h-96 w-250 mx-auto relative" id={`map-${post.id}`}>
+          <div className="map-container mb-3 h-48 md:h-64 lg:h-80 w-full mx-auto relative rounded-lg overflow-hidden" style={{ zIndex: 1 }} id={`map-${post.id}`}>
             {/* Aquí se renderizará el mapa */}
             {/* Botones de zoom */}
-            <div className="absolute top-4 right-4 z-[9999] flex flex-col gap-2">
+            <div className="absolute top-2 md:top-4 right-2 md:right-4 z-[9999] flex flex-col gap-1 md:gap-2">
               <button 
-                className="btn btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
+                className="btn btn-xs md:btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
                 onClick={() => handleMapZoom(post.id, 'in')}
                 title="Zoom In"
               >
-                <i className="fas fa-plus text-gray-800 font-bold"></i>
+                <i className="fas fa-plus text-gray-800 font-bold text-xs md:text-sm"></i>
               </button>
               <button 
-                className="btn btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
+                className="btn btn-xs md:btn-sm btn-circle bg-white shadow-xl hover:bg-gray-100 border-2 border-gray-400"
                 onClick={() => handleMapZoom(post.id, 'out')}
                 title="Zoom Out"
               >
-                <i className="fas fa-minus text-gray-800 font-bold"></i>
+                <i className="fas fa-minus text-gray-800 font-bold text-xs md:text-sm"></i>
               </button>
             </div>
           </div>
           
           {/* Lista de rutas si hay múltiples */}
           {post.rutas && post.rutas.length > 1 && (
-            <ol className="list-group list-group-flush list-group-numbered mb-3 text-sm">
+            <ol className="list-group list-group-flush list-group-numbered mb-3 text-xs md:text-sm">
               {post.rutas.map((ruta: any, index: number) => (
-                <li key={index} className="list-group-item">{ruta.etiqueta}</li>
+                <li key={index} className="list-group-item p-2 md:p-3">{ruta.etiqueta}</li>
               ))}
             </ol>
           )}
           
           {/* Botones de acción */}
-          <div className="flex gap-2 mt-3 flex-wrap">
+          <div className="flex gap-1 md:gap-2 mt-3 flex-wrap relative z-20">
             <button 
-              className="btn btn-sm btn-outline-danger"
+              className="btn btn-xs md:btn-sm lg:btn-md btn-outline-danger text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
               onClick={() => handleLike(post.id)}
             >
-              {isLiked ? '💔 Quitar Like' : '❤️ Like'} ({post.likes})
+              {isLiked ? '💔' : '❤️'} <span className="hidden sm:inline">{isLiked ? 'Quitar Like' : 'Like'}</span> <span className="text-xs md:text-sm lg:text-sm">({post.likes})</span>
             </button>
             <button 
-              className="btn btn-sm btn-outline-secondary"
+              className="btn btn-xs md:btn-sm lg:btn-md btn-outline-secondary text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
               onClick={() => toggleComments(post.id)}
             >
-              💬 Comentarios ({post.comentarios?.length || 0})
+              💬 <span className="hidden sm:inline">Comentarios</span> <span className="text-xs md:text-sm lg:text-sm">({post.comentarios?.length || 0})</span>
             </button>
             <button 
-              className="btn btn-sm btn-outline-info"
+              className="btn btn-xs md:btn-sm lg:btn-md btn-outline-info text-xs md:text-sm lg:text-sm px-2 md:px-3 lg:px-4"
               onClick={() => handleShowPostTerms(post)}
             >
-              📜 Ver Términos
+              📜 <span className="hidden sm:inline">Ver Términos</span>
             </button>
             {actionButtons.map((button, index) => (
             <React.Fragment key={index}>
@@ -2257,7 +2412,7 @@ const Dashboard = () => {
 
           {/* Sección de comentarios */}
           {showComments[post.id] && (
-            <div className="comentarios mt-3 p-3 rounded comment-section">
+            <div className="comentarios mt-3 p-2 md:p-3 rounded comment-section relative z-20">
               <div className="comentarios-list mb-3">
                 {post.comentarios && post.comentarios.length > 0 ? (
                   post.comentarios.map((comentario) => (
@@ -2269,37 +2424,37 @@ const Dashboard = () => {
                           <img 
                             src={comentario.foto_autor || '/src/assets/img/placeholder.png'} 
                             alt={`Foto de ${comentario.nombre_autor}`}
-                            className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                            className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border border-gray-200"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement
                               target.src = '/src/assets/img/placeholder.png'
                             }}
                           />
                         </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <strong className="text-sm">{comentario.nombre_autor}</strong>
-                            <span className="text-xs text-gray-500">@{comentario.username_autor}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                            <strong className="text-xs md:text-sm truncate">{comentario.nombre_autor}</strong>
+                            <span className="text-xs text-gray-500 truncate">@{comentario.username_autor}</span>
                             <span className="text-xs text-gray-400">
                               {new Date(comentario.fecha_creacion).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="text-sm mt-1">
+                          <p className="text-xs md:text-sm mt-1">
                             {renderTextWithMentions(comentario.texto)}
                           </p>
-                          <div className="flex gap-2 mt-2">
+                          <div className="flex gap-1 md:gap-2 mt-2">
                             <button 
-                              className="btn btn-xs btn-outline"
+                              className="btn btn-xs md:btn-sm lg:btn-md btn-outline text-xs md:text-sm lg:text-sm"
                               onClick={() => handleReplyToComment(comentario.id)}
                             >
-                              💬 Responder
+                              💬 <span className="hidden md:inline">Responder</span>
                             </button>
                             {comentario.id_autor === user?.id && (
                               <button 
-                                className="btn btn-xs btn-error"
+                                className="btn btn-xs md:btn-sm lg:btn-md btn-error text-xs md:text-sm lg:text-sm"
                                 onClick={() => handleDeleteComment(comentario.id, comentario.id_autor)}
                               >
-                                🗑️ Eliminar
+                                🗑️ <span className="hidden md:inline">Eliminar</span>
                               </button>
                             )}
                           </div>
@@ -2308,7 +2463,7 @@ const Dashboard = () => {
                       
                       {/* Respuestas al comentario */}
                       {comentario.respuestas && comentario.respuestas.length > 0 && (
-                        <div className="ml-6 mt-2 space-y-2">
+                        <div className="ml-4 md:ml-6 mt-2 space-y-2">
                           {comentario.respuestas.map((respuesta) => (
                             <div key={respuesta.id} className="comment-box flex items-start gap-2 p-2 rounded">
                               {/* Foto de perfil del autor de la respuesta */}
@@ -2316,27 +2471,27 @@ const Dashboard = () => {
                                 <img 
                                   src={respuesta.foto_autor || '/src/assets/img/placeholder.png'} 
                                   alt={`Foto de ${respuesta.nombre_autor}`}
-                                  className="w-6 h-6 rounded-full object-cover border border-gray-200"
+                                  className="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover border border-gray-200"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement
                                     target.src = '/src/assets/img/placeholder.png'
                                   }}
                                 />
                               </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2">
-                                  <strong className="text-sm">{respuesta.nombre_autor}</strong>
-                                  <span className="text-xs text-gray-500">@{respuesta.username_autor}</span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                                  <strong className="text-xs md:text-sm truncate">{respuesta.nombre_autor}</strong>
+                                  <span className="text-xs text-gray-500 truncate">@{respuesta.username_autor}</span>
                                   <span className="text-xs text-gray-400">
                                     {new Date(respuesta.fecha_creacion).toLocaleDateString()}
                                   </span>
                                 </div>
-                                <p className="text-sm mt-1">
+                                <p className="text-xs md:text-sm mt-1">
                                   {renderTextWithMentions(respuesta.texto)}
                                 </p>
                                 {respuesta.id_autor === user?.id && (
                                   <button 
-                                    className="btn btn-xs btn-error mt-1"
+                                    className="btn btn-xs md:btn-sm lg:btn-md btn-error mt-1 text-xs md:text-sm lg:text-sm"
                                     onClick={() => handleDeleteComment(respuesta.id, respuesta.id_autor)}
                                   >
                                     🗑️
@@ -2984,22 +3139,42 @@ const Dashboard = () => {
           }
         })
 
-        // Agregar nueva capa
+        // Agregar nueva capa según el tipo
         const style = mapStyles[styleName as keyof typeof mapStyles]
-        L.tileLayer(style.url, {
-          attribution: style.attribution
-        }).addTo(mapInstanceRef.current)
+        
+        if (style.type === 'hybrid') {
+          // Para mapas híbridos, agregar capa base (satelital) y capa de calles
+          const baseLayer = L.tileLayer(style.url, {
+            attribution: style.attribution
+          }).addTo(mapInstanceRef.current)
+          
+          // Agregar capa de calles sobre la imagen satelital
+          const streetLayer = L.tileLayer(style.streetLayer.url, {
+            attribution: style.streetLayer.attribution,
+            opacity: 0.7  // Hacer las calles semi-transparentes
+          }).addTo(mapInstanceRef.current)
+          
+          console.log(`✅ Estilo híbrido aplicado: ${styleName} (Base + Calles)`)
+        } else {
+          // Para mapas simples, agregar solo una capa
+          L.tileLayer(style.url, {
+            attribution: style.attribution
+          }).addTo(mapInstanceRef.current)
+          
+          console.log(`✅ Estilo simple aplicado: ${styleName}`)
+        }
 
-        console.log(`Estilo de mapa cambiado a: ${styleName}`)
+        console.log(`🗺️ Estilo de mapa cambiado a: ${styleName}`)
       } catch (error) {
-        console.error('Error cambiando estilo de mapa:', error)
+        console.error('❌ Error cambiando estilo de mapa:', error)
       }
     }
   }
 
   // Toggle de vista
   const toggleView = () => {
-    setCurrentView(prevView => prevView === 'map' ? 'classic' : 'map')
+    const newView = currentView === 'map' ? 'classic' : 'map'
+    changeView(newView)
   }
 
   // Inicializar datos
@@ -3077,6 +3252,13 @@ const Dashboard = () => {
     return () => clearInterval(interval)
   }, [agendaItems])
 
+  // useEffect para limpiar estado del dashboard cuando el usuario cierre sesión
+  useEffect(() => {
+    if (!user) {
+      clearDashboardState()
+    }
+  }, [user])
+
   // useEffect simplificado que cierra CUALQUIER menú activo si se hace clic fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -3125,7 +3307,28 @@ const Dashboard = () => {
           const map = L.map(mapContainerRef.current).setView([10.654, -71.612], 12);
 
           const style = mapStyles[currentMapStyle as keyof typeof mapStyles];
-          L.tileLayer(style.url, { attribution: style.attribution }).addTo(map);
+          
+          if (style.type === 'hybrid') {
+            // Para mapas híbridos, agregar capa base (satelital) y capa de calles
+            L.tileLayer(style.url, {
+              attribution: style.attribution
+            }).addTo(map);
+            
+            // Agregar capa de calles sobre la imagen satelital
+            L.tileLayer(style.streetLayer.url, {
+              attribution: style.streetLayer.attribution,
+              opacity: 0.7  // Hacer las calles semi-transparentes
+            }).addTo(map);
+            
+            console.log(`✅ Mapa híbrido inicializado: ${currentMapStyle} (Base + Calles)`)
+          } else {
+            // Para mapas simples, agregar solo una capa
+            L.tileLayer(style.url, {
+              attribution: style.attribution
+            }).addTo(map);
+            
+            console.log(`✅ Mapa simple inicializado: ${currentMapStyle}`)
+          }
 
           mapInstanceRef.current = map;
           
@@ -3316,18 +3519,18 @@ const Dashboard = () => {
         </div>
       )}
       {/* Header */}
-      <header className="flex justify-between items-center text-primary-content p-4 shadow-lg bg-primary">
+      <header className="flex flex-col lg:flex-row justify-between items-center text-primary-content p-4 shadow-lg bg-primary gap-4">
         <a href="#" className="flex items-center gap-2 text-primary-content no-underline">
           <img 
             src={currentTheme === 'noche' ? logoNoche : logo} 
             alt="Logo" 
-            className="w-9 h-9" 
+            className="w-8 h-8 md:w-9 md:h-9" 
           />
-          <strong className="text-xl">GeoPlanner</strong>
+          <strong className="text-lg md:text-xl">GeoPlanner</strong>
         </a>
         
-        {/* Búsqueda de direcciones */}
-        <div className="relative min-w-[300px] address-search-container">
+        {/* Búsqueda de direcciones - Centrada en pantallas grandes */}
+        <div className="relative w-full lg:w-1/2 xl:w-1/3 address-search-container">
           <div className="join">
             <input 
               type="text" 
@@ -3366,16 +3569,39 @@ const Dashboard = () => {
           )}
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
+          {/* Menú hamburguesa para móvil */}
+          <div className="lg:hidden dropdown dropdown-end">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </div>
+            <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[3000] w-64 p-2 shadow">
+              <li className="menu-title"><span>Menú Principal</span></li>
+              <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
+              <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={handleShowMyInscriptions}>🎟️ Mis Inscripciones</a></li>
+              <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
+              <li><hr className="my-2" /></li>
+              <li className="menu-title"><span>Filtros</span></li>
+                              <li><a className={filterType === 'all' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('all')}>Todos los tipos</a></li>
+                <li><a className={filterType === 'Deporte' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('Deporte')}>Deporte</a></li>
+                <li><a className={filterType === 'Estudio' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('Estudio')}>Estudio</a></li>
+                <li><a className={filterType === 'Social' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('Social')}>Social</a></li>
+                <li><a className={filterType === 'Cultural' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('Cultural')}>Cultural</a></li>
+                <li><a className={filterType === 'Otro' ? 'bg-primary-focus' : ''} onClick={() => changeFilter('Otro')}>Otro</a></li>
+            </ul>
+          </div>
+
           <button 
-            className={`btn btn-sm font-bold transition-all duration-300 ${
+            className={`btn btn-sm font-bold transition-all duration-300 text-xs md:text-sm ${
               currentTheme === 'noche' 
                 ? 'bg-slate-800 text-white border-2 border-cyan-400 hover:bg-cyan-400 hover:text-white hover:shadow-lg hover:shadow-cyan-400/40 hover:-translate-y-0.5' 
                 : 'bg-white text-gray-800 border-2 border-blue-600 hover:bg-blue-600 hover:text-white hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5'
             }`}
             onClick={toggleView}
           >
-            {currentView === 'map' ? 'Ver Feed Clásico' : 'Ver Vista de Mapa'}
+            {currentView === 'map' ? 'Feed Clásico' : 'Vista Mapa'}
           </button>
           
           <div className="flex gap-2">
@@ -3492,13 +3718,21 @@ const Dashboard = () => {
                         closeDropdown()
                       }}
                     >
-                      <div className="w-4 h-4 rounded bg-gray-300"></div>
+                      <div className="w-4 h-4 rounded bg-gray-300 flex items-center justify-center text-xs">
+                        {styleName === 'openstreetmap' ? '🗺️' :
+                         styleName === 'google_maps' ? '📍' :
+                         styleName === 'hybrid_esri' ? '🌍' :
+                         styleName === 'google_hybrid' ? '🛰️' :
+                         '🗺️'}
+                      </div>
                       <div>
                         <strong>{style.name}</strong>
                         <br />
-                        <small>{styleName === 'openstreetmap' ? 'Mapa estándar con calles' :
-                                styleName === 'satellite' ? 'Imágenes satelitales' :
-                                'Imágenes + calles'}</small>
+                        <small>{styleName === 'openstreetmap' ? 'Mapa digital estándar' :
+                                styleName === 'google_maps' ? 'Mapa digital de Google' :
+                                styleName === 'hybrid_esri' ? 'Satélite + calles (Esri)' :
+                                styleName === 'google_hybrid' ? 'Satélite + calles (Google)' :
+                                'Mapa digital'}</small>
                       </div>
                     </a>
                   </li>
@@ -3614,9 +3848,9 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex bg-white" style={{ height: 'calc(100vh - 80px)' }} data-theme={currentTheme}>
-        {/* Sidebar Column */}
-        <div className="w-64 flex flex-col gap-4 mr-4 pt-4 ml-4" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+      <div className="flex flex-col lg:flex-row bg-white" style={{ height: 'calc(100vh - 80px)' }} data-theme={currentTheme}>
+        {/* Sidebar Column - Oculto en móvil */}
+        <div className="hidden lg:flex w-64 flex-col gap-4 mr-4 pt-4 ml-4" style={{ maxHeight: 'calc(100vh - 120px)' }}>
           {/* Sidebar Principal */}
           <div className="bg-primary text-primary-content sidebar rounded-2xl shadow-lg">
             <div className="p-4">
@@ -3624,7 +3858,7 @@ const Dashboard = () => {
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={() => setShowAgendaModal(true)}>📅 Mi Agenda</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={handleShowMyInscriptions}>🎟️ Mis Inscripciones</a></li>
                 <li><a className="text-primary-content hover:bg-primary-focus cursor-pointer text-[#f5f5dc] font-semibold" onClick={() => setShowSavedEventsModal(true)}>⭐ Eventos Guardados</a></li>
-                <li><a className="text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold">👨‍👩‍👧‍👦 Grupos</a></li>
+                <li><a className="text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold cursor-pointer" onClick={() => navigate('/grupos')}>👨‍👩‍👧‍👦 Grupos</a></li>
 
               </ul>
             </div>
@@ -3637,37 +3871,37 @@ const Dashboard = () => {
               <ul className="menu bg-transparent text-primary-content">
                 <li><a 
                   className={filterType === 'all' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('all')}
+                  onClick={() => changeFilter('all')}
                 >
                   Todos los tipos
                 </a></li>
                 <li><a 
                   className={filterType === 'Deporte' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('Deporte')}
+                  onClick={() => changeFilter('Deporte')}
                 >
                   Deporte
                 </a></li>
                 <li><a 
                   className={filterType === 'Estudio' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('Estudio')}
+                  onClick={() => changeFilter('Estudio')}
                 >
                   Estudio
                 </a></li>
                 <li><a 
                   className={filterType === 'Social' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('Social')}
+                  onClick={() => changeFilter('Social')}
                 >
                   Social
                 </a></li>
                 <li><a 
                   className={filterType === 'Cultural' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('Cultural')}
+                  onClick={() => changeFilter('Cultural')}
                 >
                   Cultural
                 </a></li>
                 <li><a 
                   className={filterType === 'Otro' ? 'bg-primary-focus text-primary-content text-[#f5f5dc] font-semibold' : 'text-primary-content hover:bg-primary-focus text-[#f5f5dc] font-semibold'}
-                  onClick={() => setFilterType('Otro')}
+                  onClick={() => changeFilter('Otro')}
                 >
                   Otro
                 </a></li>
@@ -3679,17 +3913,19 @@ const Dashboard = () => {
         {/* Content Area */}
         <div className="flex-1 bg-white content-area" style={{ height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
           {currentView === 'map' ? (
-            <div className="relative h-full w-full p-4">
+            <div className="relative h-full w-full p-0 md:p-4">
               <div 
                 id="feed-map" 
                 ref={mapContainerRef} 
-                className="h-full w-full rounded-2xl shadow-lg"
+                className="h-full w-full rounded-none md:rounded-2xl shadow-lg border-2 border-gray-300"
                 style={{ 
-                  height: 'calc(100vh - 120px)', 
+                  height: 'calc(100vh - 80px)', 
                   width: '100%',
                   position: 'relative',
                   borderRadius: '16px',
-                  overflow: 'hidden'
+                  overflow: 'hidden',
+                  zIndex: 1,
+                  border: '2px solid #d1d5db'
                 }}
               >
                 {isMapLoading && (
@@ -3699,104 +3935,47 @@ const Dashboard = () => {
                   </div>
                 )}
                 
-                {/* Botón flotante para crear publicación */}
-                <button 
-                  className="btn btn-primary shadow-lg absolute bottom-6 right-6 z-50"
-                  title="Crear evento"
-                  onClick={() => setShowCreateEventModal(true)}
-                >
-                  <i className="fas fa-plus"></i>
-                  <span className="ml-2">Crear Evento</span>
-                </button>
+
                 
                 {/* Botón para centrar en ubicación del usuario */}
                 <button 
-                  className="btn btn-circle btn-neutral shadow absolute bottom-24 right-7 z-50"
+                  className="btn btn-circle btn-neutral shadow absolute bottom-16 md:bottom-24 right-4 md:right-7 z-[9999]"
                   title="Centrar en mi ubicación"
                   onClick={centerMapOnUser}
                 >
                   <i className="fas fa-crosshairs"></i>
                 </button>
                 
-                {/* Botón para forzar obtención de ubicación */}
-                <button 
-                  className="btn btn-circle btn-warning shadow absolute bottom-40 right-7 z-50"
-                  title="Actualizar mi ubicación"
-                  onClick={() => {
-                    console.log('📍 Forzando actualización de ubicación...')
-                    // Limpiar localStorage para forzar nueva obtención
-                    localStorage.removeItem('geoplanner_user_location')
-                    getUserLocation()
-                  }}
-                >
-                  <i className="fas fa-location-arrow"></i>
-                </button>
-                
-                {/* Botón de debug temporal */}
-                <button 
-                  className="btn btn-circle btn-info shadow absolute bottom-56 right-7 z-50"
-                  title="Debug de ubicación"
-                  onClick={showLocationDebugInfo}
-                >
-                  <i className="fas fa-bug"></i>
-                </button>
-                
-                {/* Botón para limpiar ruta */}
-                {routingControl && (
-                  <button 
-                    className="btn btn-circle btn-warning shadow absolute bottom-72 right-7 z-50"
-                    title="Limpiar ruta y restaurar eventos"
-                    onClick={() => {
-                      console.log('🗑️ Botón limpiar ruta presionado')
-                      clearRoutes()
-                      restoreAllEvents()
-                    }}
-                  >
-                    <i className="fas fa-trash"></i>
-                  </button>
-                )}
-                
                 {/* Botón flotante para crear publicación (vista mapa) */}
                 <button 
-                  className="btn btn-primary shadow-lg absolute bottom-6 right-7 z-50 w-14 h-14 rounded-full flex items-center justify-center text-2xl"
+                  className="btn btn-primary shadow-lg absolute bottom-4 md:bottom-6 right-4 md:right-7 z-[9999] w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center text-xl md:text-2xl"
                   onClick={() => setShowCreatePostModal(true)}
                   title="Crear publicación"
                 >
-                  <i className="bi bi-plus-lg"></i>
+                  <i className="fas fa-plus"></i>
                 </button>
-
-                {/* Botón para limpiar rutas */}
-                {routingControl && (
-                  <button 
-                    className="btn btn-circle btn-warning shadow absolute bottom-42 right-7 z-50"
-                    title="Limpiar rutas"
-                    onClick={clearRoutes}
-                  >
-                    🗑️
-                  </button>
-                )}
               </div>
               <div id="event-detail-sidebar"></div>
             </div>
           ) : (
-            <div className="h-full overflow-y-auto flex justify-center" style={{ height: 'calc(100vh - 80px)' }}>
-              <div className="feed-container w-11/12 max-w-6xl transform scale-105">
+            <div className="h-full overflow-y-auto flex justify-center px-2 md:px-4" style={{ height: 'calc(100vh - 80px)' }}>
+              <div className="feed-container w-full max-w-5xl transform scale-100">
                 {/* Widget de crear publicación */}
-                <div className="create-post-widget mb-6 flex justify-center mt-15">
-                  <div className="w-3/5 p-3 border rounded-lg create-post-widget">
-                    <div className="flex items-center gap-3">
-                      <img 
-                        src={placeholder} 
-                        className="w-7 h-7 rounded-full"
-                        alt="user"
-                      />
-                      <div 
-                        className="create-post-input cursor-pointer p-3 border rounded-lg hover:bg-gray-50 flex-1"
-                        onClick={() => setShowCreatePostModal(true)}
-                      >
-                        ¿Qué estás organizando, <span className="font-semibold">{user?.nombre?.split(' ')[0] || 'Usuario'}</span>?
+                <div className="create-post-widget mb-4 md:mb-6 flex justify-center mt-8 md:mt-15">
+                  <div className="w-full max-w-2xl p-3 md:p-4 border rounded-lg create-post-widget">
+                                          <div className="flex items-center gap-2 md:gap-3">
+                        <img 
+                          src={placeholder} 
+                          className="w-6 h-6 md:w-7 md:h-7 rounded-full"
+                          alt="user"
+                        />
+                        <div 
+                          className="create-post-input cursor-pointer p-2 md:p-3 border rounded-lg hover:bg-gray-50 flex-1 text-sm md:text-base"
+                          onClick={() => setShowCreatePostModal(true)}
+                        >
+                          ¿Qué estás organizando, <span className="font-semibold">{user?.nombre?.split(' ')[0] || 'Usuario'}</span>?
+                        </div>
                       </div>
-                    </div>
                   </div>
                 </div>
                 
@@ -3831,14 +4010,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Botón flotante para crear publicación (vista clásica) */}
-      <button 
-        className="btn btn-primary btn-circle fixed bottom-6 right-6 z-50 shadow-lg"
-        onClick={() => setShowCreatePostModal(true)}
-        title="Crear publicación"
-      >
-        +
-      </button>
+
 
       {/* Footer removido del dashboard para mejor UX */}
 
@@ -3963,7 +4135,7 @@ const Dashboard = () => {
       {/* Modal de Crear Publicación */}
       {showCreatePostModal && (
         <dialog open className="modal">
-          <div className="modal-box w-11/12 max-w-4xl border-2 border-white" data-theme={currentTheme}>
+          <div className="modal-box w-11/12 max-w-4xl border-2 border-white mx-4" data-theme={currentTheme}>
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3">
                 {/* Foto de perfil del usuario */}
@@ -4522,7 +4694,7 @@ const Dashboard = () => {
       {/* Modal de Eventos Guardados */}
       {showSavedEventsModal && (
         <dialog open className="modal">
-          <div className="modal-box w-11/12 max-w-4xl" data-theme={currentTheme}>
+          <div className="modal-box w-11/12 max-w-4xl mx-4" data-theme={currentTheme}>
             <h3 className="font-bold text-lg mb-4">Mis Eventos Guardados</h3>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {savedEvents.length === 0 ? (

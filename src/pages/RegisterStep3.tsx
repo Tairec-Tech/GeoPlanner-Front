@@ -319,18 +319,18 @@ const RegisterStep3: React.FC = () => {
     <div className="register-page">
       <div className="register-container-wide" style={{ background: currentTheme.fondo, color: currentTheme.texto }}>
         <div className="logo-drop">
-          <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+          <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
         </div>
 
-        <h2 className="text-3xl font-bold text-center mb-6">Personaliza tu perfil</h2>
+        <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6">Personaliza tu perfil</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="form-control text-center">
             <label className="label">
-              <span className="label-text text-lg font-semibold">Foto de perfil</span>
+              <span className="label-text text-base sm:text-lg font-semibold">Foto de perfil</span>
             </label>
-            <div className="avatar flex justify-center mb-4">
-              <div className="w-35 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+            <div className="avatar flex justify-center mb-3 sm:mb-4">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-35 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
                 <img src={previewUrl} alt="Vista previa de perfil" className="w-full h-full object-cover" />
               </div>
             </div>
@@ -349,16 +349,16 @@ const RegisterStep3: React.FC = () => {
               </label>
             </div>
             <div className="label">
-              <span className="label-text-alt text-light text-base">Sube y recorta tu foto (máx. 5MB)</span>
+              <span className="label-text-alt text-light text-xs sm:text-sm">Sube y recorta tu foto (máx. 5MB)</span>
             </div>
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-lg font-semibold">Biografía</span>
+              <span className="label-text text-base sm:text-lg font-semibold">Biografía</span>
             </label>
             <textarea 
-              className="textarea textarea-bordered w-full text-base" 
+              className="textarea textarea-bordered w-full text-sm sm:text-base" 
               name="bio"
               value={formData.bio}
               onChange={handleInputChange}
@@ -370,13 +370,14 @@ const RegisterStep3: React.FC = () => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-lg font-semibold">Selecciona tu ubicación</span>
+              <span className="label-text text-base sm:text-lg font-semibold">Selecciona tu ubicación</span>
             </label>
             <div className="map-container">
               <MapContainer 
                 center={markerPosition} 
                 zoom={13} 
-                style={{ height: '350px', borderRadius: '10px' }}
+                style={{ height: '250px', borderRadius: '10px' }}
+                className="sm:h-[300px] md:h-[350px]"
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -397,31 +398,31 @@ const RegisterStep3: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text text-base font-medium">Ciudad</span></label>
-              <input type="text" className="input input-bordered w-full text-base" value={formData.ciudad} readOnly placeholder="Ciudad"/>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Ciudad</span></label>
+              <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.ciudad} readOnly placeholder="Ciudad"/>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text text-base font-medium">País</span></label>
-              <input type="text" className="input input-bordered w-full text-base" value={formData.pais} readOnly placeholder="País"/>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium">País</span></label>
+              <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.pais} readOnly placeholder="País"/>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text text-base font-medium">Latitud</span></label>
-              <input type="text" className="input input-bordered w-full text-base" value={formData.latitud} readOnly/>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Latitud</span></label>
+              <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.latitud} readOnly/>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text text-base font-medium">Longitud</span></label>
-              <input type="text" className="input input-bordered w-full text-base" value={formData.longitud} readOnly/>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Longitud</span></label>
+              <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.longitud} readOnly/>
             </div>
           </div>
 
           <div className="form-control">
-            <label className="label"><span className="label-text text-lg font-semibold">Elige tu tema</span></label>
-            <select className="select select-bordered w-full text-base" name="tema" value={formData.tema} onChange={handleInputChange}>
+            <label className="label"><span className="label-text text-base sm:text-lg font-semibold">Elige tu tema</span></label>
+            <select className="select select-bordered w-full text-sm sm:text-base" name="tema" value={formData.tema} onChange={handleInputChange}>
               <option value="default">Azul GeoPlanner (predeterminado)</option>
               <option value="aurora">Aurora Boreal</option>
               <option value="noche">Cielo Nocturno</option>
@@ -434,22 +435,22 @@ const RegisterStep3: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex justify-between">
-            <button type="button" className="btn btn-outline text-base" onClick={handleBack}>Volver</button>
-            <button type="submit" className="btn btn-custom text-base" disabled={isLoading} style={{ backgroundColor: currentTheme.boton.fondo, color: currentTheme.boton.color }}>
+          <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
+            <button type="button" className="btn btn-outline text-sm sm:text-base" onClick={handleBack}>Volver</button>
+            <button type="submit" className="btn btn-custom text-sm sm:text-base" disabled={isLoading} style={{ backgroundColor: currentTheme.boton.fondo, color: currentTheme.boton.color }}>
               {isLoading ? (<><span className="loading loading-spinner loading-sm"></span>Finalizando...</>) : ('Finalizar Registro')}
             </button>
           </div>
 
-          {error && (<div className="alert alert-error"><span className="text-base">{error}</span></div>)}
+          {error && (<div className="alert alert-error"><span className="text-sm sm:text-base">{error}</span></div>)}
         </form>
       </div>
 
       {/* Modal de Cropper Actualizado */}
       {showCropper && (
         <div className="modal modal-open">
-          <div className="modal-box cropper-modal-container">
-            <h3 className="font-bold text-xl mb-4 text-center">Recorta tu foto de perfil</h3>
+          <div className="modal-box cropper-modal-container max-w-sm sm:max-w-md lg:max-w-lg mx-4">
+            <h3 className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-center">Recorta tu foto de perfil</h3>
             <div className="cropper-wrapper">
               <Cropper
                 ref={cropperRef}
@@ -472,9 +473,9 @@ const RegisterStep3: React.FC = () => {
                 onInitialized={(instance) => { console.log("Cropper inicializado:", instance); }}
               />
             </div>
-            <div className="modal-action">
-              <button className="btn btn-info text-base" onClick={handleCrop}>Recortar y aplicar</button>
-              <button className="btn btn-ghost text-base" onClick={handleCancelCrop}>Cancelar</button>
+            <div className="modal-action flex-col sm:flex-row gap-2">
+              <button className="btn btn-info btn-sm sm:btn-md text-sm sm:text-base" onClick={handleCrop}>Recortar y aplicar</button>
+              <button className="btn btn-ghost btn-sm sm:btn-md text-sm sm:text-base" onClick={handleCancelCrop}>Cancelar</button>
             </div>
           </div>
         </div>
@@ -482,22 +483,22 @@ const RegisterStep3: React.FC = () => {
 
       {showErrorModal && (
         <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg mb-4 text-center">Error de Registro</h3>
-            <p className="text-base text-center">{error}</p>
+          <div className="modal-box max-w-sm sm:max-w-md mx-4">
+            <h3 className="font-bold text-base sm:text-lg mb-3 sm:mb-4 text-center">Error de Registro</h3>
+            <p className="text-sm sm:text-base text-center">{error}</p>
             <div className="modal-action">
-              <button className="btn btn-info text-base" onClick={closeErrorModal}>Aceptar</button>
+              <button className="btn btn-info btn-sm sm:btn-md text-sm sm:text-base" onClick={closeErrorModal}>Aceptar</button>
             </div>
           </div>
         </div>
       )}
 
       <footer className="footer-bar w-full">
-        <div className="container-fluid flex flex-wrap justify-between items-center px-4 py-3">
-          <span className="footer-text text-base">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
-          <div className="footer-links flex flex-wrap gap-3">
-            <a href="/terminos" className="footer-link text-base" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link text-base" target="_blank">Privacidad</a>
+        <div className="container-fluid flex flex-col sm:flex-row flex-wrap justify-between items-center px-4 py-3 gap-2 sm:gap-0">
+          <span className="footer-text text-xs sm:text-sm text-center sm:text-left">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
+          <div className="footer-links flex flex-wrap gap-3 justify-center sm:justify-end">
+            <a href="/terminos" className="footer-link text-xs sm:text-sm" target="_blank">Términos</a>
+            <a href="/privacidad" className="footer-link text-xs sm:text-sm" target="_blank">Privacidad</a>
           </div>
         </div>
       </footer>

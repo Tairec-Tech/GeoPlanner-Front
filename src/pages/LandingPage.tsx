@@ -183,14 +183,14 @@ const LandingPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-black"></div>
         <div className="absolute inset-0 radial-gradient"></div>
         
-                 {/* Planeta Tierra */}
-                   <div 
-            id="planet" 
-            ref={planetRef} 
-            className="fixed z-5 right-2/21 bottom-[-200px] transform -translate-x-1/2"
-            style={{ transition: 'opacity 0.3s ease-out, transform 0.1s ease-out' }}
-          >
-                       <div className="relative w-[850px] h-[850px] md:w-[500px] md:h-[500px]">
+                                   {/* Planeta Tierra */}
+                    <div 
+             id="planet" 
+             ref={planetRef} 
+             className="fixed z-5 right-2/100 bottom-[100px] sm:bottom-[150px] md:bottom-[200px] lg:bottom-[250px] xl:bottom-[300px] transform -translate-x-1/2"
+             style={{ transition: 'opacity 0.3s ease-out, transform 0.1s ease-out' }}
+           >
+                       <div className="relative w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] md:w-[400px] md:h-[400px] lg:w-[500px] lg:h-[500px] xl:w-[600px] xl:h-[600px]">
              <div className="w-full h-full rounded-full relative overflow-hidden shadow-[inset_-20px_-20px_40px_rgba(0,0,0,0.4),0_0_40px_rgba(34,211,238,0.2),0_0_80px_rgba(34,211,238,0.1)]">
                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-800 via-blue-600 to-blue-400 flex items-center justify-center text-2xl font-bold text-white/80 border-3 border-dashed border-cyan-400/50">
                  <img 
@@ -202,11 +202,11 @@ const LandingPage = () => {
                <div className="absolute inset-0 rounded-full bg-gradient-radial from-cyan-400/15 via-blue-500/8 to-transparent"></div>
                <div className="absolute inset-0 rounded-full bg-gradient-ellipse from-black/60 via-black/30 to-transparent" style={{ background: 'radial-gradient(ellipse at 80% 50%, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }}></div>
              </div>
-             <div className="absolute -top-39 right-1/31 transform -translate-x-1/2 z-10">
-                                   <img 
+              <div className="absolute -top-12 sm:-top-16 md:-top-20 lg:-top-24 xl:-top-28 right-1/6 transform -translate-x-1/2 z-10">
+                    <img 
                     src={logo} 
                     alt="Logo" 
-                    className="w-40 h-40 transform scale-110 drop-shadow-lg filter drop-shadow-cyan-400/50 animate-bounce" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32 transform scale-110 drop-shadow-lg filter drop-shadow-cyan-400/50 animate-bounce" 
                     style={{ 
                       animationDuration: '3s',
                       filter: 'drop-shadow(0 0 15px rgba(34, 211, 238, 0.8))'
@@ -228,18 +228,18 @@ const LandingPage = () => {
         {/* Header */}
         <Header />
 
-        {/* Hero Section */}
-        <section ref={heroRef} className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
+                 {/* Hero Section */}
+         <section ref={heroRef} className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 text-center pt-20 sm:pt-24 md:pt-28 lg:pt-32 xl:pt-36">
           <div className="w-full max-w-4xl">
             {/* Contenedor para el título y el botón, con el margen inferior que empuja las tarjetas hacia abajo */}
-            <div className="mb-[22rem] md:mb-[28rem] md:mt-[3rem]">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-8 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text animate-pulse">
+            <div className="mb-16 sm:mb-20 md:mb-[28rem] md:mt-[3rem]">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 md:mb-8 bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 text-transparent bg-clip-text animate-pulse leading-tight">
                 Conecta. Organiza. Explora.
               </h1>
             </div>
-            <div className='md:mb-[2.5rem]'>
+            <div className='mb-8 md:mb-[2.5rem]'>
             <button 
-                className="btn-primary inline-flex items-center justify-center gap-2 px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105"
+                className="btn-primary inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105 text-sm sm:text-base"
                 onClick={() => navigate('/login')}
               >
                 <i className="fas fa-play"></i>
@@ -248,7 +248,7 @@ const LandingPage = () => {
             </div>
 
             {/* Tarjetas de previsualización */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10">
               {/* Tarjeta 1 */}
               <div className="card-preview">
                 <i className="fas fa-calendar card-icon"></i>
@@ -278,15 +278,15 @@ const LandingPage = () => {
         </section>
 
         {/* Features Section */}
-        <section className="py-20 px-6">
+        <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
           <div className="container mx-auto max-w-6xl">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-300 text-transparent bg-clip-text">Una Plataforma, Infinitas Posibilidades</h2>
-              <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto">
+            <div className="text-center mb-12 sm:mb-16">
+              <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-cyan-300 text-transparent bg-clip-text leading-tight">Una Plataforma, Infinitas Posibilidades</h2>
+              <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-3xl mx-auto px-4">
                 Conecta con personas afines, organiza tu vida social y descubre experiencias únicas. Todo en un solo lugar.
               </p>
             </div>
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               <div className="flex flex-col gap-8">
                 <div className="feature-card">
                   <i className="fas fa-users feature-icon"></i>
@@ -312,41 +312,41 @@ const LandingPage = () => {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 px-6">
+        <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
           <div className="container mx-auto max-w-4xl">
             <div className="cta-card text-center relative">
               <div id="flashEffect" className="flash-effect"></div>
               <div ref={ctaIconRef} className="cta-icon">
-                <i id="starIcon" className="fas fa-star text-6xl text-indigo-900"></i>
+                <i id="starIcon" className="fas fa-star text-4xl sm:text-5xl md:text-6xl text-indigo-900"></i>
                 <div id="logoIcon" className="cta-logo">
                   <div className="cta-logo-image-placeholder">
                     <img src={logo} alt="Logo" className="cta-logo-image " />
                   </div>
                 </div>
               </div>
-              <h2 className="text-4xl md:text-6xl font-bold mb-4 gradient-text">Tu Próxima Aventura Comienza Aquí</h2>
-              <p className="text-lg md:text-xl text-slate-400 max-w-xl mx-auto mb-8">Únete a miles de personas que ya están creando momentos increíbles y conexiones auténticas.</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <h2 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-bold mb-4 gradient-text leading-tight">Tu Próxima Aventura Comienza Aquí</h2>
+              <p className="text-base sm:text-lg md:text-xl text-slate-400 max-w-xl mx-auto mb-6 sm:mb-8 px-4">Únete a miles de personas que ya están creando momentos increíbles y conexiones auténticas.</p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
                 <button 
-                  className="btn-primary px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105"
+                  className="btn-primary px-6 sm:px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105 text-sm sm:text-base"
                   onClick={() => navigate('/login')}
                 >
                   Iniciar Sesión
                 </button>
                 <button 
-                  className="btn-primary px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105"
+                  className="btn-primary px-6 sm:px-8 py-3 rounded-full font-semibold text-white transition-transform hover:scale-105 text-sm sm:text-base"
                   onClick={() => navigate('/registro')}
                 >
                   Registrarme
                 </button>
               </div>
-              <p className="text-xs text-slate-500 mt-8">Versión beta - Únete a la experiencia temprana y ayúdanos a mejorar.</p>
+              <p className="text-xs text-slate-500 mt-6 sm:mt-8">Versión beta - Únete a la experiencia temprana y ayúdanos a mejorar.</p>
             </div>
           </div>
         </section>
 
                  {/* Footer */}
-         <div className="py-8 px-6 border-t border-slate-500/30 bg-slate-900/50 backdrop-blur-sm">
+         <div className="py-6 sm:py-8 px-4 sm:px-6 border-t border-slate-500/30 bg-slate-900/50 backdrop-blur-sm">
            <Footer />
          </div>
       </div>

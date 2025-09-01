@@ -216,12 +216,12 @@ const LoginPage: React.FC = () => {
       <main className="login-main">
         <div className="login-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
-          <h2 className="text-2xl font-bold mb-4">Bienvenido a GeoPlanner</h2>
-          <p className="tagline">Planifica, organiza y colabora desde el mapa.</p>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Bienvenido a GeoPlanner</h2>
+          <p className="tagline text-sm sm:text-base">Planifica, organiza y colabora desde el mapa.</p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Correo o Usuario</span>
@@ -279,23 +279,23 @@ const LoginPage: React.FC = () => {
           </form>
 
           <div className="divider">O</div>
-          <p className="text-sm">¿Nuevo en GeoPlanner? <a href="/registro" className="link link-primary">Regístrate aquí</a></p>
-          <p className="text-sm"><a href="/recuperar" className="link link-primary">¿Olvidó su contraseña o no puede ingresar?</a></p>
+          <p className="text-xs sm:text-sm">¿Nuevo en GeoPlanner? <a href="/registro" className="link link-primary">Regístrate aquí</a></p>
+          <p className="text-xs sm:text-sm"><a href="/recuperar" className="link link-primary">¿Olvidó su contraseña o no puede ingresar?</a></p>
         </div>
       </main>
 
       {/* Modal de Error */}
       {showErrorModal && (
         <div className="modal modal-open">
-          <div className="modal-box max-w-md">
+          <div className="modal-box max-w-sm sm:max-w-md mx-4">
             <div className="text-center">
-              <div className="text-6xl mb-4">{getErrorModalContent().icon}</div>
-              <h3 className="font-bold text-lg mb-2">{getErrorModalContent().title}</h3>
-              <p className="text-sm text-gray-600 mb-4">{getErrorModalContent().message}</p>
+              <div className="text-4xl sm:text-6xl mb-3 sm:mb-4">{getErrorModalContent().icon}</div>
+              <h3 className="font-bold text-base sm:text-lg mb-2">{getErrorModalContent().title}</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">{getErrorModalContent().message}</p>
               
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                <h4 className="font-semibold text-blue-800 mb-2">Sugerencias:</h4>
-                <ul className="text-sm text-blue-700 space-y-1">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
+                <h4 className="font-semibold text-blue-800 mb-1 sm:mb-2 text-sm">Sugerencias:</h4>
+                <ul className="text-xs sm:text-sm text-blue-700 space-y-1">
                   {getErrorModalContent().suggestions.map((suggestion, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
@@ -306,15 +306,15 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="modal-action">
+            <div className="modal-action flex-col sm:flex-row gap-2">
               <button 
-                className="btn btn-outline" 
+                className="btn btn-outline btn-sm sm:btn-md w-full sm:w-auto" 
                 onClick={closeErrorModal}
               >
                 {getErrorModalContent().primaryAction}
               </button>
               <button 
-                className="btn btn-primary" 
+                className="btn btn-primary btn-sm sm:btn-md w-full sm:w-auto" 
                 onClick={handleSecondaryAction}
               >
                 {getErrorModalContent().secondaryAction}
@@ -331,11 +331,11 @@ const LoginPage: React.FC = () => {
       )}
 
       <footer className="footer-bar">
-        <div className="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
-          <span className="footer-text">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
-          <div className="footer-links flex flex-wrap gap-3">
-            <a href="/terminos" className="footer-link" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link" target="_blank">Privacidad</a>
+        <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-0">
+          <span className="footer-text text-xs sm:text-sm text-center sm:text-left">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
+          <div className="footer-links flex flex-wrap gap-3 justify-center sm:justify-end">
+            <a href="/terminos" className="footer-link text-xs sm:text-sm" target="_blank">Términos</a>
+            <a href="/privacidad" className="footer-link text-xs sm:text-sm" target="_blank">Privacidad</a>
           </div>
         </div>
       </footer>

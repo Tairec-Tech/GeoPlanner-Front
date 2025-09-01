@@ -327,19 +327,19 @@ const RegisterStep2: React.FC = () => {
       <main className="register-main">
         <div className="register-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
           
-          <h2 className="text-3xl font-bold mb-6">Crea tus credenciales</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">Crea tus credenciales</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">@Nombre de usuario</span>
+                <span className="label-text text-sm sm:text-base font-medium">@Nombre de usuario</span>
               </label>
               <input
                 type="text"
-                className="input input-bordered w-full text-base"
+                className="input input-bordered w-full text-sm sm:text-base"
                 name="nombreUsuario"
                 placeholder="@usuario"
                 value={formData.nombreUsuario}
@@ -347,7 +347,7 @@ const RegisterStep2: React.FC = () => {
                 required
               />
               <div className="label">
-                <span className="label-text-alt text-light text-base">
+                <span className="label-text-alt text-light text-xs sm:text-sm">
                   Este será tu @nombre único dentro de GeoPlanner.
                 </span>
               </div>
@@ -355,11 +355,11 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Correo electrónico</span>
+                <span className="label-text text-sm sm:text-base font-medium">Correo electrónico</span>
               </label>
               <input
                 type="email"
-                className="input input-bordered w-full text-base"
+                className="input input-bordered w-full text-sm sm:text-base"
                 name="email"
                 placeholder="correo@ejemplo.com"
                 value={formData.email}
@@ -370,11 +370,11 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Contraseña</span>
+                <span className="label-text text-sm sm:text-base font-medium">Contraseña</span>
               </label>
               <input
                 type="password"
-                className="input input-bordered w-full text-base"
+                className="input input-bordered w-full text-sm sm:text-base"
                 name="password"
                 placeholder="Contraseña"
                 value={formData.password}
@@ -385,13 +385,13 @@ const RegisterStep2: React.FC = () => {
               {/* Indicador de fortaleza de contraseña */}
               {formData.password && (
                 <div className="mt-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm font-medium">Fortaleza:</span>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-2">
+                    <span className="text-xs sm:text-sm font-medium">Fortaleza:</span>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((level) => (
                         <div
                           key={level}
-                          className={`w-8 h-2 rounded ${
+                          className={`w-6 sm:w-8 h-2 rounded ${
                             level <= passwordStrength.score
                               ? passwordStrength.color === 'green'
                                 ? 'bg-green-500'
@@ -405,7 +405,7 @@ const RegisterStep2: React.FC = () => {
                         />
                       ))}
                     </div>
-                    <span className={`text-sm font-medium ${
+                    <span className={`text-xs sm:text-sm font-medium ${
                       passwordStrength.color === 'green' ? 'text-green-600' :
                       passwordStrength.color === 'orange' ? 'text-orange-600' :
                       passwordStrength.color === 'yellow' ? 'text-yellow-600' :
@@ -418,7 +418,7 @@ const RegisterStep2: React.FC = () => {
                   </div>
                   
                   {/* Lista de requisitos */}
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     <p className="font-medium mb-1">Requisitos de seguridad:</p>
                     <ul className="space-y-1">
                       {passwordStrength.feedback.length > 0 ? (
@@ -442,11 +442,11 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Confirmar contraseña</span>
+                <span className="label-text text-sm sm:text-base font-medium">Confirmar contraseña</span>
               </label>
               <input
                 type="password"
-                className="input input-bordered w-full text-base"
+                className="input input-bordered w-full text-sm sm:text-base"
                 name="confirmPassword"
                 placeholder="Confirmar contraseña"
                 value={formData.confirmPassword}
@@ -455,7 +455,7 @@ const RegisterStep2: React.FC = () => {
               />
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                 <div className="label">
-                  <span className="label-text-alt text-red-500">Las contraseñas no coinciden</span>
+                  <span className="label-text-alt text-red-500 text-xs sm:text-sm">Las contraseñas no coinciden</span>
                 </div>
               )}
             </div>
@@ -469,17 +469,17 @@ const RegisterStep2: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
               <button 
                 type="button" 
-                className="btn btn-outline text-base"
+                className="btn btn-outline text-sm sm:text-base"
                 onClick={handleBack}
               >
                 Volver
               </button>
               <button 
                 type="submit" 
-                className="btn btn-custom text-base"
+                className="btn btn-custom text-sm sm:text-base"
                 disabled={!isFormValid}
                 style={{ opacity: isFormValid ? 1 : 0.5, cursor: isFormValid ? 'pointer' : 'not-allowed' }}
               >
@@ -493,11 +493,11 @@ const RegisterStep2: React.FC = () => {
       {/* Modal de Error */}
       {showErrorModal && (
         <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg text-red-600">Error de Validación</h3>
-            <p className="py-4">{error}</p>
+          <div className="modal-box max-w-sm sm:max-w-md mx-4">
+            <h3 className="font-bold text-base sm:text-lg text-red-600">Error de Validación</h3>
+            <p className="py-3 sm:py-4 text-sm sm:text-base">{error}</p>
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={closeErrorModal}>
+              <button className="btn btn-primary btn-sm sm:btn-md" onClick={closeErrorModal}>
                 Entendido
               </button>
             </div>
@@ -506,11 +506,11 @@ const RegisterStep2: React.FC = () => {
       )}
 
       <footer className="footer-bar">
-        <div className="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
-          <span className="footer-text">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
-          <div className="footer-links flex flex-wrap gap-3">
-            <a href="/terminos" className="footer-link" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link" target="_blank">Privacidad</a>
+        <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-0">
+          <span className="footer-text text-xs sm:text-sm text-center sm:text-left">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
+          <div className="footer-links flex flex-wrap gap-3 justify-center sm:justify-end">
+            <a href="/terminos" className="footer-link text-xs sm:text-sm" target="_blank">Términos</a>
+            <a href="/privacidad" className="footer-link text-xs sm:text-sm" target="_blank">Privacidad</a>
           </div>
         </div>
       </footer>

@@ -69,6 +69,7 @@ import RegisterStep3 from './pages/RegisterStep3'
 import Dashboard from './pages/Dashboard'
 import ProfilePage from './pages/ProfilePage'
 import PublicProfilePage from './pages/PublicProfilePage'
+import GroupsPage from './pages/GroupsPage'
 import AboutUs from './pages/AboutUs'
 import Contact from './pages/Contact'
 import TermsOfService from './pages/TermsOfService'
@@ -171,6 +172,11 @@ function AppRoutes() {
       <Route path="/usuario/:userId" element={
         <ProtectedRoute>
           <PublicProfilePage />
+        </ProtectedRoute>
+      } />
+      <Route path="/grupos" element={
+        <ProtectedRoute>
+          <GroupsPage />
         </ProtectedRoute>
       } />
 

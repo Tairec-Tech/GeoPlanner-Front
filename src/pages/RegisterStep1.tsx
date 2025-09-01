@@ -251,20 +251,20 @@ const RegisterStep1: React.FC = () => {
       <main className="register-main">
         <div className="register-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
           
-          <h2 className="text-3xl font-bold mb-6">Regístrate en GeoPlanner</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">Regístrate en GeoPlanner</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Primer nombre</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Primer nombre</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
@@ -274,11 +274,11 @@ const RegisterStep1: React.FC = () => {
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Apellido</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Apellido</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleInputChange}
@@ -290,7 +290,7 @@ const RegisterStep1: React.FC = () => {
             {/* Fecha de nacimiento */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Fecha de nacimiento</span>
+                <span className="label-text text-sm sm:text-base font-medium">Fecha de nacimiento</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <select 
@@ -343,9 +343,9 @@ const RegisterStep1: React.FC = () => {
             {/* Género */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Género</span>
+                <span className="label-text text-sm sm:text-base font-medium">Género</span>
               </label>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 <label className="label cursor-pointer">
                   <input
                     type="radio"
@@ -355,7 +355,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Masculino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Masculino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -367,7 +367,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Femenino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Femenino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -379,7 +379,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Otro</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Otro</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -391,7 +391,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Prefiero no decir</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Prefiero no decir</span>
                 </label>
               </div>
             </div>
@@ -400,11 +400,11 @@ const RegisterStep1: React.FC = () => {
             {formData.genero === 'Otro' && (
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Especifica tu género</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Especifica tu género</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="otroGenero"
                   value={formData.otroGenero}
                   onChange={handleInputChange}
@@ -423,17 +423,17 @@ const RegisterStep1: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
               <button 
                 type="button" 
-                className="btn btn-outline text-base"
+                className="btn btn-outline text-sm sm:text-base"
                 onClick={handleBack}
               >
                 Volver
               </button>
               <button 
                 type="submit" 
-                className="btn btn-custom text-base"
+                className="btn btn-custom text-sm sm:text-base"
                 disabled={!isFormValid}
                 style={{ opacity: isFormValid ? 1 : 0.5, cursor: isFormValid ? 'pointer' : 'not-allowed' }}
               >
@@ -447,11 +447,11 @@ const RegisterStep1: React.FC = () => {
       {/* Modal de Error */}
       {showErrorModal && (
         <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-lg text-red-600">Error de Validación</h3>
-            <p className="py-4">{error}</p>
+          <div className="modal-box max-w-sm sm:max-w-md mx-4">
+            <h3 className="font-bold text-base sm:text-lg text-red-600">Error de Validación</h3>
+            <p className="py-3 sm:py-4 text-sm sm:text-base">{error}</p>
             <div className="modal-action">
-              <button className="btn btn-primary" onClick={closeErrorModal}>
+              <button className="btn btn-primary btn-sm sm:btn-md" onClick={closeErrorModal}>
                 Entendido
               </button>
             </div>
@@ -460,11 +460,11 @@ const RegisterStep1: React.FC = () => {
       )}
 
       <footer className="footer-bar">
-        <div className="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
-          <span className="footer-text">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
-          <div className="footer-links flex flex-wrap gap-3">
-            <a href="/terminos" className="footer-link" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link" target="_blank">Privacidad</a>
+        <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-0">
+          <span className="footer-text text-xs sm:text-sm text-center sm:text-left">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
+          <div className="footer-links flex flex-wrap gap-3 justify-center sm:justify-end">
+            <a href="/terminos" className="footer-link text-xs sm:text-sm" target="_blank">Términos</a>
+            <a href="/privacidad" className="footer-link text-xs sm:text-sm" target="_blank">Privacidad</a>
           </div>
         </div>
       </footer>
