@@ -20,5 +20,21 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'geoplanner.onrender.com',
+      '.onrender.com'
+    ],
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      'geoplanner.onrender.com',
+      '.onrender.com'
+    ],
   },
 });
