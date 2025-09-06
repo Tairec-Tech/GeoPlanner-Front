@@ -96,7 +96,7 @@ if (typeof window !== 'undefined') {
   import('leaflet').then(leaflet => {
     L = leaflet.default;
   });
-  import('leaflet-routing-machine').then(routing => {
+  import('leaflet-routing-machine').then(_routing => {
     // LRouting = routing.default;
   });
 }
@@ -192,7 +192,7 @@ const Dashboard = () => {
   const [events, setEvents] = useState<any[]>([])                                           // Lista de eventos
   const [eventMarkers, setEventMarkers] = useState<any[]>([])                               // Marcadores de eventos en el mapa
   const [routingControl, setRoutingControl] = useState<any>(null)                           // Control de rutas en el mapa
-  const [searchTerm, setSearchTerm] = useState(() => {
+  const [searchTerm] = useState(() => {
     // Recuperar el término de búsqueda guardado del localStorage
     const savedSearch = localStorage.getItem('dashboardSearch')
     return savedSearch || ''
@@ -1999,7 +1999,7 @@ const Dashboard = () => {
       const notificationsData = await apiService.getNotifications()
       setUserNotifications(notificationsData)
       
-      const unreadCount = await apiService.getUnreadNotificationsCount()
+      // const unreadCount = await apiService.getUnreadNotificationsCount()
       // setUnreadNotifications(unreadCount.unread_count)
     } catch (error) {
       console.error('Error cargando notificaciones:', error)

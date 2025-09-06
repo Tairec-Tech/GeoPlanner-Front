@@ -73,7 +73,7 @@ const PublicProfilePage = () => {
       
       // Cargar información del usuario
       const userData = await apiService.getUserById(userId!)
-      setProfileUser(userData)
+      setProfileUser(userData as any)
       
       // Cargar publicaciones del usuario con comentarios actualizados
       const posts = await apiService.getUserPosts(userId!)

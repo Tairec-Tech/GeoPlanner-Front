@@ -147,7 +147,7 @@ const RegisterStep3: React.FC = () => {
                    formData.longitud !== '' && 
                    formData.ciudad !== '' && 
                    formData.pais !== '';
-    setIsFormValid(isValid);
+    // setIsFormValid(isValid);
   }, [formData]);
 
   useEffect(() => {
