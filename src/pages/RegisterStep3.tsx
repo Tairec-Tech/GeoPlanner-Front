@@ -131,7 +131,7 @@ const RegisterStep3: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  // const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImage, setCropperImage] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState('/src/assets/img/placeholder.png');
@@ -147,7 +147,7 @@ const RegisterStep3: React.FC = () => {
                    formData.longitud !== '' && 
                    formData.ciudad !== '' && 
                    formData.pais !== '';
-    // setIsFormValid(isValid);
+    setIsFormValid(isValid);
   }, [formData]);
 
   useEffect(() => {
@@ -361,7 +361,7 @@ const RegisterStep3: React.FC = () => {
         // Mostrar detalles completos del error
         if (errorData.detalle && Array.isArray(errorData.detalle)) {
           console.error('Detalles de validación:');
-          errorData.detalle.forEach((error: any, index: number) => {
+          errorData.detalle.forEach((error: { type: string; loc?: string[]; msg: string; input?: unknown }, index: number) => {
             console.error(`Error ${index + 1}:`, error);
             console.error(`  - Tipo: ${error.type}`);
             console.error(`  - Ubicación: ${error.loc?.join('.')}`);
@@ -532,12 +532,20 @@ const RegisterStep3: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
             <button type="button" className="btn btn-outline text-sm sm:text-base" onClick={handleBack}>Volver</button>
-            <button type="submit" className="btn btn-custom text-sm sm:text-base" disabled={isLoading} style={{ backgroundColor: currentTheme.boton.fondo, color: currentTheme.boton.color }}>
+            <button type="submit" className="btn btn-custom text-sm sm:text-base" disabled={isLoading || !isFormValid} style={{ backgroundColor: currentTheme.boton.fondo, color: currentTheme.boton.color }}>
               {isLoading ? (<><span className="loading loading-spinner loading-sm"></span>Finalizando...</>) : ('Finalizar Registro')}
             </button>
           </div>
 
           {error && (<div className="alert alert-error"><span className="text-sm sm:text-base">{error}</span></div>)}
+          
+          {!isFormValid && (
+            <div className="alert alert-warning">
+              <span className="text-sm sm:text-base">
+                ⚠️ Por favor, selecciona tu ubicación en el mapa para continuar con el registro.
+              </span>
+            </div>
+          )}
         </form>
       </div>
 
