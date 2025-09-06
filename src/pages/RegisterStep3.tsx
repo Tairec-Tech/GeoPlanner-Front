@@ -131,7 +131,7 @@ const RegisterStep3: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
-  const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  // const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImage, setCropperImage] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState('/src/assets/img/placeholder.png');

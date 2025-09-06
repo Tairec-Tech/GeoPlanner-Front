@@ -67,15 +67,21 @@ export interface Analysis {
 // Tipos para usuarios
 export interface User {
   id: string
-  name: string
+  nombre_usuario: string
   email: string
-  avatar?: string
-  role: 'admin' | 'user' | 'viewer'
-  preferences: {
-    theme: Theme
-    language: string
-    notifications: boolean
-  }
+  nombre: string
+  apellido: string
+  fecha_nacimiento?: string
+  genero?: string
+  biografia?: string
+  latitud?: number
+  longitud?: number
+  ciudad?: string
+  pais?: string
+  tema_preferido?: string
+  foto_perfil_url?: string
+  fecha_registro?: string
+  verificado?: boolean
 }
 
 // Declaración de tipos para Cropper.js

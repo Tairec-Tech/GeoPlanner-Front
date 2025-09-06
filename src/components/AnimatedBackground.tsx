@@ -1,4 +1,4 @@
-import React from 'react'
+// Componente de fondo animado
 
 const AnimatedBackground = () => {
   return (

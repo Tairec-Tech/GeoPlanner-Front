@@ -97,7 +97,7 @@ const PublicProfilePage = () => {
         })
       )
       
-      setUserPosts(postsWithComments)
+      setUserPosts(postsWithComments as any)
       
       // Verificar estado de amistad
       if (user && user.id !== userId) {

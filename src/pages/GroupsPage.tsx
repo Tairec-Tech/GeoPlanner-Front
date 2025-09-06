@@ -18,16 +18,16 @@ interface Group {
   tags: string[]
 }
 
-interface GroupMember {
-  id: string
-  nombre: string
-  apellido: string
-  nombre_usuario: string
-  foto_perfil_url?: string
-  fecha_union: string
-  rol: 'admin' | 'moderador' | 'miembro'
-  verificado: boolean
-}
+// interface GroupMember {
+//   id: string
+//   nombre: string
+//   apellido: string
+//   nombre_usuario: string
+//   foto_perfil_url?: string
+//   fecha_union: string
+//   rol: 'admin' | 'moderador' | 'miembro'
+//   verificado: boolean
+// }
 
 const GroupsPage = () => {
   const navigate = useNavigate()

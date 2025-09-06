@@ -416,7 +416,7 @@ const ProfilePage: React.FC = () => {
             marker.setLatLng([userLat, userLon])
             actualizarUbicacion(userLat, userLon)
           },
-          (error) => {
+          (_error) => {
             console.warn("Geolocalización rechazada o no disponible, usando ubicación por defecto.")
           }
         )
@@ -1354,7 +1354,7 @@ const ProfilePage: React.FC = () => {
                   <select 
                     className="select select-bordered w-full"
                     value={settings.profileVisibility}
-                    onChange={(e) => setSettings({...settings, profileVisibility: e.target.value})}
+                    onChange={(e) => setSettings({...settings, profileVisibility: e.target.value as "public" | "friends" | "private"})}
                   >
                     <option value="public">Público - Cualquiera puede ver tu perfil</option>
                     <option value="friends">Solo Amigos - Solo tus amigos pueden ver tu perfil</option>
@@ -1557,7 +1557,7 @@ const ProfilePage: React.FC = () => {
                   <select 
                     className="select select-bordered w-full"
                     value={settings.contentFilter}
-                    onChange={(e) => setSettings({...settings, contentFilter: e.target.value})}
+                    onChange={(e) => setSettings({...settings, contentFilter: e.target.value as "none" | "moderate" | "strict"})}
                   >
                     <option value="none">Sin filtro</option>
                     <option value="moderate">Moderado</option>
@@ -1604,7 +1604,7 @@ const ProfilePage: React.FC = () => {
                   <select 
                     className="select select-bordered w-full"
                     value={settings.dataUsage}
-                    onChange={(e) => setSettings({...settings, dataUsage: e.target.value})}
+                    onChange={(e) => setSettings({...settings, dataUsage: e.target.value as "standard" | "reduced"})}
                   >
                     <option value="standard">Estándar - Mejor experiencia</option>
                     <option value="reduced">Reducido - Menos datos</option>

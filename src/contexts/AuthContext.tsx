@@ -21,7 +21,7 @@
  * - Integra con el sistema de rutas protegidas
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import { apiService } from '../services/api'
 import type { User } from '../services/api'
 

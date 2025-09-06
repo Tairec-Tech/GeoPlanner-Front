@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Html5QrcodeScanner } from 'html5-qrcode'
-import { apiService, QRVerificationRequest, QRVerificationResponse } from '../services/api'
+import { apiService, type QRVerificationRequest, type QRVerificationResponse } from '../services/api'
 import { useAuth } from '../contexts/AuthContext'
 
 interface QRScannerProps {

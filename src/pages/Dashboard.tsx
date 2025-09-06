@@ -91,13 +91,13 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.css'
 
 // Importar Leaflet y Routing Machine dinámicamente
 let L: any = null
-let LRouting: any = null
+// let LRouting: any = null // No se usa actualmente
 if (typeof window !== 'undefined') {
   import('leaflet').then(leaflet => {
     L = leaflet.default;
   });
   import('leaflet-routing-machine').then(routing => {
-    LRouting = routing.default;
+    // LRouting = routing.default;
   });
 }
 
@@ -163,10 +163,10 @@ const Dashboard = () => {
   }
 
   // Función para cambiar término de búsqueda y guardar en localStorage
-  const changeSearchTerm = (term: string) => {
-    setSearchTerm(term)
-    localStorage.setItem('dashboardSearch', term)
-  }
+  // const changeSearchTerm = (term: string) => {
+  //   setSearchTerm(term)
+  //   localStorage.setItem('dashboardSearch', term)
+  // }
 
   // Función para limpiar el estado guardado del dashboard (usar al cerrar sesión)
   const clearDashboardState = () => {
@@ -197,7 +197,7 @@ const Dashboard = () => {
     const savedSearch = localStorage.getItem('dashboardSearch')
     return savedSearch || ''
   })                                                                                        // Término de búsqueda
-  const [filteredEvents, setFilteredEvents] = useState<any[]>([])                           // Eventos filtrados (no usado actualmente)
+  // const [filteredEvents, setFilteredEvents] = useState<any[]>([])                           // Eventos filtrados (no usado actualmente)
   
   // ========================================
   // ESTADOS DE MODALES PRINCIPALES
@@ -235,12 +235,12 @@ const Dashboard = () => {
   const [agendaSearchTerm, setAgendaSearchTerm] = useState('')      // Término de búsqueda en agenda
   const [agendaFilter, setAgendaFilter] = useState('all')           // Filtro de agenda (all, upcoming, past, today)
   const [notifications, setNotifications] = useState<any[]>([])     // Lista de notificaciones
-  const [showNotifications, setShowNotifications] = useState(false) // Mostrar panel de notificaciones
+  // const [showNotifications, setShowNotifications] = useState(false) // Mostrar panel de notificaciones
 
   // ========================================
   // ESTADOS DE CARGA Y PROCESAMIENTO
   // ========================================
-  const [isLoadingData, setIsLoadingData] = useState(false)  // Estado de carga de datos
+  // const [isLoadingData, setIsLoadingData] = useState(false)  // Estado de carga de datos
   
   // ========================================
   // ESTADOS PARA CREACIÓN DE PUBLICACIONES
@@ -339,7 +339,7 @@ const Dashboard = () => {
   }
 
   // Datos de ejemplo de eventos (vacío)
-  const sampleEvents: any[] = []
+  // const sampleEvents: any[] = []
 
   // Términos y condiciones predeterminados de GeoPlanner
   const DEFAULT_GEOPLANNER_TERMS = `TÉRMINOS Y CONDICIONES DE GEOPLANNER
@@ -537,7 +537,7 @@ const Dashboard = () => {
       } else {
         alert('No se encontró la dirección.')
       }
-    } catch (error) {
+    } catch (_error) {
       alert('Error de conexión.')
     }
     
@@ -686,9 +686,9 @@ const Dashboard = () => {
     } catch (error) {
       console.error('❌ Error creando ruta:', error)
       console.error('❌ Detalles del error:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
+        message: (error as Error).message,
+        stack: (error as Error).stack,
+        name: (error as Error).name
       })
       
       // Fallback: crear ruta directa si falla OSRM
@@ -1363,7 +1363,7 @@ const Dashboard = () => {
     }
 
     console.log('🔍 Eventos filtrados finales:', filtered.length)
-    setFilteredEvents(filtered)  // Actualizar estado con eventos filtrados
+    // setFilteredEvents(filtered)  // Actualizar estado con eventos filtrados
     return filtered  // Retornar eventos filtrados
   }
 
@@ -1371,9 +1371,9 @@ const Dashboard = () => {
   // FUNCIÓN PARA MANEJAR BÚSQUEDA
   // ========================================
   // Actualiza el término de búsqueda para filtrar eventos
-  const handleSearch = (term: string) => {
-    changeSearchTerm(term)  // Actualizar estado de búsqueda y guardar en localStorage
-  }
+  // const handleSearch = (term: string) => {
+  //   changeSearchTerm(term)  // Actualizar estado de búsqueda y guardar en localStorage
+  // }
 
   // ========================================
   // FUNCIÓN PARA ACTUALIZAR TEMA DE MODALES
@@ -1640,7 +1640,7 @@ const Dashboard = () => {
   
   // Estados para notificaciones del usuario
   const [userNotifications, setUserNotifications] = useState<import('../services/api').Notification[]>([])  // Lista de notificaciones
-  const [unreadNotifications, setUnreadNotifications] = useState(0)  // Contador de notificaciones no leídas
+  // const [unreadNotifications, setUnreadNotifications] = useState(0)  // Contador de notificaciones no leídas
 
   // ========================================
   // FUNCIÓN PARA AGREGAR COMENTARIOS
@@ -1800,7 +1800,7 @@ const Dashboard = () => {
       case 'past':  // Actividades pasadas
         filtered = filtered.filter(item => new Date(item.fecha_actividad) < now)
         break
-      case 'today':  // Actividades de hoy
+      case 'today': { // Actividades de hoy
         const today = new Date()
         const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate())  // Inicio del día
         const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)  // Fin del día
@@ -1809,6 +1809,7 @@ const Dashboard = () => {
           return itemDate >= todayStart && itemDate < todayEnd  // Dentro del rango de hoy
         })
         break
+      }
     }
 
     // Ordenar por fecha de actividad (más antigua primero)
@@ -1821,7 +1822,7 @@ const Dashboard = () => {
   // Verifica actividades próximas y genera notificaciones automáticas
   const checkUpcomingActivities = () => {
     const now = new Date()  // Fecha y hora actual
-    const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)  // Una hora desde ahora
+    // const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000)  // Una hora desde ahora
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())  // Inicio del día actual
     const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000)  // Inicio del día siguiente
 
@@ -1882,7 +1883,7 @@ const Dashboard = () => {
   const loadRealData = async () => {
     if (!user) return
     
-    setIsLoadingData(true)
+      // setIsLoadingData(true)
     try {
       // Cargar publicaciones
       const postsData = await apiService.getPosts()
@@ -1970,10 +1971,10 @@ const Dashboard = () => {
       console.log('📋 Eventos mapeados:', mappedEvents)
 
       setEvents(mappedEvents)
-      setFilteredEvents(mappedEvents)
+      // setFilteredEvents(mappedEvents)
       
       // Cargar agenda
-      const agendaData = await apiService.getAgenda()
+      // const agendaData = await apiService.getAgenda()
       
       // Cargar notificaciones
       await loadNotifications()
@@ -1988,7 +1989,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error cargando datos:', error)
     } finally {
-      setIsLoadingData(false)
+      // setIsLoadingData(false)
     }
   }
 
@@ -1999,7 +2000,7 @@ const Dashboard = () => {
       setUserNotifications(notificationsData)
       
       const unreadCount = await apiService.getUnreadNotificationsCount()
-      setUnreadNotifications(unreadCount.unread_count)
+      // setUnreadNotifications(unreadCount.unread_count)
     } catch (error) {
       console.error('Error cargando notificaciones:', error)
     }
@@ -2050,7 +2051,7 @@ const Dashboard = () => {
     ]
     
     setEvents(sampleEvents)
-    setFilteredEvents(sampleEvents)
+    // setFilteredEvents(sampleEvents)
   }
 
   // Funciones para creación de publicaciones
@@ -2207,7 +2208,7 @@ const Dashboard = () => {
 
     const now = new Date()
     const eventDate = new Date(post.fecha_evento)
-    let actionButtons = []
+    const actionButtons = []
     
     if (isOwner) {
       if (eventDate > now) {
@@ -2328,7 +2329,7 @@ const Dashboard = () => {
           </div>
           
           {/* Indicador de expiración */}
-          {post.isExpiringSoon && (
+          {/* {post.isExpiringSoon && (
             <div className="mb-3 p-2 bg-orange-100 border border-orange-300 rounded-lg">
               <div className="flex items-center gap-2 text-orange-700">
                 <span className="text-sm">⏰</span>
@@ -2337,7 +2338,7 @@ const Dashboard = () => {
                 </span>
               </div>
             </div>
-          )}
+          )} */}
           
           {/* Texto de la publicación */}
           <p className="mb-3 text-sm md:text-base lg:text-lg leading-relaxed">{post.texto}</p>
@@ -2767,48 +2768,48 @@ const Dashboard = () => {
   }
 
   // Función para verificar el estado de geolocalización
-  const checkGeolocationStatus = () => {
-    console.log('📍 Verificando estado de geolocalización...')
-    
-    if (!navigator.geolocation) {
-      showError('Geolocalización No Soportada', 'Tu navegador no soporta geolocalización. Actualiza tu navegador o usa uno más moderno.', 'error')
-      return false
-    }
-    
-    // Verificar permisos si el navegador lo soporta
-    if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        console.log('📍 Estado de permisos de geolocalización:', result.state)
-        
-        if (result.state === 'denied') {
-          showError('Permisos Denegados', 'Has denegado el acceso a tu ubicación. Ve a Configuración > Privacidad y Seguridad > Ubicación y permite el acceso para este sitio.', 'warning')
-        } else if (result.state === 'prompt') {
-          showError('Permisos Pendientes', 'Necesitas permitir el acceso a tu ubicación para usar esta función. Haz clic en "Permitir" cuando tu navegador lo solicite.', 'info')
-        }
-      })
-    }
-    
-    return true
-  }
+  // const checkGeolocationStatus = () => {
+  //   console.log('📍 Verificando estado de geolocalización...')
+  //   
+  //   if (!navigator.geolocation) {
+  //     showError('Geolocalización No Soportada', 'Tu navegador no soporta geolocalización. Actualiza tu navegador o usa uno más moderno.', 'error')
+  //     return false
+  //   }
+  //   
+  //   // Verificar permisos si el navegador lo soporta
+  //   if ('permissions' in navigator) {
+  //     navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+  //       console.log('📍 Estado de permisos de geolocalización:', result.state)
+  //       
+  //       if (result.state === 'denied') {
+  //         showError('Permisos Denegados', 'Has denegado el acceso a tu ubicación. Ve a Configuración > Privacidad y Seguridad > Ubicación y permite el acceso para este sitio.', 'warning')
+  //       } else if (result.state === 'prompt') {
+  //         showError('Permisos Pendientes', 'Necesitas permitir el acceso a tu ubicación para usar esta función. Haz clic en "Permitir" cuando tu navegador lo solicite.', 'info')
+  //       }
+  //     })
+  //   }
+  //   
+  //   return true
+  // }
 
   // Función para mostrar información de debug de ubicación
-  const showLocationDebugInfo = () => {
-    const savedLocation = localStorage.getItem('geoplanner_user_location')
-    const currentLocation = userLocation
-    
-    console.log('📍 === DEBUG INFO DE UBICACIÓN ===')
-    console.log('📍 Ubicación en localStorage:', savedLocation ? JSON.parse(savedLocation) : 'No hay')
-    console.log('📍 Ubicación en estado (userLocation):', currentLocation)
-    console.log('📍 Navegador soporta geolocalización:', !!navigator.geolocation)
-    
-    if ('permissions' in navigator) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        console.log('📍 Estado de permisos:', result.state)
-      })
-    }
-    
-    console.log('📍 ================================')
-  }
+  // const showLocationDebugInfo = () => {
+  //   const savedLocation = localStorage.getItem('geoplanner_user_location')
+  //   const currentLocation = userLocation
+  //   
+  //   console.log('📍 === DEBUG INFO DE UBICACIÓN ===')
+  //   console.log('📍 Ubicación en localStorage:', savedLocation ? JSON.parse(savedLocation) : 'No hay')
+  //   console.log('📍 Ubicación en estado (userLocation):', currentLocation)
+  //   console.log('📍 Navegador soporta geolocalización:', !!navigator.geolocation)
+  //   
+  //   if ('permissions' in navigator) {
+  //     navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+  //       console.log('📍 Estado de permisos:', result.state)
+  //     })
+  //   }
+  //   
+  //   console.log('📍 ================================')
+  // }
 
   // Función para cerrar el modal de errores
   const closeErrorModal = () => {
@@ -2856,11 +2857,11 @@ const Dashboard = () => {
     setTimeout(() => {
       // Aplicar estilos directamente a los elementos del DOM
       const header = document.querySelector('header')
-      const body = document.body
+      // const body = document.body
       const sidebar = document.querySelector('.sidebar')
       const cards = document.querySelectorAll('.card, .event-card')
       const buttons = document.querySelectorAll('.btn-primary')
-      const mainContainer = document.querySelector('.main-container')
+      // const mainContainer = document.querySelector('.main-container')
       const contentArea = document.querySelector('.content-area')
 
       if (header && header instanceof HTMLElement) {
@@ -3144,13 +3145,13 @@ const Dashboard = () => {
         
         if (style.type === 'hybrid') {
           // Para mapas híbridos, agregar capa base (satelital) y capa de calles
-          const baseLayer = L.tileLayer(style.url, {
+          L.tileLayer(style.url, {
             attribution: style.attribution
           }).addTo(mapInstanceRef.current)
           
           // Agregar capa de calles sobre la imagen satelital
-          const streetLayer = L.tileLayer(style.streetLayer.url, {
-            attribution: style.streetLayer.attribution,
+          L.tileLayer((style as any).streetLayer.url, {
+            attribution: (style as any).streetLayer.attribution,
             opacity: 0.7  // Hacer las calles semi-transparentes
           }).addTo(mapInstanceRef.current)
           
@@ -3315,8 +3316,8 @@ const Dashboard = () => {
             }).addTo(map);
             
             // Agregar capa de calles sobre la imagen satelital
-            L.tileLayer(style.streetLayer.url, {
-              attribution: style.streetLayer.attribution,
+            L.tileLayer((style as any).streetLayer.url, {
+              attribution: (style as any).streetLayer.attribution,
               opacity: 0.7  // Hacer las calles semi-transparentes
             }).addTo(map);
             
@@ -3656,7 +3657,7 @@ const Dashboard = () => {
               </div>
               <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[3000] w-64 max-h-180 overflow-y-auto p-2 shadow">
                 <li className="menu-title"><span>Seleccionar Tema</span></li>
-                {Object.entries(temas).map(([themeName, theme]) => (
+                {Object.entries(temas).map(([themeName]) => (
                   <li key={themeName}>
                     <a 
                       className={currentTheme === themeName ? 'active' : ''}

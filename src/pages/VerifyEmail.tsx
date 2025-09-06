@@ -17,7 +17,7 @@ const VerifyEmail: React.FC = () => {
   const [verificationData, setVerificationData] = useState<VerificationData | null>(null);
   
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  // const [searchParams] = useSearchParams();
 
   useEffect(() => {
     // Prevenir ejecución múltiple
