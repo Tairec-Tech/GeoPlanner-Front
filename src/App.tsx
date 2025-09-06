@@ -66,10 +66,12 @@ import LoginPage from './pages/LoginPage'
 import RegisterStep1 from './pages/RegisterStep1'
 import RegisterStep2 from './pages/RegisterStep2'
 import RegisterStep3 from './pages/RegisterStep3'
+import VerifyEmail from './pages/VerifyEmail'
 import Dashboard from './pages/Dashboard'
 import ProfilePage from './pages/ProfilePage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import GroupsPage from './pages/GroupsPage'
+import GroupDetailPage from './pages/GroupDetailPage'
 import AboutUs from './pages/AboutUs'
 import Contact from './pages/Contact'
 import TermsOfService from './pages/TermsOfService'
@@ -159,6 +161,11 @@ function AppRoutes() {
           <RegisterStep3 />
         </PublicRoute>
       } />
+      <Route path="/verificar-email" element={
+        <PublicRoute>
+          <VerifyEmail />
+        </PublicRoute>
+      } />
       <Route path="/dashboard" element={
         <ProtectedRoute>
           <Dashboard />
@@ -177,6 +184,11 @@ function AppRoutes() {
       <Route path="/grupos" element={
         <ProtectedRoute>
           <GroupsPage />
+        </ProtectedRoute>
+      } />
+      <Route path="/grupos/:groupId" element={
+        <ProtectedRoute>
+          <GroupDetailPage />
         </ProtectedRoute>
       } />
 

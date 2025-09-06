@@ -38,9 +38,6 @@ const GroupsPage = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'all' | 'my'>('all')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showGroupModal, setShowGroupModal] = useState(false)
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null)
-  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([])
   
   const [newGroup, setNewGroup] = useState({
     nombre: '',
@@ -173,30 +170,7 @@ const GroupsPage = () => {
   }
 
   const handleViewGroup = (group: Group) => {
-    setSelectedGroup(group)
-    setShowGroupModal(true)
-    
-    const sampleMembers: GroupMember[] = [
-      {
-        id: '1',
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        nombre_usuario: 'juanperez',
-        fecha_union: '2024-01-15',
-        rol: 'admin',
-        verificado: true
-      },
-      {
-        id: '2',
-        nombre: 'María',
-        apellido: 'García',
-        nombre_usuario: 'mariagarcia',
-        fecha_union: '2024-01-16',
-        rol: 'miembro',
-        verificado: false
-      }
-    ]
-    setGroupMembers(sampleMembers)
+    navigate(`/grupos/${group.id}`)
   }
 
   const handleAddTag = () => {
@@ -518,95 +492,6 @@ const GroupsPage = () => {
               >
                 Crear Grupo
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showGroupModal && selectedGroup && (
-        <div className="modal modal-open">
-          <div className="modal-box max-w-4xl">
-            <h3 className="font-bold text-lg mb-4">{selectedGroup.nombre}</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Información del Grupo</h4>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Descripción:</strong> {selectedGroup.descripcion}</p>
-                  <p><strong>Categoría:</strong> {selectedGroup.categoria}</p>
-                  <p><strong>Privacidad:</strong> {selectedGroup.privacidad === 'publico' ? 'Público' : 'Privado'}</p>
-                  <p><strong>Miembros:</strong> {selectedGroup.miembros}/{selectedGroup.max_miembros}</p>
-                  <p><strong>Creado:</strong> {new Date(selectedGroup.fecha_creacion).toLocaleDateString()}</p>
-                  <p><strong>Creado por:</strong> {selectedGroup.nombre_creador}</p>
-                </div>
-
-                <div className="mt-4">
-                  <h5 className="font-semibold text-gray-800 mb-2">Tags</h5>
-                  <div className="flex flex-wrap gap-1">
-                    {selectedGroup.tags.map((tag, index) => (
-                      <span key={index} className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Miembros ({groupMembers.length})</h4>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {groupMembers.map((member) => (
-                    <div key={member.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                      <img 
-                        src={member.foto_perfil_url || '/src/assets/img/placeholder.png'} 
-                        alt={`Foto de ${member.nombre}`}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium text-sm">{member.nombre} {member.apellido}</div>
-                        <div className="text-xs text-gray-500">@{member.nombre_usuario}</div>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        member.rol === 'admin' ? 'bg-red-100 text-red-800' :
-                        member.rol === 'moderador' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {member.rol}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-action">
-              <button 
-                className="btn btn-ghost"
-                onClick={() => setShowGroupModal(false)}
-              >
-                Cerrar
-              </button>
-              {selectedGroup.isMember ? (
-                <button 
-                  className="btn btn-error"
-                  onClick={() => {
-                    handleLeaveGroup(selectedGroup.id)
-                    setShowGroupModal(false)
-                  }}
-                >
-                  Salir del Grupo
-                </button>
-              ) : (
-                <button 
-                  className="btn btn-success"
-                  onClick={() => {
-                    handleJoinGroup(selectedGroup.id)
-                    setShowGroupModal(false)
-                  }}
-                >
-                  Unirse al Grupo
-                </button>
-              )}
             </div>
           </div>
         </div>

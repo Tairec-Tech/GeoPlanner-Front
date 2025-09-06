@@ -152,7 +152,16 @@ const RegisterStep3: React.FC = () => {
 
   useEffect(() => {
     const step2Data = sessionStorage.getItem('registroStep2');
-    if (!step2Data) { navigate('/registro'); return; }
+    console.log('RegisterStep3 - Datos en sessionStorage:', { step2Data }); // Debug
+    
+    if (!step2Data) { 
+      console.log('RegisterStep3 - No hay datos, redirigiendo a /registro'); // Debug
+      navigate('/registro'); 
+      return; 
+    }
+    
+    console.log('RegisterStep3 - Datos encontrados, continuando...'); // Debug
+    
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -200,14 +209,59 @@ const RegisterStep3: React.FC = () => {
 
   const handleCrop = () => {
     if (cropperRef.current) {
-      cropperRef.current.getCroppedCanvas().toBlob((blob: Blob | null) => {
-        if (blob) {
-          const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
-          setFormData(p => ({ ...p, fotoPerfil: file }));
-          setPreviewUrl(URL.createObjectURL(blob));
-          setShowCropper(false);
+      try {
+        // Debug: ver qué métodos están disponibles
+        console.log('cropperRef.current:', cropperRef.current);
+        console.log('Métodos disponibles:', Object.getOwnPropertyNames(cropperRef.current));
+        console.log('getCroppedCanvas:', typeof cropperRef.current.getCroppedCanvas);
+        console.log('cropper:', cropperRef.current.cropper);
+        
+        // Intentar diferentes métodos de la API del cropper
+        let canvas;
+        
+        if (typeof cropperRef.current.getCroppedCanvas === 'function') {
+          // API estándar
+          console.log('Usando API estándar getCroppedCanvas');
+          canvas = cropperRef.current.getCroppedCanvas();
+        } else if (cropperRef.current.cropper && typeof cropperRef.current.cropper.getCroppedCanvas === 'function') {
+          // API anidada
+          console.log('Usando API anidada cropper.getCroppedCanvas');
+          canvas = cropperRef.current.cropper.getCroppedCanvas();
+        } else if (cropperRef.current.getData && typeof cropperRef.current.getData === 'function') {
+          // API alternativa
+          console.log('Usando API alternativa getData');
+          const data = cropperRef.current.getData();
+          console.log('Datos del cropper:', data);
+          // Crear canvas manualmente con los datos
+          canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (ctx && data) {
+            canvas.width = data.width || 300;
+            canvas.height = data.height || 300;
+            // Aquí podrías dibujar la imagen recortada
+          }
         }
-      }, 'image/jpeg');
+        
+        if (canvas) {
+          canvas.toBlob((blob: Blob | null) => {
+            if (blob) {
+              const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+              setFormData(p => ({ ...p, fotoPerfil: file }));
+              setPreviewUrl(URL.createObjectURL(blob));
+              setShowCropper(false);
+            }
+          }, 'image/jpeg');
+        } else {
+          console.error('No se pudo obtener el canvas del cropper');
+          setError('Error al procesar la imagen. Intenta con otra imagen.');
+        }
+      } catch (error) {
+        console.error('Error en handleCrop:', error);
+        setError('Error al procesar la imagen. Intenta con otra imagen.');
+      }
+    } else {
+      console.error('cropperRef.current es null');
+      setError('Error: Cropper no está inicializado');
     }
   };
 
@@ -253,9 +307,28 @@ const RegisterStep3: React.FC = () => {
       }
 
       const userData = JSON.parse(step2Data);
+      // Convertir fecha de nacimiento a formato ISO
+      const fechaNacimiento = new Date(
+        parseInt(userData.year),
+        parseInt(userData.month) - 1, // month es 0-based en JavaScript
+        parseInt(userData.day)
+      ).toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      
       const finalData = {
-        ...userData,
-        biografia: formData.bio,
+        // Campos del paso 1
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        fecha_nacimiento: fechaNacimiento,
+        genero: userData.genero,
+        otro_genero: userData.otroGenero || null,
+        
+        // Campos del paso 2
+        nombre_usuario: userData.nombreUsuario, // Corregir nombre del campo
+        email: userData.email,
+        password: userData.password,
+        
+        // Campos del paso 3
+        biografia: formData.bio || null,
         latitud: parseFloat(formData.latitud),
         longitud: parseFloat(formData.longitud),
         ciudad: formData.ciudad,
@@ -263,6 +336,11 @@ const RegisterStep3: React.FC = () => {
         tema_preferido: formData.tema,
         foto_perfil_url: formData.fotoPerfil ? await uploadImage(formData.fotoPerfil) : null
       };
+      
+      // Debug: mostrar datos que se van a enviar
+      console.log('Datos del usuario (step2):', userData);
+      console.log('Datos del formulario (step3):', formData);
+      console.log('Datos finales a enviar:', finalData);
 
       const response = await fetch('http://localhost:8000/auth/register', {
         method: 'POST',
@@ -271,10 +349,27 @@ const RegisterStep3: React.FC = () => {
       });
 
       if (response.ok) {
+        console.log('Usuario registrado exitosamente');
         sessionStorage.clear();
         navigate('/login');
       } else {
         const errorData = await response.json();
+        console.error('Error del backend:', errorData);
+        console.error('Status:', response.status);
+        console.error('StatusText:', response.statusText);
+        
+        // Mostrar detalles completos del error
+        if (errorData.detalle && Array.isArray(errorData.detalle)) {
+          console.error('Detalles de validación:');
+          errorData.detalle.forEach((error: any, index: number) => {
+            console.error(`Error ${index + 1}:`, error);
+            console.error(`  - Tipo: ${error.type}`);
+            console.error(`  - Ubicación: ${error.loc?.join('.')}`);
+            console.error(`  - Mensaje: ${error.msg}`);
+            console.error(`  - Input recibido:`, error.input);
+          });
+        }
+        
         setError(errorData.detail || 'Error al registrar usuario');
         setShowErrorModal(true);
       }

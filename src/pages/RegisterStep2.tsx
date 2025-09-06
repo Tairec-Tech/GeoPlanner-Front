@@ -189,7 +189,11 @@ const RegisterStep2: React.FC = () => {
   const checkUserExists = async (username: string): Promise<boolean> => {
     try {
       const response = await fetch(`http://localhost:8000/users/username/${username}`);
-      return response.ok;
+      if (response.ok) {
+        const data = await response.json();
+        return data.exists; // Retorna true si existe, false si está disponible
+      }
+      return false;
     } catch (error) {
       console.error('Error checking username:', error);
       return false;
@@ -199,9 +203,12 @@ const RegisterStep2: React.FC = () => {
   // Función para verificar si el email existe
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
-      // Asumiendo que hay un endpoint para verificar email
       const response = await fetch(`http://localhost:8000/users/check-email/${email}`);
-      return response.ok;
+      if (response.ok) {
+        const data = await response.json();
+        return data.exists; // Retorna true si existe, false si está disponible
+      }
+      return false;
     } catch (error) {
       console.error('Error checking email:', error);
       return false;
@@ -297,16 +304,48 @@ const RegisterStep2: React.FC = () => {
       return;
     }
 
-    // Combinar datos del paso 1 y 2
-    const combinedData = {
-      ...step1Data,
-      ...formData
-    };
+    try {
+      // Enviar email de verificación
+      const verificationResponse = await fetch('http://localhost:8000/auth/send-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          username: formData.nombreUsuario
+        })
+      });
 
-    // Guardar datos combinados en sessionStorage
-    sessionStorage.setItem('registroStep2', JSON.stringify(combinedData));
-    sessionStorage.setItem('registerStep1', JSON.stringify(step1Data)); // Mantener también los datos del paso 1
-    navigate('/registro/paso3');
+      if (verificationResponse.ok) {
+        // Combinar datos del paso 1 y 2
+        const combinedData = {
+          ...step1Data,
+          ...formData
+        };
+        
+        console.log('Datos combinados a guardar:', combinedData); // Debug
+        
+        // Guardar datos combinados en sessionStorage
+        sessionStorage.setItem('registroStep2', JSON.stringify(combinedData));
+        sessionStorage.setItem('registerStep1', JSON.stringify(step1Data));
+        
+        console.log('Datos guardados en sessionStorage:', {
+          registroStep2: sessionStorage.getItem('registroStep2'),
+          registerStep1: sessionStorage.getItem('registerStep1')
+        }); // Debug
+        
+        // Navegar a página de verificación en lugar de paso 3
+        navigate('/verificar-email');
+      } else {
+        const errorData = await verificationResponse.json();
+        setError(`Error enviando email de verificación: ${errorData.detail || 'Error desconocido'}`);
+        setShowErrorModal(true);
+      }
+    } catch (error) {
+      setError('Error de conexión. Verifica tu internet.');
+      setShowErrorModal(true);
+    }
   };
 
   const handleBack = () => {
