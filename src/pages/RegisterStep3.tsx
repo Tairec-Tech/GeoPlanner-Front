@@ -361,6 +361,7 @@ const RegisterStep3: React.FC = () => {
         // Mostrar detalles completos del error
         if (errorData.detalle && Array.isArray(errorData.detalle)) {
           console.error('Detalles de validación:');
+          //errorData.detalle.forEach((error: any, index: number)
           errorData.detalle.forEach((error: { type: string; loc?: string[]; msg: string; input?: unknown }, index: number) => {
             console.error(`Error ${index + 1}:`, error);
             console.error(`  - Tipo: ${error.type}`);
