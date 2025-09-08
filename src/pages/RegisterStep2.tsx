@@ -74,6 +74,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildApiUrl, API_ENDPOINTS } from '../config/api';
 import '../styles/RegisterStep2.css';
 
 interface CredentialsInfo {
@@ -203,7 +204,7 @@ const RegisterStep2: React.FC = () => {
   // Función para verificar si el email existe
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
-      const response = await fetch(`http://localhost:8000/users/check-email/${email}`);
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHECK_EMAIL}/${email}`));
       if (response.ok) {
         const data = await response.json();
         return data.exists; // Retorna true si existe, false si está disponible
@@ -306,7 +307,7 @@ const RegisterStep2: React.FC = () => {
 
     try {
       // Enviar email de verificación
-      const verificationResponse = await fetch('http://localhost:8000/auth/send-verification', {
+      const verificationResponse = await fetch(buildApiUrl(API_ENDPOINTS.SEND_VERIFICATION), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

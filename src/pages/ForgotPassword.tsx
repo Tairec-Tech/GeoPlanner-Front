@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ErrorModal from '../components/ErrorModal';
+import { buildApiUrl, API_ENDPOINTS } from '../config/api';
 import '../styles/ForgotPassword.css';
 
 // Tipos para validación de contraseña
@@ -96,7 +96,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth/forgot-password', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ const ForgotPassword: React.FC = () => {
         passwordStrength: passwordStrength.score
       });
 
-      const response = await fetch('http://localhost:8000/auth/reset-password', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESET_PASSWORD)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth/resend-reset-code', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESEND_RESET_CODE)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth/forgot-password', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
