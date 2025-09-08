@@ -13,9 +13,15 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom'],
           router: ['react-router-dom'],
+          leaflet: ['leaflet', 'react-leaflet', 'leaflet-routing-machine'],
+          charts: ['chart.js', 'react-chartjs-2'],
         },
       },
     },
+    // Optimizaciones para producción
+    target: 'es2015',
+    cssCodeSplit: true,
+    assetsInlineLimit: 4096,
   },
   server: {
     port: 5173,

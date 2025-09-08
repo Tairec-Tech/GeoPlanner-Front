@@ -2,9 +2,10 @@
 const isDevelopment = import.meta.env.DEV;
 
 // URLs del backend
-export const API_BASE_URL = isDevelopment 
-  ? 'http://localhost:8000'  // Desarrollo local
-  : 'https://geoplanner-back.onrender.com';  // Producción - CAMBIA ESTA URL
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (isDevelopment 
+    ? 'http://localhost:8000'  // Desarrollo local
+    : 'https://geoplanner-back.onrender.com');  // Producción
 
 // Endpoints de la API
 export const API_ENDPOINTS = {

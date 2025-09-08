@@ -74,7 +74,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { buildApiUrl, API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, apiRequest } from '../config/api';
 import '../styles/RegisterStep2.css';
 
 interface CredentialsInfo {
@@ -189,7 +189,7 @@ const RegisterStep2: React.FC = () => {
   // Función para verificar si el usuario existe
   const checkUserExists = async (username: string): Promise<boolean> => {
     try {
-      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHECK_USERNAME}/${username}`));
+      const response = await apiRequest(`${API_ENDPOINTS.CHECK_USERNAME}/${username}`);
       if (response.ok) {
         const data = await response.json();
         return data.exists; // Retorna true si existe, false si está disponible
@@ -204,7 +204,7 @@ const RegisterStep2: React.FC = () => {
   // Función para verificar si el email existe
   const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
-      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHECK_EMAIL}/${email}`));
+      const response = await apiRequest(`${API_ENDPOINTS.CHECK_EMAIL}/${email}`);
       if (response.ok) {
         const data = await response.json();
         return data.exists; // Retorna true si existe, false si está disponible
@@ -307,11 +307,8 @@ const RegisterStep2: React.FC = () => {
 
     try {
       // Enviar email de verificación
-      const verificationResponse = await fetch(buildApiUrl(API_ENDPOINTS.SEND_VERIFICATION), {
+      const verificationResponse = await apiRequest(API_ENDPOINTS.SEND_VERIFICATION, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           email: formData.email,
           username: formData.nombreUsuario
@@ -344,6 +341,7 @@ const RegisterStep2: React.FC = () => {
         setShowErrorModal(true);
       }
     } catch (error) {
+      console.error('Error sending verification email:', error);
       setError('Error de conexión. Verifica tu internet.');
       setShowErrorModal(true);
     }

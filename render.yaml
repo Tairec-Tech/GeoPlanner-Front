@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: geoplanner-front
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build:prod
+    startCommand: npm run preview:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: https://geoplanner-back.onrender.com
+    healthCheckPath: /
+    autoDeploy: true
