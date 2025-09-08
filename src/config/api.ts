@@ -27,7 +27,9 @@ export const API_ENDPOINTS = {
 
 // Función helper para construir URLs completas
 export const buildApiUrl = (endpoint: string): string => {
-  return `${API_BASE_URL}${endpoint}`;
+  const fullUrl = `${API_BASE_URL}${endpoint}`;
+  console.log(`🌐 API URL: ${fullUrl} (${isDevelopment ? 'DESARROLLO' : 'PRODUCCIÓN'})`);
+  return fullUrl;
 };
 
 // Función helper para hacer requests

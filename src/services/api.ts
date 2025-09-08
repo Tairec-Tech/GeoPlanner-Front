@@ -1,8 +1,5 @@
-// Configuración de la API
-const isDevelopment = import.meta.env.DEV;
-const API_BASE_URL = isDevelopment 
-  ? 'http://localhost:8000'  // Desarrollo local
-  : 'https://geoplanner-back.onrender.com';  // Producción - CAMBIA ESTA URL
+// Importar configuración centralizada
+import { API_BASE_URL } from '../config/api';
 
 // Interfaces para QR y asistencia
 export interface QRCodeResponse {
