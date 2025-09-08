@@ -98,7 +98,7 @@
 }
 
 .logo-image {
-  scale: 30%;
+  scale: scale(3.0%);
   filter: drop-shadow(0 0 5px rgba(34, 211, 238, 0.8));
   animation: vertical-float 5s ease-in-out infinite;
 }

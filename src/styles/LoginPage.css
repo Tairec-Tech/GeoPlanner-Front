@@ -207,4 +207,90 @@
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* Estilos para el Modal de Error */
+.modal {
+  z-index: 9999;
+}
+
+.modal-box {
+  animation: modalSlideIn 0.3s ease-out;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes modalSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Estilos específicos para el contenido del modal */
+.modal-box .text-6xl {
+  animation: iconBounce 0.6s ease-out;
+}
+
+@keyframes iconBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+.modal-box .bg-blue-50 {
+  animation: fadeInUp 0.4s ease-out 0.2s both;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-action {
+  animation: fadeInUp 0.4s ease-out 0.4s both;
+}
+
+/* Hover effects para los botones del modal */
+.modal-action .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Responsive para el modal */
+@media (max-width: 576px) {
+  .modal-box {
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .modal-box .text-6xl {
+    font-size: 3rem;
+  }
+  
+  .modal-box .text-lg {
+    font-size: 1.1rem;
+  }
 } 

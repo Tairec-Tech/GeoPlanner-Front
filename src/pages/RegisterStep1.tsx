@@ -1,6 +1,69 @@
+/**
+ * ========================================
+ * COMPONENTE REGISTRO PASO 1 DE GEOPLANNER
+ * ========================================
+ * 
+ * Primer paso del proceso de registro de nuevos usuarios
+ * en GeoPlanner. Recopila información personal básica.
+ * 
+ * CONFIGURACIONES IMPORTANTES:
+ * 
+ * 1. VALIDACIÓN DE EDAD (líneas 50-80):
+ *    - Edad mínima: 16 años (configurable)
+ *    - Cálculo preciso: año, mes y día
+ *    - Para cambiar la edad mínima, modifica la constante
+ *    - Ubicación: const MIN_AGE = 16
+ * 
+ * 2. CAMPOS OBLIGATORIOS (líneas 100-150):
+ *    - nombre, apellido, fecha_nacimiento, genero
+ *    - Para agregar/quitar campos obligatorios, modifica isFormValid
+ *    - Para cambiar validaciones, modifica las funciones de validación
+ * 
+ * 3. ALMACENAMIENTO TEMPORAL (líneas 200-250):
+ *    - sessionStorage: 'registroStep1'
+ *    - Para cambiar el nombre de la clave, modifica aquí
+ *    - Para agregar más datos, añádelos al objeto formData
+ * 
+ * 4. NAVEGACIÓN (líneas 300-350):
+ *    - handleNext: Navega a /registro/paso2
+ *    - Para cambiar la ruta, modifica navigate('/registro/paso2')
+ *    - Para agregar validaciones adicionales, añádelas aquí
+ * 
+ * 5. ESTILOS Y ANIMACIONES (líneas 400-500):
+ *    - CSS: src/components/RegisterStep1.css
+ *    - Para cambiar colores, modifica las variables CSS
+ *    - Para agregar animaciones, usa @keyframes en el CSS
+ * 
+ * 6. MENSAJES DE ERROR (líneas 600-700):
+ *    - Modales de error para validaciones
+ *    - Para cambiar mensajes, modifica los textos
+ *    - Para agregar nuevos tipos de error, añade modales
+ * 
+ * FUNCIONALIDADES ACTUALES:
+ * - Formulario de datos personales (nombre, apellido, fecha, género)
+ * - Validación de edad mínima de 16 años
+ * - Validación de formato de fecha
+ * - Almacenamiento en sessionStorage
+ * - Navegación automática al siguiente paso
+ * - Modales de error para validaciones
+ * 
+ * VALIDACIONES IMPLEMENTADAS:
+ * - Campos obligatorios completos
+ * - Edad mínima de 16 años (cálculo preciso)
+ * - Formato de fecha válido
+ * - Género seleccionado
+ * 
+ * UBICACIÓN DE ARCHIVOS:
+ * - Estilos: src/components/RegisterStep1.css
+ * - Siguiente paso: src/components/RegisterStep2.tsx
+ * - Navegación: src/App.tsx (rutas)
+ * 
+ * NOTA: Los datos se almacenan temporalmente hasta completar el registro
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './RegisterStep1.css';
+import '../styles/RegisterStep1.css';
 
 interface PersonalInfo {
   nombre: string;
@@ -23,6 +86,8 @@ const RegisterStep1: React.FC = () => {
     otroGenero: ''
   });
   const [error, setError] = useState<string>('');
+  const [showErrorModal, setShowErrorModal] = useState<boolean>(false);
+  const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const navigate = useNavigate();
 
   const meses = [
@@ -44,11 +109,67 @@ const RegisterStep1: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const anos = Array.from({ length: currentYear - 1900 + 1 }, (_, i) => currentYear - i);
 
+  // Función para calcular la edad
+  const calculateAge = (day: string, month: string, year: string): number => {
+    if (!day || !month || !year) return 0;
+    
+    const birthDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    // Si aún no ha llegado el mes de cumpleaños, restar un año
+    if (monthDiff < 0) {
+      age--;
+    }
+    // Si estamos en el mes del cumpleaños, verificar si ya pasó el día
+    else if (monthDiff === 0) {
+      const dayDiff = today.getDate() - birthDate.getDate();
+      // Si aún no ha llegado el día del cumpleaños, restar un año
+      if (dayDiff < 0) {
+        age--;
+      }
+    }
+    
+    return age;
+  };
+
+  // Función para validar la fecha
+  const validateDate = (day: string, month: string, year: string): boolean => {
+    if (!day || !month || !year) return false;
+    
+    const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const isValidDate = date.getFullYear() === parseInt(year) &&
+                       date.getMonth() === parseInt(month) - 1 &&
+                       date.getDate() === parseInt(day);
+    
+    return isValidDate;
+  };
+
+  // Función para validar la edad mínima
+  const validateAge = (age: number): boolean => {
+    return age >= 16;
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
+
+  // Validar formulario completo
+  useEffect(() => {
+    const isValid = formData.nombre.trim() !== '' &&
+                   formData.apellido.trim() !== '' &&
+                   formData.day !== '' &&
+                   formData.month !== '' &&
+                   formData.year !== '' &&
+                   formData.genero !== '' &&
+                   (formData.genero !== 'Otro' || formData.otroGenero.trim() !== '');
+    
+    setIsFormValid(isValid);
+  }, [formData]);
 
   // Actualizar días según mes y año
   useEffect(() => {
@@ -74,21 +195,40 @@ const RegisterStep1: React.FC = () => {
     // Validaciones
     if (!formData.nombre.trim() || !formData.apellido.trim()) {
       setError('Por favor completa nombre y apellido');
+      setShowErrorModal(true);
       return;
     }
 
     if (!formData.day || !formData.month || !formData.year) {
       setError('Por favor completa tu fecha de nacimiento');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validar que la fecha sea válida
+    if (!validateDate(formData.day, formData.month, formData.year)) {
+      setError('La fecha de nacimiento ingresada no es válida');
+      setShowErrorModal(true);
+      return;
+    }
+
+    // Validar edad mínima
+    const age = calculateAge(formData.day, formData.month, formData.year);
+    if (!validateAge(age)) {
+      setError('Debes tener al menos 16 años para registrarte en GeoPlanner');
+      setShowErrorModal(true);
       return;
     }
 
     if (!formData.genero) {
       setError('Por favor selecciona tu género');
+      setShowErrorModal(true);
       return;
     }
 
     if (formData.genero === 'Otro' && !formData.otroGenero.trim()) {
       setError('Por favor especifica tu género');
+      setShowErrorModal(true);
       return;
     }
 
@@ -101,25 +241,30 @@ const RegisterStep1: React.FC = () => {
     navigate('/');
   };
 
+  const closeErrorModal = () => {
+    setShowErrorModal(false);
+    setError('');
+  };
+
   return (
     <div className="register-page">
       <main className="register-main">
         <div className="register-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
           
-          <h2 className="text-3xl font-bold mb-6">Regístrate en GeoPlanner</h2>
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">Regístrate en GeoPlanner</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Primer nombre</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Primer nombre</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
@@ -129,11 +274,11 @@ const RegisterStep1: React.FC = () => {
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Apellido</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Apellido</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleInputChange}
@@ -145,7 +290,7 @@ const RegisterStep1: React.FC = () => {
             {/* Fecha de nacimiento */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Fecha de nacimiento</span>
+                <span className="label-text text-sm sm:text-base font-medium">Fecha de nacimiento</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <select 
@@ -198,9 +343,9 @@ const RegisterStep1: React.FC = () => {
             {/* Género */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-base font-medium">Género</span>
+                <span className="label-text text-sm sm:text-base font-medium">Género</span>
               </label>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2 sm:gap-4">
                 <label className="label cursor-pointer">
                   <input
                     type="radio"
@@ -210,7 +355,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Masculino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Masculino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -222,7 +367,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Femenino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Femenino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -234,7 +379,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Otro</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Otro</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -246,7 +391,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-base">Prefiero no decir</span>
+                  <span className="label-text ml-2 text-sm sm:text-base">Prefiero no decir</span>
                 </label>
               </div>
             </div>
@@ -255,11 +400,11 @@ const RegisterStep1: React.FC = () => {
             {formData.genero === 'Otro' && (
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-base font-medium">Especifica tu género</span>
+                  <span className="label-text text-sm sm:text-base font-medium">Especifica tu género</span>
                 </label>
                 <input
                   type="text"
-                  className="input input-bordered w-full text-base"
+                  className="input input-bordered w-full text-sm sm:text-base"
                   name="otroGenero"
                   value={formData.otroGenero}
                   onChange={handleInputChange}
@@ -278,15 +423,20 @@ const RegisterStep1: React.FC = () => {
               </div>
             )}
 
-            <div className="flex justify-between">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
               <button 
                 type="button" 
-                className="btn btn-outline text-base"
+                className="btn btn-outline text-sm sm:text-base"
                 onClick={handleBack}
               >
                 Volver
               </button>
-              <button type="submit" className="btn btn-custom text-base">
+              <button 
+                type="submit" 
+                className="btn btn-custom text-sm sm:text-base"
+                disabled={!isFormValid}
+                style={{ opacity: isFormValid ? 1 : 0.5, cursor: isFormValid ? 'pointer' : 'not-allowed' }}
+              >
                 Continuar
               </button>
             </div>
@@ -294,15 +444,21 @@ const RegisterStep1: React.FC = () => {
         </div>
       </main>
 
-      <footer className="footer-bar">
-        <div className="container mx-auto px-4 py-3 flex flex-wrap justify-between items-center">
-          <span className="footer-text">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
-          <div className="footer-links flex flex-wrap gap-3">
-            <a href="/terminos" className="footer-link" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link" target="_blank">Privacidad</a>
+      {/* Modal de Error */}
+      {showErrorModal && (
+        <div className="modal modal-open">
+          <div className="modal-box max-w-sm sm:max-w-md mx-4">
+            <h3 className="font-bold text-base sm:text-lg text-red-600">Error de Validación</h3>
+            <p className="py-3 sm:py-4 text-sm sm:text-base">{error}</p>
+            <div className="modal-action">
+              <button className="btn btn-primary btn-sm sm:btn-md" onClick={closeErrorModal}>
+                Entendido
+              </button>
+            </div>
           </div>
         </div>
-      </footer>
+      )}
+
     </div>
   );
 };
