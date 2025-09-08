@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { buildApiUrl, API_ENDPOINTS } from '../config/api';
 import '../styles/ForgotPassword.css';
 
 // Tipos para validación de contraseña

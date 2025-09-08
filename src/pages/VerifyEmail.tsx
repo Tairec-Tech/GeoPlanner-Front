@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { buildApiUrl, API_ENDPOINTS } from '../config/api';
 import '../styles/VerifyEmail.css';
 
 interface VerificationData {
@@ -139,7 +140,7 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth/verify-email', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.VERIFY_EMAIL)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +182,7 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:8000/auth/resend-verification', {
+      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESEND_VERIFICATION)', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

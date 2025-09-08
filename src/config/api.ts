@@ -1,6 +1,5 @@
 // Configuración de la API
 const isDevelopment = import.meta.env.DEV;
-const isProduction = import.meta.env.PROD;
 
 // URLs del backend
 export const API_BASE_URL = isDevelopment 

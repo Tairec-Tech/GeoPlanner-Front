@@ -77,6 +77,7 @@ import { useNavigate } from 'react-router-dom';
 import Cropper from 'react-cropper';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { buildApiUrl, API_ENDPOINTS } from '../config/api';
 import 'leaflet/dist/leaflet.css';
 import '../styles/RegisterStep3.css';
 
@@ -342,7 +343,7 @@ const RegisterStep3: React.FC = () => {
       console.log('Datos del formulario (step3):', formData);
       console.log('Datos finales a enviar:', finalData);
 
-      const response = await fetch('http://localhost:8000/auth/register', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.REGISTER), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalData)
