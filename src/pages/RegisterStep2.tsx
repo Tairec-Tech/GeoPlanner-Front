@@ -189,7 +189,7 @@ const RegisterStep2: React.FC = () => {
   // Función para verificar si el usuario existe
   const checkUserExists = async (username: string): Promise<boolean> => {
     try {
-      const response = await fetch(`http://localhost:8000/users/username/${username}`);
+      const response = await fetch(buildApiUrl(`${API_ENDPOINTS.CHECK_USERNAME}/${username}`));
       if (response.ok) {
         const data = await response.json();
         return data.exists; // Retorna true si existe, false si está disponible

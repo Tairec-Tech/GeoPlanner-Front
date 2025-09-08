@@ -29,6 +29,8 @@ export const API_ENDPOINTS = {
 export const buildApiUrl = (endpoint: string): string => {
   const fullUrl = `${API_BASE_URL}${endpoint}`;
   console.log(`🌐 API URL: ${fullUrl} (${isDevelopment ? 'DESARROLLO' : 'PRODUCCIÓN'})`);
+  console.log(`🔧 API_BASE_URL: ${API_BASE_URL}`);
+  console.log(`🔧 Endpoint: ${endpoint}`);
   return fullUrl;
 };
 
