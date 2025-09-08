@@ -140,7 +140,7 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.VERIFY_EMAIL)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.VERIFY_EMAIL), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ const VerifyEmail: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESEND_VERIFICATION)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.RESEND_VERIFICATION), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

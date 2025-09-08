@@ -96,7 +96,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ const ForgotPassword: React.FC = () => {
         passwordStrength: passwordStrength.score
       });
 
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESET_PASSWORD)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.RESET_PASSWORD), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -190,7 +190,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.RESEND_RESET_CODE)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.RESEND_RESET_CODE), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +225,7 @@ const ForgotPassword: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD)', {
+      const response = await fetch(buildApiUrl(API_ENDPOINTS.FORGOT_PASSWORD), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
