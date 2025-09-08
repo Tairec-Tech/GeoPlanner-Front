@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import ErrorModal from '../components/ErrorModal';
 import '../styles/ForgotPassword.css';
 
 // Tipos para validación de contraseña
