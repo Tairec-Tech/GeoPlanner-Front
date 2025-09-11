@@ -279,8 +279,8 @@ const LoginPage: React.FC = () => {
           </form>
 
           <div className="divider">O</div>
-          <p className="text-xs sm:text-sm">¿Nuevo en GeoPlanner? <a href="/registro" className="link link-primary">Regístrate aquí</a></p>
-          <p className="text-xs sm:text-sm"><a href="/forgot-password" className="link link-primary">¿Olvidó su contraseña o no puede ingresar?</a></p>
+          <p className="text-xs sm:text-sm">¿Nuevo en GeoPlanner? <button onClick={() => navigate('/registro')} className="link link-primary">Regístrate aquí</button></p>
+          <p className="text-xs sm:text-sm"><button onClick={() => navigate('/forgot-password')} className="link link-primary">¿Olvidó su contraseña o no puede ingresar?</button></p>
         </div>
       </main>
 
