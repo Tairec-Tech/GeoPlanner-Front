@@ -216,7 +216,7 @@ const LoginPage: React.FC = () => {
       <main className="login-main">
         <div className="login-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
+            <img src="/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4">Bienvenido a GeoPlanner</h2>
           <p className="tagline text-sm sm:text-base">Planifica, organiza y colabora desde el mapa.</p>

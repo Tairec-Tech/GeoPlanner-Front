@@ -440,7 +440,7 @@ const GroupDetailPage = () => {
                 {members.map((member) => (
                   <div key={member.id} className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                     <img 
-                      src={member.foto_perfil_url || '/src/assets/img/placeholder.png'} 
+                      src={member.foto_perfil_url || '/placeholder.png'} 
                       alt={`Foto de ${member.nombre}`}
                       className="w-12 h-12 rounded-full object-cover"
                     />
@@ -498,7 +498,7 @@ const GroupDetailPage = () => {
                     <div key={post.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <img 
-                          src={post.autor.foto_perfil_url || '/src/assets/img/placeholder.png'} 
+                          src={post.autor.foto_perfil_url || '/placeholder.png'} 
                           alt={`Foto de ${post.autor.nombre}`}
                           className="w-10 h-10 rounded-full object-cover"
                         />

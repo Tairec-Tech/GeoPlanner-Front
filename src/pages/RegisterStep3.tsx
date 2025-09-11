@@ -135,7 +135,7 @@ const RegisterStep3: React.FC = () => {
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [showCropper, setShowCropper] = useState(false);
   const [cropperImage, setCropperImage] = useState<string>('');
-  const [previewUrl, setPreviewUrl] = useState('/src/assets/img/placeholder.png');
+  const [previewUrl, setPreviewUrl] = useState('/placeholder.png');
   const [currentTheme, setCurrentTheme] = useState<Theme>(temas.default);
   const [markerPosition, setMarkerPosition] = useState<[number, number]>([10.654, -71.612]);
 
@@ -416,7 +416,7 @@ const RegisterStep3: React.FC = () => {
     <div className="register-page">
       <div className="register-container-wide" style={{ background: currentTheme.fondo, color: currentTheme.texto }}>
         <div className="logo-drop">
-          <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
+          <img src="/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
         </div>
 
         <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-6">Personaliza tu perfil</h2>

@@ -365,7 +365,7 @@ const RegisterStep2: React.FC = () => {
       <main className="register-main">
         <div className="register-container text-center">
           <div className="logo-drop text-center">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
+            <img src="/Logo.png" alt="Logo GeoPlanner" className="logo-spin w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24" />
           </div>
           
           <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6">Crea tus credenciales</h2>

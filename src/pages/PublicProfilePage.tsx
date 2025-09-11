@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
-import placeholder from '../assets/img/placeholder.png'
+// Assets moved to public folder for production compatibility
 
 interface User {
   id: string
@@ -300,12 +300,12 @@ const PublicProfilePage = () => {
             <div className="absolute -top-16 md:-top-20 left-6 md:left-8">
               <div className="relative">
                 <img 
-                  src={profileUser.foto_perfil_url || placeholder} 
+                  src={profileUser.foto_perfil_url || '/placeholder.png'} 
                   alt={`Foto de ${profileUser.nombre}`}
                   className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-lg"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
-                    target.src = placeholder
+                    target.src = '/placeholder.png'
                   }}
                 />
                 {profileUser.verificado && (
@@ -494,12 +494,12 @@ const PublicProfilePage = () => {
                       <div key={post.id} className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-4 mb-4">
                           <img 
-                            src={post.foto_autor || placeholder} 
+                            src={post.foto_autor || '/placeholder.png'} 
                             alt={`Foto de ${post.nombre_autor}`}
                             className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement
-                              target.src = placeholder
+                              target.src = '/placeholder.png'
                             }}
                           />
                           <div className="flex-1">

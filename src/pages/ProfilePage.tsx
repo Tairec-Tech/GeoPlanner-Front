@@ -29,7 +29,7 @@ import { apiService } from '../services/api'
 import type { UserSettings } from '../services/api'
 import UserPosts from '../components/UserPosts'
 import '../styles/ProfilePage.css'
-import placeholder from '../assets/img/placeholder.png'
+// Assets moved to public folder for production compatibility
 
 interface ProfileStats {
   totalPosts: number
@@ -1095,12 +1095,12 @@ const ProfilePage: React.FC = () => {
                   <div key={friend.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-3 mb-3">
                       <img 
-                        src={friend.foto_perfil_url || placeholder} 
+                        src={friend.foto_perfil_url || '/placeholder.png'} 
                         alt={`Foto de ${friend.nombre}`}
                         className="w-12 h-12 rounded-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
-                          target.src = placeholder
+                          target.src = '/placeholder.png'
                         }}
                       />
                       <div className="flex-1">
@@ -1167,12 +1167,12 @@ const ProfilePage: React.FC = () => {
                     <div key={blockedUser.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-center gap-3 mb-3">
                         <img 
-                          src={blockedUser.foto_perfil_url || placeholder} 
+                          src={blockedUser.foto_perfil_url || '/placeholder.png'} 
                           alt={`Foto de ${blockedUser.nombre}`}
                           className="w-12 h-12 rounded-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement
-                            target.src = placeholder
+                            target.src = '/placeholder.png'
                           }}
                         />
                         <div className="flex-1">

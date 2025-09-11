@@ -77,9 +77,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { apiService } from '../services/api'
 // import type { QRVerificationResponse } from '../services/api'
 import type { Post, AgendaItem, SavedEvent } from '../services/api'
-import logo from '../assets/img/LogoMini.png'
-import logoNoche from '../assets/img/logo_noche.png'
-import placeholder from '../assets/img/placeholder.png'
+// Assets moved to public folder for production compatibility
 // import QRScanner from './QRScanner'
 import QRCodeDisplay from '../components/QRCodeDisplay'
 import AttendanceHistory from '../components/AttendanceHistory'
@@ -993,7 +991,7 @@ const Dashboard = () => {
     // Calcular tamaño del icono basado en el nivel de zoom (entre 20px y 50px)
     const iconSize = Math.max(20, Math.min(50, zoomLevel * 3))
     return L.divIcon({
-      html: `<img src="${logo}" style="width: ${iconSize}px; height: ${iconSize}px; border-radius: 50%; border: 3px solid #007BFF; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" alt="Tu ubicación">`,
+      html: `<img src="/Logo.png" style="width: ${iconSize}px; height: ${iconSize}px; border-radius: 50%; border: 3px solid #007BFF; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);" alt="Tu ubicación">`,
       className: 'user-location-marker',  // Clase CSS para estilos adicionales
       iconSize: [iconSize, iconSize],     // Tamaño del icono
       iconAnchor: [iconSize / 2, iconSize / 2]  // Punto de anclaje (centro del icono)
@@ -2300,12 +2298,12 @@ const Dashboard = () => {
             {/* Foto de perfil del autor */}
             <div className="flex-shrink-0">
               <img 
-                src={post.foto_autor || '/src/assets/img/placeholder.png'} 
+                src={post.foto_autor || '/placeholder.png'} 
                 alt={`Foto de ${post.nombre_autor}`}
                 className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border-2 border-gray-200"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
-                  target.src = '/src/assets/img/placeholder.png'
+                  target.src = '/placeholder.png'
                 }}
               />
             </div>
@@ -2428,7 +2426,7 @@ const Dashboard = () => {
                             className="w-6 h-6 md:w-8 md:h-8 rounded-full object-cover border border-gray-200"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement
-                              target.src = '/src/assets/img/placeholder.png'
+                              target.src = '/placeholder.png'
                             }}
                           />
                         </div>
@@ -2475,7 +2473,7 @@ const Dashboard = () => {
                                   className="w-5 h-5 md:w-6 md:h-6 rounded-full object-cover border border-gray-200"
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement
-                                    target.src = '/src/assets/img/placeholder.png'
+                                    target.src = '/placeholder.png'
                                   }}
                                 />
                               </div>
@@ -3510,7 +3508,7 @@ const Dashboard = () => {
           <div className="loading-container">
             <div className="logo-drop">
               <img 
-                src={currentTheme === 'noche' ? logoNoche : "/src/assets/img/Logo.png"} 
+                src={currentTheme === 'noche' ? "/logo_noche.png" : "/Logo.png"} 
                 alt="Logo GeoPlanner" 
                 className="logo-spin" 
               />
@@ -3523,7 +3521,7 @@ const Dashboard = () => {
       <header className="flex flex-col lg:flex-row justify-between items-center text-primary-content p-4 shadow-lg bg-primary gap-4">
         <a href="#" className="flex items-center gap-2 text-primary-content no-underline">
           <img 
-            src={currentTheme === 'noche' ? logoNoche : logo} 
+            src={currentTheme === 'noche' ? "/logo_noche.png" : "/Logo.png"} 
             alt="Logo" 
             className="w-8 h-8 md:w-9 md:h-9" 
           />
@@ -3810,11 +3808,11 @@ const Dashboard = () => {
                 <li><a onClick={handleProfile}>
                   <img 
                     className="w-10 h-10 rounded-full object-cover border-2 border-gray-200" 
-                    src={user?.foto_perfil_url || '/src/assets/img/placeholder.png'} 
+                    src={user?.foto_perfil_url || '/placeholder.png'} 
                     alt="Foto de perfil"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
-                      target.src = '/src/assets/img/placeholder.png'
+                      target.src = '/placeholder.png'
                     }}
                   />
                   <div className="flex-1">
@@ -3966,7 +3964,7 @@ const Dashboard = () => {
                   <div className="w-full max-w-2xl p-3 md:p-4 border rounded-lg create-post-widget">
                                           <div className="flex items-center gap-2 md:gap-3">
                         <img 
-                          src={placeholder} 
+                          src="/placeholder.png" 
                           className="w-6 h-6 md:w-7 md:h-7 rounded-full"
                           alt="user"
                         />
@@ -4141,12 +4139,12 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 {/* Foto de perfil del usuario */}
                 <img 
-                  src={user?.foto_perfil_url || '/src/assets/img/placeholder.png'} 
+                  src={user?.foto_perfil_url || '/placeholder.png'} 
                   alt="Tu foto de perfil"
                   className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement
-                    target.src = '/src/assets/img/placeholder.png'
+                    target.src = '/placeholder.png'
                   }}
                 />
                 <div>

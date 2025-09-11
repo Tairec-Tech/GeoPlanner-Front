@@ -93,7 +93,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="loading-screen">
         <div className="loading-container">
           <div className="logo-drop">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
           </div>
           <p className="loading-text">Cargando GeoPlanner...</p>
         </div>
@@ -117,7 +117,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       <div className="loading-screen">
         <div className="loading-container">
           <div className="logo-drop">
-            <img src="/src/assets/img/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
+            <img src="/Logo.png" alt="Logo GeoPlanner" className="logo-spin" />
           </div>
           <p className="loading-text">Cargando GeoPlanner...</p>
         </div>

@@ -124,3 +124,4 @@ Si encuentras problemas:
 ---
 
 **Nota**: Este proyecto está configurado para funcionar automáticamente en producción. Solo necesitas desplegarlo siguiendo los pasos anteriores.
+
