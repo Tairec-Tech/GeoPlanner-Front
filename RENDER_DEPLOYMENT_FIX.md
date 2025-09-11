@@ -6,8 +6,9 @@
 **Síntoma**: Al hacer refresh (Ctrl+R) en páginas como `/login`, `/registro`, etc., aparece "Not Found"
 **Causa**: Render no estaba configurado para manejar rutas de SPA correctamente
 **Solución**: 
-- Creado archivo `public/_redirects` con contenido: `/*    /index.html   200`
-- Actualizado `render.yaml` para usar `serve` en lugar de `vite preview`
+- Creado servidor Express personalizado (`server.js`) para manejo robusto de SPA
+- Actualizado `render.yaml` para usar servidor personalizado
+- Cambiados enlaces `<a href="">` por navegación programática con React Router
 
 ### 2. Problema de Carga de Assets
 **Síntoma**: Logo y placeholder no se muestran en producción
@@ -20,8 +21,10 @@
 
 ### Configuración de Deployment
 - `render.yaml`: Actualizado buildCommand y startCommand
-- `package.json`: Agregado `serve` como devDependency
-- `public/_redirects`: Nuevo archivo para manejo de rutas SPA
+- `package.json`: Agregado `express` como devDependency
+- `server.js`: Nuevo servidor Express personalizado para SPA
+- `static.json`: Configuración adicional para hosting estático
+- `public/_redirects`: Archivo de respaldo para manejo de rutas SPA
 
 ### Assets Movidos
 - `src/assets/img/Logo.png` → `public/Logo.png`
@@ -30,7 +33,7 @@
 
 ### Referencias Actualizadas
 - `src/App.tsx`: Referencias de logo en loading screens
-- `src/pages/LoginPage.tsx`: Referencia de logo
+- `src/pages/LoginPage.tsx`: Referencia de logo + navegación programática
 - `src/pages/RegisterStep1.tsx`: Referencia de logo
 - `src/pages/RegisterStep2.tsx`: Referencia de logo
 - `src/pages/RegisterStep3.tsx`: Referencias de logo y placeholder
@@ -62,10 +65,27 @@
 ### render.yaml
 ```yaml
 buildCommand: npm install && npm run build
-startCommand: npx serve -s dist -l 4173
+startCommand: node server.js
 ```
 
-### public/_redirects
+### server.js
+```javascript
+const express = require('express');
+const path = require('path');
+const app = express();
+const port = process.env.PORT || 4173;
+
+app.use(express.static(path.join(__dirname, 'dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
+app.listen(port, () => {
+  console.log(`Servidor ejecutándose en puerto ${port}`);
+});
+```
+
+### public/_redirects (respaldo)
 ```
 /*    /index.html   200
 ```
@@ -78,8 +98,9 @@ startCommand: npx serve -s dist -l 4173
 
 - Los assets en la carpeta `public/` se sirven directamente sin procesamiento
 - Las rutas que empiezan con `/` apuntan a la carpeta `public/`
-- El archivo `_redirects` es específico de Render para manejo de SPA
-- `serve` es un servidor estático que maneja mejor las rutas SPA que `vite preview`
+- El servidor Express personalizado maneja todas las rutas SPA correctamente
+- Se cambió navegación con `<a href="">` por navegación programática con React Router
+- El servidor personalizado es más robusto que `serve` para aplicaciones SPA complejas
 
 ## Verificación Post-Deployment
 
@@ -87,4 +108,6 @@ startCommand: npx serve -s dist -l 4173
 2. ✅ Placeholder de foto de perfil se muestra
 3. ✅ Refresh (Ctrl+R) funciona en todas las rutas
 4. ✅ Navegación entre páginas funciona correctamente
-5. ✅ Modal de registro y "olvidar contraseña" se abren correctamente
+5. ✅ Navegación desde login a registro funciona correctamente
+6. ✅ Navegación desde login a "olvidar contraseña" funciona correctamente
+7. ✅ Todas las rutas SPA funcionan correctamente en producción

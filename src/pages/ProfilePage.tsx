@@ -129,20 +129,20 @@ const ProfilePage: React.FC = () => {
       btnPrimaryBG: "#38bdf8"
     },
     oceano: {
-      headerBG: "linear-gradient(145deg, #2C3E50, #4CA1AF)",
+      headerBG: "linear-gradient(145deg, #4CA1AF, #2C3E50)",
       headerText: "white",
       bodyBG: "#eef6f7",
-      sidebarBG: "linear-gradient(145deg, #2C3E50, #4CA1AF)",
+      sidebarBG: "linear-gradient(145deg, #4CA1AF, #2C3E50)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#2C3E50",
       btnPrimaryBG: "#4CA1AF"
     },
     amanecer: {
-      headerBG: "linear-gradient(145deg, #FF512F, #F09819)",
+      headerBG: "linear-gradient(145deg, #F09819, #FF512F)",
       headerText: "white",
       bodyBG: "#fff8f2",
-      sidebarBG: "linear-gradient(145deg, #FF512F, #F09819)",
+      sidebarBG: "linear-gradient(145deg, #F09819, #FF512F)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#5c2a07",
@@ -159,30 +159,30 @@ const ProfilePage: React.FC = () => {
       btnPrimaryBG: "#A1C4FD"
     },
     fuego: {
-      headerBG: "linear-gradient(145deg, #CB356B, #BD3F32)",
+      headerBG: "linear-gradient(145deg, #BD3F32, #CB356B)",
       headerText: "white",
       bodyBG: "#f9f2f3",
-      sidebarBG: "linear-gradient(145deg, #CB356B, #BD3F32)",
+      sidebarBG: "linear-gradient(145deg, #BD3F32, #CB356B)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#4d1024",
       btnPrimaryBG: "#CB356B"
     },
     bosque: {
-      headerBG: "linear-gradient(145deg, #11998E, #38EF7D)",
+      headerBG: "linear-gradient(145deg, #38EF7D, #11998E)",
       headerText: "white",
       bodyBG: "#f2fcf8",
-      sidebarBG: "linear-gradient(145deg, #11998E, #38EF7D)",
+      sidebarBG: "linear-gradient(145deg, #38EF7D, #11998E)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#043d38",
       btnPrimaryBG: "#11998E"
     },
     lluvia: {
-      headerBG: "linear-gradient(145deg, #396afc, #2948ff)",
+      headerBG: "linear-gradient(145deg, #2948ff, #396afc)",
       headerText: "white",
       bodyBG: "#f0f2ff",
-      sidebarBG: "linear-gradient(145deg, #396afc, #2948ff)",
+      sidebarBG: "linear-gradient(145deg, #2948ff, #396afc)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#192d8b",

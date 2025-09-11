@@ -189,6 +189,7 @@ const Dashboard = () => {
   const [userLocationMarker, setUserLocationMarker] = useState<any>(null)                   // Marcador de ubicación del usuario
   const [events, setEvents] = useState<any[]>([])                                           // Lista de eventos
   const [eventMarkers, setEventMarkers] = useState<any[]>([])                               // Marcadores de eventos en el mapa
+  const [routeMarkers, setRouteMarkers] = useState<any[]>([])                               // Marcadores numerados de rutas múltiples
   const [routingControl, setRoutingControl] = useState<any>(null)                           // Control de rutas en el mapa
   const [searchTerm] = useState(() => {
     // Recuperar el término de búsqueda guardado del localStorage
@@ -248,6 +249,7 @@ const Dashboard = () => {
   const [showLocationModal, setShowLocationModal] = useState(false)      // Modal para seleccionar ubicación
   const [routeType, setRouteType] = useState<'simple' | 'multiple'>('simple')  // Tipo de ruta (simple o múltiple)
   const [selectedMarkers, setSelectedMarkers] = useState<any[]>([])      // Marcadores seleccionados en el mapa
+  const [routeDescriptions, setRouteDescriptions] = useState<string[]>([])  // Descripciones de cada punto de ruta
   const [locationDisplay, setLocationDisplay] = useState('No se ha seleccionado ninguna ubicación.')  // Texto de ubicación
   const [acceptTerms, setAcceptTerms] = useState(false)                  // Aceptación de términos y condiciones
   const [showTerms, setShowTerms] = useState(false)                      // Mostrar modal de términos
@@ -399,17 +401,17 @@ const Dashboard = () => {
       btnPrimaryBG: "#38bdf8"
     },
     oceano: {
-      headerBG: "linear-gradient(145deg, #2C3E50, #4CA1AF)",
+      headerBG: "linear-gradient(145deg, #4CA1AF, #2C3E50)",
       headerText: "white",
       bodyBG: "#eef6f7",
-      sidebarBG: "linear-gradient(145deg, #2C3E50, #4CA1AF)",
+      sidebarBG: "linear-gradient(145deg, #4CA1AF, #2C3E50)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#2C3E50",
       btnPrimaryBG: "#4CA1AF"
     },
     amanecer: {
-      headerBG: "linear-gradient(145deg, #FF512F, #F09819)",
+      headerBG: "linear-gradient(145deg, #F09819, #FF512F)",
       headerText: "white",
       bodyBG: "#fff8f2",
       sidebarBG: "linear-gradient(145deg, #FF512F, #F09819)",
@@ -429,7 +431,7 @@ const Dashboard = () => {
       btnPrimaryBG: "#A1C4FD"
     },
     fuego: {
-      headerBG: "linear-gradient(145deg, #CB356B, #BD3F32)",
+      headerBG: "linear-gradient(145deg, #BD3F32, #CB356B)",
       headerText: "white",
       bodyBG: "#f9f2f3",
       sidebarBG: "linear-gradient(145deg, #CB356B, #BD3F32)",
@@ -439,17 +441,17 @@ const Dashboard = () => {
       btnPrimaryBG: "#CB356B"
     },
     bosque: {
-      headerBG: "linear-gradient(145deg, #11998E, #38EF7D)",
+      headerBG: "linear-gradient(145deg, #38EF7D, #11998E)",
       headerText: "white",
       bodyBG: "#f2fcf8",
-      sidebarBG: "linear-gradient(145deg, #11998E, #38EF7D)",
+      sidebarBG: "linear-gradient(145deg, #38EF7D, #11998E)",
       sidebarText: "white",
       cardBG: "#ffffff",
       cardText: "#043d38",
       btnPrimaryBG: "#11998E"
     },
     lluvia: {
-      headerBG: "linear-gradient(145deg, #396afc, #2948ff)",
+      headerBG: "linear-gradient(145deg, #2948ff, #396afc)",
       headerText: "white",
       bodyBG: "#f0f2ff",
       sidebarBG: "linear-gradient(145deg, #396afc, #2948ff)",
@@ -714,12 +716,154 @@ const Dashboard = () => {
   }
 
   // ========================================
+  // FUNCIÓN PARA MOSTRAR RUTA MÚLTIPLE
+  // ========================================
+  // Muestra una ruta múltiple con numeración de puntos
+  const handleShowRoute = async (postId: string, rutas: any[]) => {
+    console.log('🗺️ handleShowRoute llamado con:', { postId, rutas })
+    
+    if (!mapInstanceRef.current) {
+      console.error('❌ Mapa no disponible')
+      showError('Error de Mapa', 'El mapa no está disponible. Recarga la página.', 'error')
+      return
+    }
+    
+    if (!L) {
+      console.error('❌ Leaflet no disponible')
+      showError('Error de Mapa', 'Leaflet no está disponible. Recarga la página.', 'error')
+      return
+    }
+
+    try {
+      // Limpiar rutas existentes antes de crear una nueva
+      clearRoutes()
+
+      // Solo ocultar eventos si no es una llamada desde el mapa principal
+      if (postId !== 'multiple-routes') {
+        console.log('📍 Ocultando otros eventos del mapa...')
+        eventMarkers.forEach(marker => {
+          marker.remove()
+        })
+      }
+
+      // Convertir rutas a coordenadas
+      const waypoints = rutas.map(ruta => [ruta.latitud, ruta.longitud] as [number, number])
+      
+      // Crear marcadores numerados para cada punto de la ruta
+      const newRouteMarkers: any[] = []
+      waypoints.forEach((point, index) => {
+        const markerIcon = L.divIcon({
+          html: `
+            <div style="
+              width: 40px; 
+              height: 40px; 
+              background: #007BFF; 
+              border: 3px solid white; 
+              border-radius: 50%; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              color: white; 
+              font-weight: bold; 
+              font-size: 16px;
+              box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            ">
+              ${index + 1}
+            </div>
+          `,
+          className: 'route-marker',
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
+          popupAnchor: [0, -20]
+        })
+        
+        const marker = L.marker(point, { icon: markerIcon }).addTo(mapInstanceRef.current)
+        marker.bindPopup(`
+          <div style="text-align: center;">
+            <strong>Punto ${index + 1}</strong><br>
+            <small>${rutas[index].etiqueta || `Punto ${index + 1}`}</small><br>
+            <small>Lat: ${Number(point[0]).toFixed(6)}</small><br>
+            <small>Lng: ${Number(point[1]).toFixed(6)}</small>
+          </div>
+        `)
+        newRouteMarkers.push(marker)
+      })
+      
+      // Guardar los marcadores en el estado para poder limpiarlos después
+      setRouteMarkers(newRouteMarkers)
+
+      // Crear ruta que conecte todos los puntos siguiendo las calles
+      if (waypoints.length > 1) {
+        try {
+          // Crear ruta usando OSRM que siga las calles
+          const createStreetRoute = async () => {
+            // Construir URL de OSRM con todos los waypoints
+            const coordinates = waypoints.map(point => `${point[1]},${point[0]}`).join(';')
+            const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
+            
+            const response = await fetch(url)
+            const data = await response.json()
+            
+            if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+              const route = data.routes[0]
+              const coordinates = route.geometry.coordinates
+              
+              // Convertir coordenadas de [lng, lat] a [lat, lng] para Leaflet
+              const latLngs = coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
+              
+              // Crear la ruta que sigue las calles
+              const routeLine = L.polyline(latLngs, {
+                color: '#007BFF',
+                weight: 5,
+                opacity: 0.8
+              }).addTo(mapInstanceRef.current)
+              
+              // Ajustar la vista para mostrar toda la ruta
+              const bounds = L.latLngBounds(waypoints)
+              mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] })
+              
+              setRoutingControl(routeLine)
+              console.log('✅ Ruta múltiple siguiendo calles creada exitosamente')
+            } else {
+              throw new Error('No se pudo obtener la ruta desde OSRM')
+            }
+          }
+          
+          await createStreetRoute()
+        } catch (error) {
+          console.error('❌ Error creando ruta múltiple:', error)
+          // Fallback: crear línea recta si OSRM falla
+          const routeLine = L.polyline(waypoints, {
+            color: '#007BFF',
+            weight: 5,
+            opacity: 0.8
+          }).addTo(mapInstanceRef.current)
+          
+          const bounds = L.latLngBounds(waypoints)
+          mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] })
+          
+          setRoutingControl(routeLine)
+          console.log('✅ Ruta múltiple (fallback) creada exitosamente')
+        }
+      } else {
+        // Si solo hay un punto, centrar en él
+        mapInstanceRef.current.setView(waypoints[0], 15)
+      }
+      
+    } catch (error) {
+      console.error('❌ Error creando ruta múltiple:', error)
+      showError('Error de Ruta', 'No se pudo crear la ruta. Intenta nuevamente.', 'error')
+    }
+  }
+
+  // ========================================
   // FUNCIÓN PARA LIMPIAR RUTAS
   // ========================================
   // Elimina todas las rutas visuales del mapa
   const clearRoutes = () => {
     console.log('🗑️ clearRoutes llamado, routingControl:', !!routingControl)
     
+    // Limpiar control de ruta
     if (routingControl && mapInstanceRef.current) {  // Verificar que exista una ruta y el mapa
       if (routingControl.remove) {
         // Si es un control de ruta (leaflet-routing-machine)
@@ -732,6 +876,17 @@ const Dashboard = () => {
       console.log('🗑️ Ruta limpiada exitosamente')
     } else {
       console.log('🗑️ No hay ruta activa para limpiar')
+    }
+    
+    // Limpiar marcadores de ruta numerados
+    if (routeMarkers.length > 0 && mapInstanceRef.current) {
+      routeMarkers.forEach(marker => {
+        if (marker && marker.remove) {
+          marker.remove()
+        }
+      })
+      setRouteMarkers([])  // Limpiar el array de marcadores
+      console.log('🗑️ Marcadores de ruta limpiados')
     }
   }
 
@@ -805,6 +960,16 @@ const Dashboard = () => {
                 <div style="margin-bottom: 4px;"><strong>👤 Organizador:</strong> ${event.organizer}</div>
                 <div style="margin-bottom: 4px;"><strong>📅 Fecha:</strong> ${event.date} a las ${event.time}</div>
                 <div style="margin-bottom: 4px;"><strong>👥 Asistentes:</strong> ${event.attendees}/${event.maxAttendees}</div>
+                ${event.post && event.post.rutas && event.post.rutas.length > 1 ? `
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+                    <div style="margin-bottom: 4px;"><strong>🗺️ Ruta Múltiple:</strong></div>
+                    ${event.post.rutas.map((ruta, index) => `
+                      <div style="margin-bottom: 2px; font-size: 11px;">
+                        <strong>#${index + 1}:</strong> ${ruta.etiqueta || `Punto ${index + 1}`}
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
               </div>
             </div>
             
@@ -815,7 +980,7 @@ const Dashboard = () => {
               <button class="btn btn-sm btn-outline-secondary" style="font-size: 11px; padding: 6px 10px;" onclick="alert('Función de guardar próximamente')">
                 ${event.saved ? '❤️' : '🤍'} Guardar
               </button>
-              <button class="btn btn-sm btn-success" style="font-size: 11px; padding: 6px 10px;" onclick="window.routeToEvent(${event.lat}, ${event.lng})">
+              <button class="btn btn-sm btn-success" style="font-size: 11px; padding: 6px 10px;" onclick="window.routeToEvent(${event.lat}, ${event.lng}, ${event.post && event.post.rutas ? JSON.stringify(event.post.rutas).replace(/"/g, '&quot;') : 'null'})">
                 🗺️ Ruta
               </button>
               <button class="btn btn-sm btn-warning" style="font-size: 11px; padding: 6px 10px;" onclick="window.clearRouteAndRestoreEvents()">
@@ -895,7 +1060,7 @@ const Dashboard = () => {
   // FUNCIÓN PARA CREAR RUTA A UN EVENTO
   // ========================================
   // Crea una ruta desde la ubicación del usuario hasta un evento específico
-  const routeToEvent = async (eventLat: number, eventLng: number) => {
+  const routeToEvent = async (eventLat: number, eventLng: number, eventRoutes: any = null) => {
     console.log('🗺️ routeToEvent llamado con:', { eventLat, eventLng })
     console.log('🗺️ userLocation actual:', userLocation)
     
@@ -968,10 +1133,17 @@ const Dashboard = () => {
     }
     
     try {
+      // Si el evento tiene múltiples rutas, mostrar todas las rutas
+      if (eventRoutes && eventRoutes.length > 1) {
+        console.log('🗺️ Evento con múltiples rutas detectado:', eventRoutes)
+        await handleShowRoute('multiple-routes', eventRoutes)
+        return
+      }
+      
       // Obtener ubicación (desde localStorage o geolocalización)
       const location = await getLocationForRoute()
       
-      // Crear la ruta
+      // Crear la ruta simple
       console.log('✅ Creando ruta desde:', location, 'hasta:', { eventLat, eventLng })
       await createRoute([location.lat, location.lng], [eventLat, eventLng])
       
@@ -1228,6 +1400,16 @@ const Dashboard = () => {
                 <div style="margin-bottom: 4px;"><strong>👤 Organizador:</strong> ${event.organizer}</div>
                 <div style="margin-bottom: 4px;"><strong>📅 Fecha:</strong> ${event.date} a las ${event.time}</div>
                 <div style="margin-bottom: 4px;"><strong>👥 Asistentes:</strong> ${event.attendees}/${event.maxAttendees}</div>
+                ${event.post && event.post.rutas && event.post.rutas.length > 1 ? `
+                  <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
+                    <div style="margin-bottom: 4px;"><strong>🗺️ Ruta Múltiple:</strong></div>
+                    ${event.post.rutas.map((ruta, index) => `
+                      <div style="margin-bottom: 2px; font-size: 11px;">
+                        <strong>#${index + 1}:</strong> ${ruta.etiqueta || `Punto ${index + 1}`}
+                      </div>
+                    `).join('')}
+                  </div>
+                ` : ''}
               </div>
             </div>
             
@@ -1238,7 +1420,7 @@ const Dashboard = () => {
               <button class="btn btn-sm btn-outline-secondary" style="font-size: 11px; padding: 6px 10px;" onclick="alert('Función de guardar próximamente')">
                 ${event.saved ? '❤️' : '🤍'} Guardar
               </button>
-              <button class="btn btn-sm btn-success" style="font-size: 11px; padding: 6px 10px;" onclick="window.routeToEvent(${event.lat}, ${event.lng})">
+              <button class="btn btn-sm btn-success" style="font-size: 11px; padding: 6px 10px;" onclick="window.routeToEvent(${event.lat}, ${event.lng}, ${event.post && event.post.rutas ? JSON.stringify(event.post.rutas).replace(/"/g, '&quot;') : 'null'})">
                 🗺️ Ruta
               </button>
               <button class="btn btn-sm btn-warning" style="font-size: 11px; padding: 6px 10px;" onclick="window.clearRouteAndRestoreEvents()">
@@ -1921,6 +2103,21 @@ const Dashboard = () => {
         
         return !isEventPassed // Solo mostrar eventos que NO han pasado más de 24 horas
       })
+      
+      // Limpiar eventos guardados que corresponden a publicaciones expiradas
+      const expiredPostIds = postsWithComments
+        .filter(post => {
+          if (!post.fecha_evento) return false
+          const eventDate = new Date(post.fecha_evento)
+          return eventDate < twentyFourHoursAgo
+        })
+        .map(post => post.id)
+      
+      if (expiredPostIds.length > 0) {
+        console.log('🧹 Limpiando eventos guardados expirados:', expiredPostIds)
+        // Filtrar eventos guardados para remover los que corresponden a posts expirados
+        setSavedEvents(prev => prev.filter(saved => !expiredPostIds.includes(saved.id_publicacion)))
+      }
 
       // Agregar información sobre eventos próximos a expirar
       const postsWithExpiryInfo = activePosts.map(post => {
@@ -1983,6 +2180,14 @@ const Dashboard = () => {
         setMyInscriptions(inscriptionsData)
       } catch (error) {
         console.error('Error cargando inscripciones:', error)
+      }
+      
+      // Cargar eventos guardados del usuario
+      try {
+        const savedEventsData = await apiService.getSavedEventsWithDetails()
+        setSavedEvents(savedEventsData)
+      } catch (error) {
+        console.error('Error cargando eventos guardados:', error)
       }
     } catch (error) {
       console.error('Error cargando datos:', error)
@@ -2097,7 +2302,7 @@ const Dashboard = () => {
         rutas: selectedMarkers.map((marker: any, i: number) => ({
           latitud: marker.getLatLng().lat,
           longitud: marker.getLatLng().lng,
-          etiqueta: `Punto ${i + 1}`,
+          etiqueta: routeDescriptions[i] || `Punto ${i + 1}`,
           orden: i
         })),
         terminos_adicionales: additionalTerms
@@ -2114,6 +2319,7 @@ const Dashboard = () => {
         mediaFile: null
       })
       setSelectedMarkers([])
+      setRouteDescriptions([])
       setLocationDisplay('No se ha seleccionado ninguna ubicación.')
       setAcceptTerms(false)
       setAdditionalTerms('')
@@ -2341,6 +2547,23 @@ const Dashboard = () => {
           {/* Texto de la publicación */}
           <p className="mb-3 text-sm md:text-base lg:text-lg leading-relaxed">{post.texto}</p>
           
+          {/* Descripciones de rutas múltiples */}
+          {post.rutas && post.rutas.length > 1 && (
+            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <h5 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                🗺️ Ruta Múltiple
+              </h5>
+              <div className="space-y-1">
+                {post.rutas.map((ruta, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm">
+                    <span className="font-medium text-blue-700 w-6">#{index + 1}</span>
+                    <span className="text-blue-600">{ruta.etiqueta || `Punto ${index + 1}`}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {/* Imagen si existe */}
           {post.media_url && (
             <img 
@@ -2372,15 +2595,6 @@ const Dashboard = () => {
               </button>
             </div>
           </div>
-          
-          {/* Lista de rutas si hay múltiples */}
-          {post.rutas && post.rutas.length > 1 && (
-            <ol className="list-group list-group-flush list-group-numbered mb-3 text-xs md:text-sm">
-              {post.rutas.map((ruta: any, index: number) => (
-                <li key={index} className="list-group-item p-2 md:p-3">{ruta.etiqueta}</li>
-              ))}
-            </ol>
-          )}
           
           {/* Botones de acción */}
           <div className="flex gap-1 md:gap-2 mt-3 flex-wrap relative z-20">
@@ -2595,8 +2809,9 @@ const Dashboard = () => {
               attribution: style.attribution
             }).addTo(postMap)
 
-            // Agregar marcadores
-            latlngs.forEach(latlng => {
+            // Agregar marcadores según el tipo de ruta
+            if (latlngs.length === 1) {
+              // Para rutas simples, mostrar marcador normal
               const eventIcon = L.divIcon({
                 html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="28" height="28"><path fill="#dc3545" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>`,
                 className: 'public-event-marker',
@@ -2604,8 +2819,37 @@ const Dashboard = () => {
                 iconAnchor: [14, 28],
                 popupAnchor: [0, -28],
               })
-              L.marker(latlng as [number, number], { icon: eventIcon }).addTo(postMap)
-            })
+              L.marker(latlngs[0] as [number, number], { icon: eventIcon }).addTo(postMap)
+            } else {
+              // Para rutas múltiples, mostrar marcadores numerados
+              latlngs.forEach((latlng, index) => {
+                const routeIcon = L.divIcon({
+                  html: `
+                    <div style="
+                      width: 30px; 
+                      height: 30px; 
+                      background: #007BFF; 
+                      border: 2px solid white; 
+                      border-radius: 50%; 
+                      display: flex; 
+                      align-items: center; 
+                      justify-content: center; 
+                      color: white; 
+                      font-weight: bold; 
+                      font-size: 12px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                    ">
+                      ${index + 1}
+                    </div>
+                  `,
+                  className: 'route-marker',
+                  iconSize: [30, 30],
+                  iconAnchor: [15, 15],
+                  popupAnchor: [0, -15]
+                })
+                L.marker(latlng as [number, number], { icon: routeIcon }).addTo(postMap)
+              })
+            }
 
             // Agregar ubicación del usuario si está disponible
             if (userLocation) {
@@ -2617,27 +2861,55 @@ const Dashboard = () => {
 
             // Crear ruta si hay múltiples puntos
             if (latlngs.length > 1) {
-              // Usar leaflet-routing-machine para rutas que sigan las calles
-              import('leaflet-routing-machine').then((Lrm) => {
-                const waypoints = latlngs.map(latlng => L.latLng((latlng as [number, number])[0], (latlng as [number, number])[1]))
-                ;(Lrm.default as any).control({
-                  waypoints: waypoints,
-                  createMarker: function() { return null; },
-                  routeWhileDragging: false,
-                  show: false,
-                  addWaypoints: false,
-                  lineOptions: {
-                    styles: [{color: '#007BFF', opacity: 0.8, weight: 5}]
-                  },
-                  router: (Lrm.default as any).osrm({
-                    serviceUrl: 'https://router.project-osrm.org/route/v1'
-                  })
-                }).addTo(postMap)
-                
-                postMap.fitBounds(L.latLngBounds(waypoints), {
-                  padding: [20, 20]
-                })
-              })
+              // Crear ruta usando OSRM que siga las calles
+              const createStreetRoute = async () => {
+                try {
+                  // Construir URL de OSRM con todos los waypoints
+                  const coordinates = latlngs.map(point => `${point[1]},${point[0]}`).join(';')
+                  const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
+                  
+                  const response = await fetch(url)
+                  const data = await response.json()
+                  
+                  if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                    const route = data.routes[0]
+                    const coordinates = route.geometry.coordinates
+                    
+                    // Convertir coordenadas de [lng, lat] a [lat, lng] para Leaflet
+                    const routeLatLngs = coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
+                    
+                    // Crear la ruta que sigue las calles
+                    const routeLine = L.polyline(routeLatLngs, {
+                      color: '#007BFF',
+                      weight: 5,
+                      opacity: 0.8
+                    }).addTo(postMap)
+                    
+                    // Ajustar la vista para mostrar toda la ruta
+                    const bounds = L.latLngBounds(latlngs)
+                    postMap.fitBounds(bounds, { padding: [20, 20] })
+                    
+                    console.log('✅ Ruta múltiple siguiendo calles creada exitosamente en post')
+                  } else {
+                    throw new Error('No se pudo obtener la ruta desde OSRM')
+                  }
+                } catch (error) {
+                  console.error('❌ Error creando ruta múltiple en post:', error)
+                  // Fallback: crear línea recta si OSRM falla
+                  const routeLine = L.polyline(latlngs, {
+                    color: '#007BFF',
+                    weight: 5,
+                    opacity: 0.8
+                  }).addTo(postMap)
+                  
+                  const bounds = L.latLngBounds(latlngs)
+                  postMap.fitBounds(bounds, { padding: [20, 20] })
+                  
+                  console.log('✅ Ruta múltiple (fallback) creada exitosamente en post')
+                }
+              }
+              
+              createStreetRoute()
             } else {
               postMap.setView(latlngs[0] as [number, number], 15)
             }
@@ -2957,16 +3229,16 @@ const Dashboard = () => {
               geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(0, 51, 102, 0.3)'
               break
             case 'fuego':
-              geoPlannerTitle.style.color = '#CB356B' // Rosa fuego
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(203, 53, 107, 0.3)'
+              geoPlannerTitle.style.color = '#FF8C00' // Amarillo dorado que mantiene el estilo fuego y contrasta perfectamente con #BD3F32
+              geoPlannerTitle.style.textShadow = '2px 2px 4px rgba(189, 63, 50, 0.6)' // Sombra con tono rojo para mantener coherencia
               break
             case 'bosque':
               geoPlannerTitle.style.color = '#11998E' // Verde bosque
               geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(17, 153, 142, 0.3)'
               break
             case 'lluvia':
-              geoPlannerTitle.style.color = '#396afc' // Azul lluvia
-              geoPlannerTitle.style.textShadow = '1px 1px 2px rgba(57, 106, 252, 0.3)'
+              geoPlannerTitle.style.color = '#00FFFF' // Amarillo claro como gotas de lluvia iluminadas por el sol, contrasta perfectamente con el azul
+              geoPlannerTitle.style.textShadow = '2px 2px 4px rgba(41, 72, 255, 0.6)' // Sombra con tono azul para mantener coherencia
               break
             default:
               geoPlannerTitle.style.color = '#1e40af' // Azul por defecto
@@ -3428,47 +3700,114 @@ const Dashboard = () => {
                 attribution: style.attribution
               }).addTo(locationMap)
               
+              // Crear una referencia mutable para almacenar los marcadores
+              const markersRef = { current: [] as any[] }
+              
               // Evento de clic en el mapa
-              locationMap.on('click', (e) => {
-                if (routeType === 'simple' && selectedMarkers.length > 0) {
+              locationMap.on('click', async (e) => {
+                // Obtener el routeType actual del estado usando una función que accede al estado actual
+                const getCurrentRouteType = () => {
+                  // Buscar el botón activo para determinar el routeType actual
+                  const activeTab = document.querySelector('.tab.tab-active')
+                  if (activeTab && activeTab.textContent?.includes('Ruta Múltiple')) {
+                    return 'multiple'
+                  }
+                  return 'simple'
+                }
+                
+                const currentRouteType = getCurrentRouteType()
+                console.log('🖱️ Click en mapa - routeType:', currentRouteType, 'selectedMarkers:', markersRef.current.length)
+                console.log('🔍 Tab activo encontrado:', document.querySelector('.tab.tab-active')?.textContent)
+                
+                if (currentRouteType === 'simple' && markersRef.current.length > 0) {
                   // Limpiar marcadores previos para ruta simple
-                  selectedMarkers.forEach((marker: any) => {
+                  markersRef.current.forEach((marker: any) => {
                     if (marker && marker.remove) marker.remove()
                   })
+                  markersRef.current = []
                   setSelectedMarkers([])
+                  setRouteDescriptions([])
                 }
                 
                 // Crear nuevo marcador
                 const newMarker = L.marker(e.latlng).addTo(locationMap)
-                setSelectedMarkers(prev => [...prev, newMarker])
+                markersRef.current.push(newMarker)
+                setSelectedMarkers([...markersRef.current])
                 
-                                 // Crear ruta si es múltiple y hay más de un punto
-                 if (routeType === 'multiple' && selectedMarkers.length > 0) {
-                   const waypoints = [...selectedMarkers, newMarker].map((marker: any) => marker.getLatLng())
-                   
-                   // Importar leaflet-routing-machine dinámicamente
-                   import('leaflet-routing-machine').then((Lrm) => {
-                     const mapWithRouting = locationMap as any
-                     if (mapWithRouting.routingControl) {
-                       locationMap.removeControl(mapWithRouting.routingControl)
-                     }
-                     
-                     mapWithRouting.routingControl = (Lrm.default as any).control({
-                       waypoints: waypoints,
-                       createMarker: function() { return null; },
-                       routeWhileDragging: true,
-                       show: true,
-                       addWaypoints: false,
-                       lineOptions: {
-                         styles: [{color: '#007BFF', opacity: 0.8, weight: 5}]
-                       },
-                       router: (Lrm.default as any).osrm({
-                         serviceUrl: 'https://router.project-osrm.org/route/v1'
-                       })
-                     }).addTo(locationMap)
-                   })
-                 }
-              })
+                // Agregar descripción vacía para el nuevo marcador
+                if (currentRouteType === 'multiple') {
+                  setRouteDescriptions(prev => [...prev, ''])
+                }
+                
+                console.log('📍 Marcador creado. Total marcadores:', markersRef.current.length)
+                
+                // Crear ruta si es múltiple y hay más de un punto
+                if (currentRouteType === 'multiple' && markersRef.current.length > 1) {
+                  console.log('🗺️ Creando ruta múltiple con', markersRef.current.length, 'puntos')
+                  const waypoints = markersRef.current.map((marker: any) => marker.getLatLng())
+                  console.log('📍 Waypoints:', waypoints)
+                  
+                  // Crear ruta usando OSRM que siga las calles
+                  try {
+                    // Construir URL de OSRM con todos los waypoints
+                    const coordinates = waypoints.map(point => `${point.lng},${point.lat}`).join(';')
+                    const url = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`
+                    
+                    const response = await fetch(url)
+                    const data = await response.json()
+                    
+                    if (data.code === 'Ok' && data.routes && data.routes.length > 0) {
+                      const route = data.routes[0]
+                      const coordinates = route.geometry.coordinates
+                      
+                      // Convertir coordenadas de [lng, lat] a [lat, lng] para Leaflet
+                      const latLngs = coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
+                      
+                      // Limpiar ruta anterior si existe
+                      const mapWithRouting = locationMap as any
+                      if (mapWithRouting.routingControl) {
+                        locationMap.removeLayer(mapWithRouting.routingControl)
+                      }
+                      
+                      // Crear la ruta que sigue las calles
+                      const routeLine = L.polyline(latLngs, {
+                        color: '#007BFF',
+                        weight: 5,
+                        opacity: 0.8
+                      }).addTo(locationMap)
+                      
+                      // Guardar referencia de la ruta
+                      mapWithRouting.routingControl = routeLine
+                      
+                      // Ajustar la vista para mostrar toda la ruta
+                      const bounds = L.latLngBounds(waypoints)
+                      locationMap.fitBounds(bounds, { padding: [20, 20] })
+                      
+                      console.log('✅ Ruta múltiple siguiendo calles creada exitosamente en modal')
+                    } else {
+                      throw new Error('No se pudo obtener la ruta desde OSRM')
+                    }
+                  } catch (error) {
+                    console.error('❌ Error creando ruta múltiple en modal:', error)
+                    // Fallback: crear línea recta si OSRM falla
+                    const mapWithRouting = locationMap as any
+                    if (mapWithRouting.routingControl) {
+                      locationMap.removeLayer(mapWithRouting.routingControl)
+                    }
+                    
+                    const routeLine = L.polyline(waypoints, {
+                      color: '#007BFF',
+                      weight: 5,
+                      opacity: 0.8
+                    }).addTo(locationMap)
+                    
+                    mapWithRouting.routingControl = routeLine
+                  console.log('✅ Ruta múltiple (fallback) creada exitosamente en modal')
+                }
+              } else {
+                console.log('⏳ Esperando más puntos para crear ruta múltiple. Puntos actuales:', markersRef.current.length)
+              }
+            })
               
               // Guardar referencia del mapa
               ;(mapContainer as any).locationMap = locationMap
@@ -4359,13 +4698,30 @@ const Dashboard = () => {
             <div className="tabs tabs-boxed mb-4">
               <button 
                 className={`tab ${routeType === 'simple' ? 'tab-active' : ''}`}
-                onClick={() => setRouteType('simple')}
+                onClick={() => {
+                  console.log('🔄 Cambiando a ruta simple')
+                  setRouteType('simple')
+                  // Limpiar marcadores y descripciones al cambiar a ruta simple
+                  setSelectedMarkers([])
+                  setRouteDescriptions([])
+                }}
               >
                 📍 Ruta Simple
               </button>
               <button 
                 className={`tab ${routeType === 'multiple' ? 'tab-active' : ''}`}
-                onClick={() => setRouteType('multiple')}
+                onClick={() => {
+                  console.log('🔄 Cambiando a ruta múltiple')
+                  setRouteType('multiple')
+                  // Limpiar marcadores y descripciones al cambiar a ruta múltiple
+                  setSelectedMarkers([])
+                  setRouteDescriptions([])
+                  // Verificar que el DOM se actualizó
+                  setTimeout(() => {
+                    const activeTab = document.querySelector('.tab.tab-active')
+                    console.log('✅ Tab activo después del cambio:', activeTab?.textContent)
+                  }, 100)
+                }}
               >
                 ➯ Ruta Múltiple
               </button>
@@ -4375,6 +4731,31 @@ const Dashboard = () => {
               <p><strong>Ruta Simple:</strong> Un único marcador.</p>
               <p><strong>Ruta Múltiple:</strong> Traza una ruta con varios puntos.</p>
             </div>
+
+            {/* Inputs para descripciones de rutas múltiples */}
+            {routeType === 'multiple' && routeDescriptions.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-semibold mb-2">📝 Descripciones de los puntos de ruta:</h4>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {routeDescriptions.map((description, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="text-sm font-medium w-8">#{index + 1}</span>
+                      <input
+                        type="text"
+                        className="input input-bordered input-sm flex-1"
+                        placeholder={`Descripción del punto ${index + 1}...`}
+                        value={description}
+                        onChange={(e) => {
+                          const newDescriptions = [...routeDescriptions]
+                          newDescriptions[index] = e.target.value
+                          setRouteDescriptions(newDescriptions)
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Buscador de direcciones */}
             <div className="form-control mb-4">
@@ -4694,39 +5075,49 @@ const Dashboard = () => {
       {showSavedEventsModal && (
         <dialog open className="modal">
           <div className="modal-box w-11/12 max-w-4xl mx-4" data-theme={currentTheme}>
-            <h3 className="font-bold text-lg mb-4">Mis Eventos Guardados</h3>
+            <h3 className="font-bold text-lg mb-4">⭐ Mis Eventos Guardados</h3>
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {savedEvents.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">No tienes eventos guardados.</p>
                 </div>
               ) : (
-                events
-                  .filter(event => savedEvents.includes(event.id.toString()))
-                  .map((event) => (
-                    <div key={event.id} className="card bg-base-200">
+                savedEvents.map((savedEvent) => {
+                  // Buscar la publicación correspondiente en los posts
+                  const post = posts.find(p => p.id === savedEvent.id_publicacion)
+                  if (!post) return null // Si no se encuentra la publicación, no mostrar
+                  
+                  return (
+                    <div key={savedEvent.id_publicacion} className="card bg-base-200">
                       <div className="card-body p-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h5 className="font-semibold">{event.title}</h5>
-                            <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                            <h5 className="font-semibold">{post.texto.split('\n')[0]}</h5>
+                            <p className="text-sm text-gray-600 mt-1">{post.texto}</p>
                             <div className="flex items-center gap-4 mt-2 text-sm">
-                              <span>📅 {event.date}</span>
-                              <span>🕒 {event.time}</span>
-                              <span>👤 {event.organizer}</span>
-                              <span className="badge badge-primary">{event.type}</span>
+                              <span>👤 {post.nombre_autor}</span>
+                              <span className="badge badge-primary">{post.tipo}</span>
+                              <span className={`badge ${post.privacidad === 'publica' ? 'badge-success' : 'badge-warning'}`}>
+                                {post.privacidad === 'publica' ? 'Público' : 
+                                 post.privacidad === 'amigos' ? 'Solo Amigos' : 'Privado'}
+                              </span>
+                              {post.fecha_evento && (
+                                <span>📅 {new Date(post.fecha_evento).toLocaleDateString()}</span>
+                              )}
+                              <span>⭐ Guardado: {new Date(savedEvent.fecha_guardado).toLocaleDateString()}</span>
                             </div>
                           </div>
                           <button 
-                            className="btn btn-sm btn-outline"
-                            onClick={() => handleSaveEvent(event.id.toString())}
+                            className="btn btn-sm btn-error"
+                            onClick={() => handleSaveEvent(savedEvent.id_publicacion)}
                           >
-                            Quitar
+                            ❌ Quitar
                           </button>
                         </div>
                       </div>
                     </div>
-                  ))
+                  )
+                })
               )}
             </div>
             <div className="modal-action">

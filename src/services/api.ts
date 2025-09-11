@@ -213,6 +213,23 @@ export interface SavedEvent {
   publicacion?: Post
 }
 
+// Interfaz para la respuesta del backend
+export interface SavedEventWithDetails {
+  evento_guardado: {
+    id_usuario: string
+    id_publicacion: string
+    fecha_guardado: string
+  }
+  publicacion: {
+    id: string
+    texto: string
+    tipo: string
+    fecha_evento: string
+    estado: string
+    id_autor: string
+  }
+}
+
 // Interfaz para las configuraciones de usuario
 export interface UserSettings {
   // Notificaciones
@@ -427,7 +444,35 @@ class ApiService {
   }
 
   async getSavedEventsWithDetails(): Promise<SavedEvent[]> {
-    return this.request<SavedEvent[]>('/saved-events/with-details')
+    const response = await this.request<SavedEventWithDetails[]>('/saved-events/with-details')
+    
+    // Transformar la respuesta del backend al formato esperado por el frontend
+    return response.map(item => ({
+      id_usuario: item.evento_guardado.id_usuario,
+      id_publicacion: item.evento_guardado.id_publicacion,
+      fecha_guardado: item.evento_guardado.fecha_guardado,
+      publicacion: {
+        id: item.publicacion.id,
+        id_autor: item.publicacion.id_autor,
+        nombre_autor: '', // Se llenará desde los posts
+        username_autor: '', // Se llenará desde los posts
+        foto_autor: '', // Se llenará desde los posts
+        texto: item.publicacion.texto,
+        tipo: item.publicacion.tipo,
+        fecha_evento: item.publicacion.fecha_evento,
+        privacidad: 'publica', // Valor por defecto
+        media_url: '', // Se llenará desde los posts
+        terminos_adicionales: '', // Se llenará desde los posts
+        estado: item.publicacion.estado,
+        fecha_creacion: '', // Se llenará desde los posts
+        rutas: [], // Se llenará desde los posts
+        likes: 0, // Se llenará desde los posts
+        likers: [], // Se llenará desde los posts
+        comentarios: [], // Se llenará desde los posts
+        inscritos: [], // Se llenará desde los posts
+        verificado: false // Se llenará desde los posts
+      }
+    }))
   }
 
   // Métodos de usuarios

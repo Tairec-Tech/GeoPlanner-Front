@@ -4,6 +4,7 @@
     "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
     "module": "ESNext",
     "skipLibCheck": true,
 
@@ -26,5 +27,5 @@
     /* Type definitions */
     "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": ["src", "src/types"]
+  "include": ["src", "src/types", "src/types/global.d.ts"]
 }
