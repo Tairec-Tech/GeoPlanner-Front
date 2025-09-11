@@ -963,7 +963,7 @@ const Dashboard = () => {
                 ${event.post && event.post.rutas && event.post.rutas.length > 1 ? `
                   <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
                     <div style="margin-bottom: 4px;"><strong>🗺️ Ruta Múltiple:</strong></div>
-                    ${event.post.rutas.map((ruta, index) => `
+                    ${event.post.rutas.map((ruta: any, index: number) => `
                       <div style="margin-bottom: 2px; font-size: 11px;">
                         <strong>#${index + 1}:</strong> ${ruta.etiqueta || `Punto ${index + 1}`}
                       </div>
@@ -1403,7 +1403,7 @@ const Dashboard = () => {
                 ${event.post && event.post.rutas && event.post.rutas.length > 1 ? `
                   <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd;">
                     <div style="margin-bottom: 4px;"><strong>🗺️ Ruta Múltiple:</strong></div>
-                    ${event.post.rutas.map((ruta, index) => `
+                    ${event.post.rutas.map((ruta: any, index: number) => `
                       <div style="margin-bottom: 2px; font-size: 11px;">
                         <strong>#${index + 1}:</strong> ${ruta.etiqueta || `Punto ${index + 1}`}
                       </div>
@@ -2879,7 +2879,7 @@ const Dashboard = () => {
                     const routeLatLngs = coordinates.map((coord: [number, number]) => [coord[1], coord[0]] as [number, number])
                     
                     // Crear la ruta que sigue las calles
-                    const routeLine = L.polyline(routeLatLngs, {
+                    L.polyline(routeLatLngs, {
                       color: '#007BFF',
                       weight: 5,
                       opacity: 0.8
@@ -2896,7 +2896,7 @@ const Dashboard = () => {
                 } catch (error) {
                   console.error('❌ Error creando ruta múltiple en post:', error)
                   // Fallback: crear línea recta si OSRM falla
-                  const routeLine = L.polyline(latlngs, {
+                  L.polyline(latlngs, {
                     color: '#007BFF',
                     weight: 5,
                     opacity: 0.8
