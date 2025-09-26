@@ -46,7 +46,7 @@
  * - Evaluación de fortaleza de contraseña en tiempo real
  * - Verificación de formato de email
  * - Confirmación de contraseña
- * - Navegación entre pasos
+ * - Navegación directa al paso 3 (sin verificación de email)
  * 
  * VALIDACIONES IMPLEMENTADAS:
  * - Username único y disponible
@@ -69,12 +69,14 @@
  * - Siguiente paso: src/components/RegisterStep3.tsx
  * - API: src/services/api.ts (verificación de disponibilidad)
  * 
- * NOTA: Las credenciales se validan contra el backend antes de continuar
+ * NOTA: Las credenciales se validan contra el backend antes de continuar.
+ * La verificación de email se eliminó por limitaciones de Render.
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_ENDPOINTS, apiRequest } from '../config/api';
+// Nota: Se eliminó la verificación de email por limitaciones de Render
 import '../styles/RegisterStep2.css';
 
 interface CredentialsInfo {
@@ -306,42 +308,27 @@ const RegisterStep2: React.FC = () => {
     }
 
     try {
-      // Enviar email de verificación
-      const verificationResponse = await apiRequest(API_ENDPOINTS.SEND_VERIFICATION, {
-        method: 'POST',
-        body: JSON.stringify({
-          email: formData.email,
-          username: formData.nombreUsuario
-        })
-      });
-
-      if (verificationResponse.ok) {
-        // Combinar datos del paso 1 y 2
-        const combinedData = {
-          ...step1Data,
-          ...formData
-        };
-        
-        console.log('Datos combinados a guardar:', combinedData); // Debug
-        
-        // Guardar datos combinados en sessionStorage
-        sessionStorage.setItem('registroStep2', JSON.stringify(combinedData));
-        sessionStorage.setItem('registerStep1', JSON.stringify(step1Data));
-        
-        console.log('Datos guardados en sessionStorage:', {
-          registroStep2: sessionStorage.getItem('registroStep2'),
-          registerStep1: sessionStorage.getItem('registerStep1')
-        }); // Debug
-        
-        // Navegar a página de verificación en lugar de paso 3
-        navigate('/verificar-email');
-      } else {
-        const errorData = await verificationResponse.json();
-        setError(`Error enviando email de verificación: ${errorData.detail || 'Error desconocido'}`);
-        setShowErrorModal(true);
-      }
+      // Combinar datos del paso 1 y 2
+      const combinedData = {
+        ...step1Data,
+        ...formData
+      };
+      
+      console.log('Datos combinados a guardar:', combinedData); // Debug
+      
+      // Guardar datos combinados en sessionStorage
+      sessionStorage.setItem('registroStep2', JSON.stringify(combinedData));
+      sessionStorage.setItem('registerStep1', JSON.stringify(step1Data));
+      
+      console.log('Datos guardados en sessionStorage:', {
+        registroStep2: sessionStorage.getItem('registroStep2'),
+        registerStep1: sessionStorage.getItem('registerStep1')
+      }); // Debug
+      
+      // Navegar directamente al paso 3 (sin verificación de email)
+      navigate('/registro/paso3');
     } catch (error) {
-      console.error('Error sending verification email:', error);
+      console.error('Error guardando datos:', error);
       setError('Error de conexión. Verifica tu internet.');
       setShowErrorModal(true);
     }
