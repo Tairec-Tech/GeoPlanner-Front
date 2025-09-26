@@ -424,7 +424,7 @@ const RegisterStep3: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <div className="form-control text-center">
             <label className="label">
-              <span className="label-text text-base sm:text-lg font-semibold">Foto de perfil</span>
+              <span className="label-text text-base sm:text-lg font-semibold text-white">Foto de perfil</span>
             </label>
             <div className="avatar flex justify-center mb-3 sm:mb-4">
               <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-35 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
@@ -441,18 +441,18 @@ const RegisterStep3: React.FC = () => {
                 id="file-input"
               />
               <label htmlFor="file-input" className="custom-file-label">
-                <span className="file-icon">📷</span>
+                <span className="file-icon text-white">📷</span>
                 Seleccionar imagen
               </label>
             </div>
             <div className="label">
-              <span className="label-text-alt text-light text-xs sm:text-sm">Sube y recorta tu foto (máx. 5MB)</span>
+              <span className="label-text-alt text-light text-xs sm:text-sm text-white">Sube y recorta tu foto (máx. 5MB)</span>
             </div>
           </div>
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-base sm:text-lg font-semibold">Biografía</span>
+              <span className="label-text text-base sm:text-lg font-semibold text-white">Biografía</span>
             </label>
             <textarea 
               className="textarea textarea-bordered w-full text-sm sm:text-base" 
@@ -467,7 +467,7 @@ const RegisterStep3: React.FC = () => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text text-base sm:text-lg font-semibold">Selecciona tu ubicación</span>
+              <span className="label-text text-base sm:text-lg font-semibold text-white">Selecciona tu ubicación</span>
             </label>
             <div className="map-container">
               <MapContainer 
@@ -497,28 +497,28 @@ const RegisterStep3: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Ciudad</span></label>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium text-white">Ciudad</span></label>
               <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.ciudad} readOnly placeholder="Ciudad"/>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text text-sm sm:text-base font-medium">País</span></label>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium text-white">País</span></label>
               <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.pais} readOnly placeholder="País"/>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="form-control">
-              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Latitud</span></label>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium text-white">Latitud</span></label>
               <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.latitud} readOnly/>
             </div>
             <div className="form-control">
-              <label className="label"><span className="label-text text-sm sm:text-base font-medium">Longitud</span></label>
+              <label className="label"><span className="label-text text-sm sm:text-base font-medium text-white">Longitud</span></label>
               <input type="text" className="input input-bordered w-full text-sm sm:text-base" value={formData.longitud} readOnly/>
             </div>
           </div>
 
           <div className="form-control">
-            <label className="label"><span className="label-text text-base sm:text-lg font-semibold">Elige tu tema</span></label>
+            <label className="label"><span className="label-text text-base sm:text-lg font-semibold text-white">Elige tu tema</span></label>
             <select className="select select-bordered w-full text-sm sm:text-base" name="tema" value={formData.tema} onChange={handleInputChange}>
               <option value="default">Azul GeoPlanner (predeterminado)</option>
               <option value="aurora">Aurora Boreal</option>
@@ -543,7 +543,7 @@ const RegisterStep3: React.FC = () => {
           
           {!isFormValid && (
             <div className="alert alert-warning">
-              <span className="text-sm sm:text-base">
+              <span className="text-sm sm:text-base text-white">
                 ⚠️ Por favor, selecciona tu ubicación en el mapa para continuar con el registro.
               </span>
             </div>

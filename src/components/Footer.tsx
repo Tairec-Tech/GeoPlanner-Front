@@ -1,7 +1,10 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 import logo from '../assets/img/LogoMini.png'
 
 const Footer: React.FC = () => {
+  const navigate = useNavigate()
+
   return (
          <footer className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12">
@@ -24,8 +27,8 @@ const Footer: React.FC = () => {
            <div>
              <h6 className="text-sm sm:text-base font-semibold text-slate-300 mb-4 sm:mb-6">Compañía</h6>
              <div className="flex flex-col gap-2 sm:gap-3">
-               <a href="/about" className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors">Acerca de nosotros</a>
-               <a href="/contact" className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors">Contacto</a>
+               <button onClick={() => navigate('/about')} className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors text-left">Acerca de nosotros</button>
+               <button onClick={() => navigate('/contact')} className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors text-left">Contacto</button>
              </div>
            </div>
 
@@ -33,9 +36,9 @@ const Footer: React.FC = () => {
            <div>
              <h6 className="text-sm sm:text-base font-semibold text-slate-300 mb-4 sm:mb-6">Legal</h6>
              <div className="flex flex-col gap-2 sm:gap-3">
-               <a href="/terms" className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors">Términos de uso</a>
-               <a href="/privacy" className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors">Política de privacidad</a>
-               <a href="/cookies" className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors">Política de cookies</a>
+               <button onClick={() => navigate('/terms')} className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors text-left">Términos de uso</button>
+               <button onClick={() => navigate('/privacy')} className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors text-left">Política de privacidad</button>
+               <button onClick={() => navigate('/cookies')} className="text-sm sm:text-base text-slate-400 hover:text-cyan-400 transition-colors text-left">Política de cookies</button>
              </div>
            </div>
        </div>

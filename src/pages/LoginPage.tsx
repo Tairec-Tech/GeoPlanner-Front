@@ -334,8 +334,8 @@ const LoginPage: React.FC = () => {
         <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row flex-wrap justify-between items-center gap-2 sm:gap-0">
           <span className="footer-text text-xs sm:text-sm text-center sm:text-left">© 2025 GeoPlanner. Todos los derechos reservados — Creado por The GeoPlanner Group.</span>
           <div className="footer-links flex flex-wrap gap-3 justify-center sm:justify-end">
-            <a href="/terminos" className="footer-link text-xs sm:text-sm" target="_blank">Términos</a>
-            <a href="/privacidad" className="footer-link text-xs sm:text-sm" target="_blank">Privacidad</a>
+            <button onClick={() => navigate('/terms')} className="footer-link text-xs sm:text-sm">Términos</button>
+            <button onClick={() => navigate('/privacy')} className="footer-link text-xs sm:text-sm">Privacidad</button>
           </div>
         </div>
       </footer>

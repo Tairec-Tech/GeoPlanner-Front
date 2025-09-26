@@ -75,3 +75,5 @@ npm run build
 3. Verificar que el deployment funcione correctamente
 
 Los errores de TypeScript que impedían el build en Render han sido completamente resueltos.
+
+

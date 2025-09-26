@@ -373,7 +373,7 @@ const RegisterStep2: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">@Nombre de usuario</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">@Nombre de usuario</span>
               </label>
               <input
                 type="text"
@@ -385,7 +385,7 @@ const RegisterStep2: React.FC = () => {
                 required
               />
               <div className="label">
-                <span className="label-text-alt text-light text-xs sm:text-sm">
+                <span className="label-text-alt text-light text-xs sm:text-sm text-white">
                   Este será tu @nombre único dentro de GeoPlanner.
                 </span>
               </div>
@@ -393,7 +393,7 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">Correo electrónico</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">Correo electrónico</span>
               </label>
               <input
                 type="email"
@@ -408,7 +408,7 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">Contraseña</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">Contraseña</span>
               </label>
               <input
                 type="password"
@@ -464,7 +464,7 @@ const RegisterStep2: React.FC = () => {
 
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">Confirmar contraseña</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">Confirmar contraseña</span>
               </label>
               <input
                 type="password"
@@ -477,7 +477,7 @@ const RegisterStep2: React.FC = () => {
               />
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
                 <div className="label">
-                  <span className="label-text-alt text-red-500 text-xs sm:text-sm">Las contraseñas no coinciden</span>
+                  <span className="label-text-alt text-red-500 text-xs sm:text-sm ">Las contraseñas no coinciden</span>
                 </div>
               )}
             </div>

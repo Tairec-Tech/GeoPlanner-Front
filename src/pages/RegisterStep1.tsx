@@ -260,7 +260,7 @@ const RegisterStep1: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-sm sm:text-base font-medium">Primer nombre</span>
+                  <span className="label-text text-sm sm:text-base font-medium text-white">Primer nombre</span>
                 </label>
                 <input
                   type="text"
@@ -274,7 +274,7 @@ const RegisterStep1: React.FC = () => {
               
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-sm sm:text-base font-medium">Apellido</span>
+                  <span className="label-text text-sm sm:text-base font-medium text-white">Apellido</span>
                 </label>
                 <input
                   type="text"
@@ -290,7 +290,7 @@ const RegisterStep1: React.FC = () => {
             {/* Fecha de nacimiento */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">Fecha de nacimiento</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">Fecha de nacimiento</span>
               </label>
               <div className="grid grid-cols-3 gap-2">
                 <select 
@@ -343,7 +343,7 @@ const RegisterStep1: React.FC = () => {
             {/* Género */}
             <div className="form-control">
               <label className="label">
-                <span className="label-text text-sm sm:text-base font-medium">Género</span>
+                <span className="label-text text-sm sm:text-base font-medium text-white">Género</span>
               </label>
               <div className="flex flex-wrap gap-2 sm:gap-4">
                 <label className="label cursor-pointer">
@@ -355,7 +355,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-sm sm:text-base">Masculino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base text-white">Masculino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -367,7 +367,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-sm sm:text-base">Femenino</span>
+                  <span className="label-text ml-2 text-sm sm:text-base text-white">Femenino</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -379,7 +379,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-sm sm:text-base">Otro</span>
+                  <span className="label-text ml-2 text-sm sm:text-base text-white">Otro</span>
                 </label>
                 
                 <label className="label cursor-pointer">
@@ -391,7 +391,7 @@ const RegisterStep1: React.FC = () => {
                     onChange={handleInputChange}
                     className="radio radio-primary"
                   />
-                  <span className="label-text ml-2 text-sm sm:text-base">Prefiero no decir</span>
+                  <span className="label-text ml-2 text-sm sm:text-base text-white">Prefiero no decir</span>
                 </label>
               </div>
             </div>
@@ -400,7 +400,7 @@ const RegisterStep1: React.FC = () => {
             {formData.genero === 'Otro' && (
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text text-sm sm:text-base font-medium">Especifica tu género</span>
+                  <span className="label-text text-sm sm:text-base font-medium text-white">Especifica tu género</span>
                 </label>
                 <input
                   type="text"
